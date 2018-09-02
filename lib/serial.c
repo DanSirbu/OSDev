@@ -1,7 +1,8 @@
 //Taken from https://wiki.osdev.org/Serial_Ports
+#include <stdarg.h>
+#include "../include/serial.h"
 
 #define PORT 0x3f8   /* COM1 */
-#include <stdarg.h>
 
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
