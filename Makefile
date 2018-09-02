@@ -1,5 +1,5 @@
 OBJFILES = boot.o idt.o kernel.o
-ARGS = -m32 -O0 -fno-pic -fno-stack-protector -g
+ARGS = -m32 -O0 -fno-pic -fno-stack-protector -g -nostdlib
 
 run: kernel.elf
 	qemu-system-i386 -s -kernel kernel.elf -serial file:serial.log

@@ -1,6 +1,7 @@
 //Taken from https://wiki.osdev.org/Serial_Ports
 
 #define PORT 0x3f8   /* COM1 */
+#include <stdarg.h>
 
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
@@ -36,6 +37,32 @@ void write_serial(char a) {
    while (is_transmit_empty() == 0);
  
    outb(PORT,a);
+}
+void kpanic_fmt(char *message, ...) {
+    va_list args;
+    va_start(args, message);
+    
+    int i = 0;
+    while(message[i] != '\0') {
+        if(message[i] == '%') {
+            i++;
+            if(message[i] == '%') {
+                write_serial(message[i]);
+            }
+            else if(message[i] == 'x') {
+                char buf[256];
+                itoa(va_arg(args, int), buf, 16);
+                kpanic(buf);
+            } else if(message[i] == 'd') {
+                char buf[256];
+                itoa(va_arg(args, int), buf, 10);
+                kpanic(buf);
+            }
+        } else {
+            write_serial(message[i]);
+        }
+        i++;
+    }
 }
 void kpanic(char *message) {
     int i = 0;

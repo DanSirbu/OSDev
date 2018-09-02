@@ -178,6 +178,54 @@ void kmain(void)
 	int a = 5 / 0;
 	while(1);
 }
-void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code) {
-	kpanic("interrupt");
+void itoa(u32 number, char *str, u32 base);
+void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code, u32 eip) {
+	char buf[20];
+
+	//itoa(interrupt_no, buf, 16);
+	kpanic_fmt("interrupt 0x%x\n", 16);
+	kpanic_fmt("interrupt %d\n", 16);
+	if(interrupt_no == 0) {
+		eip += 1;//Ignore divide by zero error
+	}
+}
+u32 strlen(char *str) {
+	int i = 0;
+	while(str[i] != '\0') { i++; }
+	return i;
+}
+void reverse(char *str) {
+	char *start = str;
+	char *end = str + strlen(str) - 1;
+	char temp;
+
+	while(end > start) {
+		temp = *start;
+		*start = *end;
+		*end = temp;
+
+		start++;
+		end--;
+	}
+}
+void itoa(u32 number, char *str, u32 base) {
+	int curNumber = number;
+	if(number == 0) {
+		str[0] = '0';
+		str[1] = '\0';
+		return;
+	}
+	int i = 0;
+	while(curNumber != 0) {
+		int rem = curNumber % base;
+		if(rem < 10) {
+		str[i++] = rem + 0x30;
+		} else {
+			str[i++] = rem + 0x51;
+		}
+		curNumber /= base;
+	}
+	str[++i] = '\0';
+
+	reverse(str);
 }
