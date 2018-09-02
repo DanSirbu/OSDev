@@ -3,6 +3,9 @@
 * License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
 */
 #include "keyboard_map.h"
+#include "serial.c"
+
+typedef unsigned int u32;
 
 /* there are 25 lines each of 80 columns; each element takes 2 bytes */
 #define LINES 25
@@ -23,6 +26,7 @@ extern void keyboard_handler(void);
 extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
+extern void idt_0(void);
 
 /* current cursor location */
 unsigned int current_loc = 0;
@@ -44,15 +48,26 @@ void idt_init(void)
 {
 	unsigned long keyboard_address;
 	unsigned long idt_address;
+	unsigned long idt_0_address;
 	unsigned long idt_ptr[2];
-
+	
 	/* populate IDT entry of keyboard's interrupt */
-	keyboard_address = (unsigned long)keyboard_handler;
-	IDT[0x21].offset_lowerbits = keyboard_address & 0xffff;
+	idt_0_address = (unsigned long) idt_0;
+
+	for(int x = 0; x < 256; x++) {
+		idt_address = idt_0_address + x * 6;//each handler is 6 bytes so we can calculate all handlers address
+		IDT[x].offset_lowerbits = idt_address + x*6 & 0xffff;
+		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
+		IDT[x].zero = 0;
+		IDT[x].type_attr = INTERRUPT_GATE;
+		IDT[x].offset_higherbits = (idt_address & 0xffff0000) >> 16;
+	}
+	idt_address = (unsigned long)keyboard_handler;
+	IDT[0x21].offset_lowerbits = idt_address & 0xffff;
 	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
 	IDT[0x21].zero = 0;
 	IDT[0x21].type_attr = INTERRUPT_GATE;
-	IDT[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
+	IDT[0x21].offset_higherbits = (idt_address & 0xffff0000) >> 16;
 
 	/*     Ports
 	*	 PIC1	PIC2
@@ -159,5 +174,10 @@ void kmain(void)
 	idt_init();
 	kb_init();
 
+	init_serial();
+	int a = 5 / 0;
 	while(1);
+}
+void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code) {
+	kpanic("interrupt");
 }
