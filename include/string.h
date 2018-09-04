@@ -3,4 +3,4 @@
 
 u32 strlen(char *str);
 void reverse(char *str);
-void itoa(u32 number, char *str, u32 base);
+void itoa(u64 number, char *str, u32 base);

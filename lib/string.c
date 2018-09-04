@@ -19,24 +19,36 @@ void reverse(char *str) {
 		end--;
 	}
 }
-void itoa(u32 number, char *str, u32 base) {
-	int curNumber = number;
+void itoa(u64 number, char *str, u32 base) {
 	if(number == 0) {
 		str[0] = '0';
 		str[1] = '\0';
 		return;
 	}
-	int i = 0;
-	while(curNumber != 0) {
-		int rem = curNumber % base;
+	u32 i = 0;
+	u32 lowBytes = number & 0xFFFFFFFF;
+	while(lowBytes != 0) {
+		u64 rem = lowBytes % base;
 		if(rem < 10) {
-		str[i++] = rem + 0x30;
+			str[i] = rem + 0x30;
 		} else {
-			str[i++] = rem + 0x57;
+			str[i] = rem + 0x57;
 		}
-		curNumber /= base;
+		lowBytes /= base;
+		i++;
 	}
-	str[++i] = '\0';
+	u32 highBytes = (number >> 32) & 0xFFFFFFFF;
+	while(highBytes != 0) {
+		u64 rem = highBytes % base;
+		if(rem < 10) {
+			str[i] = rem + 0x30;
+		} else {
+			str[i] = rem + 0x57;
+		}
+		highBytes /= base;
+		i++;
+	}
+	str[i] = '\0';
 
 	reverse(str);
 }

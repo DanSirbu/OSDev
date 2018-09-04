@@ -6,6 +6,7 @@
 #include "include/serial.h"
 #include "include/string.h"
 
+#define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
 
 /* there are 25 lines each of 80 columns; each element takes 2 bytes */
@@ -32,7 +33,7 @@ extern void idt_0(void);
 /* current cursor location */
 unsigned int current_loc = 0;
 /* video memory begins at address 0xb8000 */
-char *vidptr = (char*)0xb8000;
+char *vidptr = (char*)0xc00b8000;
 
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
@@ -44,13 +45,16 @@ struct IDT_entry {
 
 struct IDT_entry IDT[IDT_SIZE];
 
+struct idt_description_structure_t {
+  u16 size; // in bytes
+  u32 offset;
+} __attribute__((packed)) idt_description_structure;
 
 void idt_init(void)
 {
 	unsigned long keyboard_address;
 	unsigned long idt_address;
 	unsigned long idt_0_address;
-	unsigned long idt_ptr[2];
 	
 	/* populate IDT entry of keyboard's interrupt */
 	idt_0_address = (unsigned long) idt_0;
@@ -63,7 +67,7 @@ void idt_init(void)
 		IDT[x].type_attr = INTERRUPT_GATE;
 		IDT[x].offset_higherbits = (idt_address & 0xffff0000) >> 16;
 	}
-	idt_address = (unsigned long)keyboard_handler;
+	idt_address = (unsigned long) keyboard_handler;
 	IDT[0x21].offset_lowerbits = idt_address & 0xffff;
 	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
 	IDT[0x21].zero = 0;
@@ -102,11 +106,11 @@ void idt_init(void)
 	write_port(0xA1 , 0xff);
 
 	/* fill the IDT descriptor */
-	idt_address = (unsigned long)IDT ;
-	idt_ptr[0] = (sizeof (struct IDT_entry) * IDT_SIZE) + ((idt_address & 0xffff) << 16);
-	idt_ptr[1] = idt_address >> 16 ;
+	idt_address = (unsigned long)IDT;
+	idt_description_structure.size = sizeof(IDT) - 1;
+	idt_description_structure.offset = (u32) IDT;
 
-	load_idt(idt_ptr);
+	load_idt(&idt_description_structure);
 }
 
 void kb_init(void)
@@ -176,14 +180,33 @@ void kmain(void)
 	kb_init();
 
 	init_serial();
+	char buf[256];
+	itoa(0x123456789abcdef, buf, 16);
+	reverse(buf);
+	
+	kpanic(buf);
+	kpanic_fmt("Serial initialized %x\n", 0x123456789abcdef);
 	int a = 5 / 0;
 	int b = 6 / 0;
 	while(1);
 }
 void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code, u32 eip) {
-	kpanic_fmt("Interrupt %d at 0x%x, error %d\n", interrupt_no, eip, error_code);
+	kpanic_fmt("Interrupt %d at 0x%x, error %d\n", (u64) interrupt_no, (u64) eip, (u64) error_code);
 	
 	if(interrupt_no == 0) { //Don't know what to do yet so just ignore
 		eip += 1;
 	}
 }
+struct PD {
+	unsigned char present: 1;
+	unsigned char writable: 1;
+	unsigned char user: 1;
+	unsigned char write_through : 1;
+	unsigned char cache_disabled : 1;
+	unsigned char accessed : 1;
+    unsigned char zero : 1;
+	unsigned char size_4mb : 1;
+	unsigned char g: 1;
+	unsigned char avail: 3;
+	unsigned int address: 20;
+};

@@ -48,15 +48,15 @@ void kpanic_fmt(char *message, ...) {
         if(message[i] == '%') {
             i++;
             if(message[i] == '%') {
-                write_serial(message[i]);
+                write_serial("%");
             }
             else if(message[i] == 'x') {
                 char buf[256];
-                itoa(va_arg(args, int), buf, 16);
+                itoa(va_arg(args, u64), buf, 16);
                 kpanic(buf);
             } else if(message[i] == 'd') {
                 char buf[256];
-                itoa(va_arg(args, int), buf, 10);
+                itoa(va_arg(args, u64), buf, 10);
                 kpanic(buf);
             }
         } else {
