@@ -63,7 +63,7 @@ void idt_init(void)
 
 	for(int x = 0; x < 256; x++) {
 		idt_address = idt_0_address + x * 6;//each handler is 6 bytes so we can calculate all handlers address
-		IDT[x].offset_lowerbits = idt_address + x*6 & 0xffff;
+		IDT[x].offset_lowerbits = idt_address & 0xffff;
 		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
 		IDT[x].zero = 0;
 		IDT[x].type_attr = INTERRUPT_GATE;
@@ -184,7 +184,7 @@ void kmain(void)
 
 	init_serial();
 	kpanic_fmt("Serial initialized\n");
-	//int a = 5 / 0;
+	int a = 5 / 0;
 	kmalloc();
 	//int b = 6 / 0;
 	while(1);
