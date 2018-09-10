@@ -2,3 +2,4 @@ binary_x86/
 temp/
 *.o
 serial.log
+.vscode/
