@@ -48,7 +48,7 @@ void kpanic_fmt(char *message, ...) {
         if(message[i] == '%') {
             i++;
             if(message[i] == '%') {
-                write_serial("%");
+                write_serial('%');
             }
             else if(message[i] == 'x') {
                 char buf[256];

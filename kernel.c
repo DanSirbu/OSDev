@@ -29,6 +29,8 @@ extern char read_port(unsigned short port);
 extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
 extern void idt_0(void);
+extern void initialize_gdt();
+extern void kmalloc();
 
 /* current cursor location */
 unsigned int current_loc = 0;
@@ -52,12 +54,12 @@ struct idt_description_structure_t {
 
 void idt_init(void)
 {
-	unsigned long keyboard_address;
-	unsigned long idt_address;
-	unsigned long idt_0_address;
+	u32 keyboard_address;
+	u32 idt_address;
+	u32 idt_0_address;
 	
 	/* populate IDT entry of keyboard's interrupt */
-	idt_0_address = (unsigned long) idt_0;
+	idt_0_address = (u32) idt_0;
 
 	for(int x = 0; x < 256; x++) {
 		idt_address = idt_0_address + x * 6;//each handler is 6 bytes so we can calculate all handlers address
@@ -67,7 +69,7 @@ void idt_init(void)
 		IDT[x].type_attr = INTERRUPT_GATE;
 		IDT[x].offset_higherbits = (idt_address & 0xffff0000) >> 16;
 	}
-	idt_address = (unsigned long) keyboard_handler;
+	idt_address = (u32) keyboard_handler;
 	IDT[0x21].offset_lowerbits = idt_address & 0xffff;
 	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
 	IDT[0x21].zero = 0;
@@ -110,7 +112,7 @@ void idt_init(void)
 	idt_description_structure.size = sizeof(IDT) - 1;
 	idt_description_structure.offset = (u32) IDT;
 
-	load_idt(&idt_description_structure);
+	load_idt((u64*) &idt_description_structure);
 }
 
 void kb_init(void)
@@ -176,18 +178,15 @@ void kmain(void)
 	kprint_newline();
 	kprint_newline();
 
+	initialize_gdt();
 	idt_init();
 	kb_init();
 
 	init_serial();
-	char buf[256];
-	itoa(0x123456789abcdef, buf, 16);
-	reverse(buf);
-	
-	kpanic(buf);
-	kpanic_fmt("Serial initialized %x\n", 0x123456789abcdef);
-	int a = 5 / 0;
-	int b = 6 / 0;
+	kpanic_fmt("Serial initialized\n");
+	//int a = 5 / 0;
+	kmalloc();
+	//int b = 6 / 0;
 	while(1);
 }
 void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code, u32 eip) {

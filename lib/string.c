@@ -37,7 +37,7 @@ void itoa(u64 number, char *str, u32 base) {
 		lowBytes /= base;
 		i++;
 	}
-	u32 highBytes = (number >> 32) & 0xFFFFFFFF;
+	u32 highBytes = (number >> 31) >> 1 & 0xFFFFFFFF; //>> 32, but IA-32 processors mask shift to 5 bits so max is shift is 31
 	while(highBytes != 0) {
 		u64 rem = highBytes % base;
 		if(rem < 10) {

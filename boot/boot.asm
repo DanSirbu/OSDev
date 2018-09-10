@@ -18,6 +18,25 @@ global load_idt
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
 
+global asm_lgdt
+
+; asm_lgdt - load global descriptor table
+; stack: [esp + 4] the address of the gdt description structure
+;        [esp    ] return address
+asm_lgdt:
+  mov edx, [esp + 4]
+  lgdt [edx]
+  ret
+
+GLOBAL tss_flush   ; Allows our C code to call tss_flush().
+tss_flush:
+  mov ax, 0x2B      ; Load the index of our TSS structure - The index is
+                   ; 0x28, as it is the 5th selector and each is 8 bytes
+                   ; long, but we set the bottom two bits (making 0x2B)
+                   ; so that it has an RPL of 3, not zero.
+  ltr ax            ; Load 0x2B into the task state register.
+  ret
+
 read_port:
 	mov edx, [esp + 4]
 			;al is the lower 8 bits of eax
@@ -43,6 +62,7 @@ keyboard_handler:
 
 KERN_BASE equ 0xC0000000
 KERN_PAGE_NUM equ KERN_BASE >> 22
+KERNEL_STACK_SIZE equ 4096
 
 section .data
 align 0x1000
@@ -72,15 +92,17 @@ start:
 	jmp ecx
 
 StartHigherHalf:
-	;mov dword [page_directory], 0
-	;invlpg [0]
+	mov dword [page_directory], 0
+	invlpg [0]
 
-	mov esp, stack_space
+	mov esp, kernel_stack_lowest_address + KERNEL_STACK_SIZE
 	mov ebp, esp
 	
 	call kmain
 	hlt 				;halt the CPU
 
+global kernel_stack_lowest_address
 section .bss
-resb 8192; 8KB for stack
-stack_space:
+align 4
+kernel_stack_lowest_address:
+resb KERNEL_STACK_SIZE; 8KB for stack
