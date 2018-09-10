@@ -1,5 +1,6 @@
 OBJFILES = boot/boot.o boot/idt.o lib/serial.o lib/string.o gdt.o lib/kmalloc.o kernel.o
 ARGS = -m32 -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding
+ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 2G
 # -d int shows interrupts
 
