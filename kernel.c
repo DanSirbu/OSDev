@@ -52,6 +52,14 @@ struct idt_description_structure_t {
   u32 offset;
 } __attribute__((packed)) idt_description_structure;
 
+#define PIC1_CMD 0x20
+#define PIC1_DATA 0x21
+
+#define PIC2_CMD 0xA0
+#define PIC2_DATA 0xA1
+
+#define ICW4_8086	0x01		/* 8086/88 (MCS-80/85) mode */
+#define END_OF_INTERRUPT 0x20
 void idt_init(void)
 {
 	u32 keyboard_address;
@@ -62,7 +70,7 @@ void idt_init(void)
 	idt_0_address = (u32) idt_0;
 
 	for(int x = 0; x < 256; x++) {
-		idt_address = idt_0_address + x * 6;//each handler is 6 bytes so we can calculate all handlers address
+		idt_address = idt_0_address + (x * 0x10);//each handler is 16 bytes aligned
 		IDT[x].offset_lowerbits = idt_address & 0xffff;
 		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
 		IDT[x].zero = 0;
@@ -83,29 +91,25 @@ void idt_init(void)
 	*/
 
 	/* ICW1 - begin initialization */
-	write_port(0x20 , 0x11);
-	write_port(0xA0 , 0x11);
+	write_port(PIC1_CMD, 0x11);
+	write_port(PIC2_CMD, 0x11);
 
 	/* ICW2 - remap offset address of IDT */
-	/*
-	* In x86 protected mode, we have to remap the PICs beyond 0x20 because
-	* Intel have designated the first 32 interrupts as "reserved" for cpu exceptions
-	*/
-	write_port(0x21 , 0x20);
-	write_port(0xA1 , 0x28);
+	write_port(PIC1_DATA, 0x20);
+	write_port(PIC2_DATA, 0x28);
 
 	/* ICW3 - setup cascading */
-	write_port(0x21 , 0x00);
-	write_port(0xA1 , 0x00);
+	write_port(PIC1_DATA, 0x04); //Tell pic1 that pic2 is at pin 3 (0x0000 0100)
+	write_port(PIC2_DATA, 0x02); //Tell pic2 its cascade number is 2
 
 	/* ICW4 - environment info */
-	write_port(0x21 , 0x01);
-	write_port(0xA1 , 0x01);
+	write_port(PIC1_DATA, ICW4_8086);
+	write_port(PIC2_DATA, ICW4_8086);
 	/* Initialization finished */
 
-	/* mask interrupts */
-	write_port(0x21 , 0xff);
-	write_port(0xA1 , 0xff);
+	/* mask interrupts *///TODO
+	write_port(PIC1_DATA, 0x0);
+	write_port(PIC2_DATA, 0x0);
 
 	/* fill the IDT descriptor */
 	idt_address = (unsigned long)IDT;
@@ -118,7 +122,7 @@ void idt_init(void)
 void kb_init(void)
 {
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
-	write_port(0x21 , 0xFD);
+	//write_port(0x21 , 0xFD);
 }
 
 void kprint(const char *str)
@@ -143,6 +147,31 @@ void clear_screen(void)
 		vidptr[i++] = ' ';
 		vidptr[i++] = 0x07;
 	}
+}
+#define CMOS_PORT 0x70
+#define CMOS_PORT_INOUT 0x71
+
+char read_cmos(u8 cmos_reg) {
+	write_port(CMOS_PORT, cmos_reg); //Must always reselect before reading because it seems reading clears the selection
+	return read_port(CMOS_PORT_INOUT);
+}
+
+void print_time() {
+	/* From https://wiki.osdev.org/CMOS#Accessing_CMOS_Registers
+	Register  Contents
+	0x00      Seconds
+ 	0x02      Minutes
+	0x04      Hours
+	0x06      Weekday
+	0x07      Day of Month
+	0x08      Month
+	0x09      Year
+	0x32      Century (maybe)
+	0x0A      Status Register A
+	0x0B      Status Register B
+	*/
+	u64 value = (u64) read_cmos(0);
+	kpanic_fmt("%d\n", value);
 }
 
 void keyboard_handler_main(void)
@@ -184,16 +213,27 @@ void kmain(void)
 
 	init_serial();
 	kpanic_fmt("Serial initialized\n");
+
 	int a = 5 / 0;
 	kmalloc();
-	//int b = 6 / 0;
 	while(1);
 }
+#define IRQ_PIT 0x20
+
 void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code, u32 eip) {
 	kpanic_fmt("Interrupt %d at 0x%x, error %d\n", (u64) interrupt_no, (u64) eip, (u64) error_code);
-	
 	if(interrupt_no == 0) { //Don't know what to do yet so just ignore
 		eip += 1;
+	} else if(interrupt_no == IRQ_PIT) {
+		print_time();
+	}
+
+	if(interrupt_no >= 0x20 && interrupt_no <= 0x30) {
+		int irqNum = interrupt_no - 0x20;
+		if(irqNum > 0x7) {
+			write_port(PIC2_CMD, END_OF_INTERRUPT);
+		}
+		write_port(PIC1_CMD, END_OF_INTERRUPT);
 	}
 }
 struct PD {
