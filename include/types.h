@@ -14,3 +14,13 @@ typedef u64 uint64_t;
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
+
+typedef u32 size_t;
+
+#define NULL 0
+#define false 0
+
+#define ALIGN(val, alignment) \
+    if(val % alignment != 0) { \
+        val += alignment - (val % alignment); \
+    }

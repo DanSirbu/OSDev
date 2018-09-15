@@ -5,6 +5,7 @@
 #include "include/keyboard_map.h"
 #include "include/serial.h"
 #include "include/string.h"
+#include "include/kmalloc.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -30,7 +31,6 @@ extern void write_port(unsigned short port, unsigned char data);
 extern void load_idt(unsigned long *idt_ptr);
 extern void idt_0(void);
 extern void initialize_gdt();
-extern void kmalloc();
 
 /* current cursor location */
 unsigned int current_loc = 0;
@@ -215,7 +215,10 @@ void kmain(void)
 	kpanic_fmt("Serial initialized\n");
 
 	int a = 5 / 0;
-	kmalloc();
+	kmalloc(10);
+	void* ptr = kmalloc(0x100);
+	kfree(ptr);
+
 	while(1);
 }
 #define IRQ_PIT 0x20
