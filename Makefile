@@ -1,4 +1,7 @@
-OBJFILES = boot/boot.o boot/idt.o lib/serial.o lib/string.o gdt.o lib/kmalloc.o lib/screen.o lib/mmu.o lib/keyboard.o lib/e1000.o lib/idt.o kernel.o
+SRCFILES = $(wildcard boot/*.asm) $(wildcard lib/*.c) $(wildcard *.c)
+SRCFILES1 = $(SRCFILES:.c=.o)
+OBJFILES = $(SRCFILES1:.asm=.o)
+
 ARGS = -m32 -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 2G
@@ -32,3 +35,6 @@ test: test.asm
 	@nasm -f elf32 test.asm
 	@clear
 	@objdump -M intel -D -m i386 test.o | tail -n +5
+
+PHONY:
+	$(info $$OBJFILES is [${OBJFILES}])
