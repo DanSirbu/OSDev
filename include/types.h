@@ -18,7 +18,14 @@ typedef int int32_t;
 typedef u32 size_t;
 
 #define NULL 0
+
 #define false 0
+#define true 1
+
+#define FALSE 0
+#define TRUE 1
+
+typedef uint8_t bool;
 
 #define ALIGN(val, alignment) \
     if(val % alignment != 0) { \

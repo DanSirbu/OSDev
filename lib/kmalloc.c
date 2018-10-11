@@ -102,3 +102,8 @@ void memcpy(char *dst, char *src, size_t s) {
         dst[x] = src[x];
     }
 }
+
+
+uint32_t physical_to_virtual(uint32_t phys) {
+    return phys + KERN_BASE;
+}

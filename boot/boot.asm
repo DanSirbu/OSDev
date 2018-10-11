@@ -14,6 +14,7 @@ global keyboard_handler
 global read_port
 global write_port
 global load_idt
+global LoadNewPageDirectory
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -68,9 +69,9 @@ section .data
 align 0x1000
 global page_directory
 page_directory:
-	dd 0x00000083 ; Set Present, set 4mb pages, set rw
+	dd 0x00000083 ; Set Present, set 4mb pages, set rw #Maps 0x0 to 0x0
 	times (KERN_PAGE_NUM - 1) dd 0
-	dd 0x00000083 ; Set Present, set 4mb pages, set rw
+	dd 0x00000083 ; Set Present, set 4mb pages, set rw # Maps 0xC0000000 to 0x0
 	times (1024 - KERN_PAGE_NUM - 1) dd 0
 
 section .text
@@ -90,6 +91,11 @@ start:
 	
 	lea ecx, [StartHigherHalf]
 	jmp ecx
+
+LoadNewPageDirectory:
+	mov ecx, [esp + 4]
+	mov cr3, ecx
+	ret
 
 StartHigherHalf:
 	mov dword [page_directory], 0
