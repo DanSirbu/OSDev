@@ -88,6 +88,7 @@ void ethernet_main() {
 
     //kpanic_fmt("mac0 %x\n", (uint64_t) eeprom_read(0));
 }
+
 void rxinit() {
     //NIC works with physical addresses
     void *ptr;
@@ -98,12 +99,16 @@ void rxinit() {
 
     descs = (struct e1000_rx_desc*) ptr;
     for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
-        rx_desc[i] = (struct e1000_rx_desc*) descs + i; //TODO check pointer arithmetic for structs
+        rx_desc[i] = (struct e1000_rx_desc*) descs + i;
         rx_desc[i]->addr = kmalloc(8192 + 16); // malloc 2**13 + 16 TODO
         rx_desc[i]->status = 0;
     }
     //Here we set the buffer size, which will be 8192
-    //writeCommand(REG_RCTRL, ); //Table 13-67, page 300
+
+    //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
+    //RCTL_BAM accept broadcast packets
+    uint32_t rctl_params = RCTL_EN | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_BSIZE_8192;
+    writeCommand(REG_RCTRL, rctl_params); //Table 13-67, page 300
 }
 uint32_t inportl( uint16_t p_port)
 {
