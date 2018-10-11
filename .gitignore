@@ -3,3 +3,4 @@ temp/
 *.o
 serial.log
 .vscode/
+.gdb_history
