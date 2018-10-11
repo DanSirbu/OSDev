@@ -8,7 +8,7 @@ extern void write_port(unsigned short port, unsigned char data);
 void kb_init(void)
 {
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
-	write_port(0x21 , 0xFD);
+	//write_port(0x21 , 0xFD);
 }
 void keyboard_handler_main(void)
 {
