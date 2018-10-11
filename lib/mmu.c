@@ -14,7 +14,7 @@ void setPTE(uint32_t source, uint32_t target) {
 
 	page_directory[pte_index] = pte_entry;
 }
-
+#define PAGE_SIZE 0x400000 //4 MB pages
 void paging_init() {
 	/*
 	; Map 0xFEBC0000 -> 0xFEBC0000
@@ -29,7 +29,9 @@ void paging_init() {
 		page_directory[x] = 0;
 	}
 	setPTE(0xC0000000, 0x0);
-	setPTE(0xFEBC0000, 0xfe800000); //ETHERNET_BASE equ 0xFEBC0000
+    //Leave a space to get a page fault if kernel exceeds 4mb
+    setPTE(0xc0800000, 2*PAGE_SIZE); //Map 0xc0800000 to use as heap 
+	setPTE(0xfe800000, 0xfe800000); //ETHERNET_BASE equ 0xFEBC0000
     //0xfe800000->0xfec00000
 
 	uint32_t pd_target = ((uint32_t) page_directory) - 0xC0000000;
