@@ -42,14 +42,13 @@ void kmain(void)
 	kmalloc(10);
 	void* ptr = kmalloc(0x100);
 	kfree(ptr);*/
-
 	//Initialize paging
 	kpanic_fmt("Paging init\n");
 	paging_init();
 	kpanic_fmt("Paging init finished\n");
+	//Malloc and ethernet now work
 	
 	ethernet_main();
-	//Page fault at writeCommand+34, 0xc01019da, write at 0xfebc0050
 	while(1);
 }
 

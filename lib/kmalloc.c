@@ -14,7 +14,8 @@ typedef struct block_header block;
 #define P2B(mblock) (((block *) mblock) - 1)
 
 block *free_list;
-void* heap_top = &kernel_end;
+void* heap_head = (void*) 0xc0800000; 
+void* heap_top = (void*) 0xc0800000;
 //kpanic_fmt("kmalloc 0x%x\n", (u64) (u32) (void *) &kernel_end);
 
 void* kmalloc(size_t size) {
@@ -61,6 +62,10 @@ void kfree(void *ptr) {
     if(ptr == 0) {
         return;
     }
+    if(ptr < heap_head) {
+        kpanic_fmt("Trying to free ptr before the head of the heap. %p\n", ptr);
+        return;
+    }
     
     block *cur_block = P2B(ptr);
 
@@ -89,6 +94,10 @@ void* sbrk(u32 size) {
     void *returnVal = heap_top;
     heap_top += size; //TODO check if passes limit
 
+    //Should never happen
+    if(heap_top < heap_head) {
+        kpanic_fmt("PANIC: heap top < heap head");
+    }
     return returnVal;
 }
 
