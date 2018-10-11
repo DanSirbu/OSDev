@@ -53,8 +53,12 @@ void kmain(void)
 }
 
 void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32 edx, u32 ecx, u32 eax, u32 interrupt_no, u32 error_code, u32 eip) {
-	kpanic_fmt("Interrupt %d at 0x%x, error %d\n", (u64) interrupt_no, (u64) eip, (u64) error_code);
-	
+	if(interrupt_no < 32) {
+		kpanic_fmt("Exception %d (%s) at 0x%x, error %d\n", (u64) interrupt_no, exceptions[interrupt_no], (u64) eip, (u64) error_code);
+	} else {
+		kpanic_fmt("Interrupt %d at 0x%x, error %d\n", (u64) interrupt_no, (u64) eip, (u64) error_code);
+	}
+
 	if(interrupt_no == 0) { //Don't know what to do yet so just ignore
 		eip += 1;
 	}

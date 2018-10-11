@@ -58,6 +58,8 @@ void kpanic_fmt(char *message, ...) {
                 char buf[256];
                 itoa(va_arg(args, u64), buf, 10);
                 kpanic(buf);
+            } else if(message[i] == 's') {
+                kpanic(va_arg(args, char*));
             }
         } else {
             write_serial(message[i]);
