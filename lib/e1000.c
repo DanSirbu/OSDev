@@ -7,12 +7,12 @@
 #define ETHERNET_IO_BASE 0xc03f
 #define ETHERNET_MEM_BASE 0xFEBC0000
 //                        0xC0100000
-
+uint8_t mac[6];
 uint32_t readCommand(uint16_t offset) {
-    return *((uint32_t *) ETHERNET_MEM_BASE + offset);
+    return *((uint32_t *) (ETHERNET_MEM_BASE + offset));
 }
 void writeCommand(uint16_t addr, uint32_t value) {
-    uint32_t *ptr = (uint32_t*) ETHERNET_MEM_BASE+addr;
+    uint32_t *ptr = (uint32_t*) (ETHERNET_MEM_BASE+addr);
     *ptr = value;
 }
 bool detectEEProm()
@@ -43,6 +43,17 @@ uint16_t eeprom_read(uint8_t addr) {
     //Bit 31-16 contain the data
     return (uint16_t) ((eepromValue >> 16) & 0xFFFF);
 }
+void readMacAddress() {
+    uint16_t temp = eeprom_read(0);
+    mac[0] = temp & 0xFF;
+    mac[1] = temp >> 8;
+    temp = eeprom_read(1);
+    mac[2] = temp & 0xFF;
+    mac[3] = temp >> 8;
+    temp = eeprom_read(2);
+    mac[4] = temp & 0xFF;
+    mac[5] = temp >> 8;
+}
 //To decide on the best routing, routers use: IGMP, BGP
 //IP gives packet to right computer
 //TCP/UDP specify the program (port)+checksum
@@ -66,9 +77,34 @@ void ethernet_main() {
         uint16_t vendor1 = pciCheckVendor(0, i);
     }*/
     kpanic_fmt("detectEEProm %x\n", (uint64_t) detectEEProm());
+    readMacAddress();
+
+    kpanic_fmt("Mac: 0x%x", (uint32_t) mac[0]);
+    kpanic_fmt(" 0x%x", (uint32_t) mac[1]);
+    kpanic_fmt(" 0x%x", (uint32_t) mac[2]);
+    kpanic_fmt(" 0x%x", (uint32_t) mac[3]);
+    kpanic_fmt(" 0x%x", (uint32_t) mac[4]);
+    kpanic_fmt(" 0x%x\n", (uint32_t) mac[5]);
+
     //kpanic_fmt("mac0 %x\n", (uint64_t) eeprom_read(0));
 }
- 
+void rxinit() {
+    //NIC works with physical addresses
+    void *ptr;
+    struct e1000_rx_desc *descs;
+    struct e1000_rx_desc *rx_desc[E1000_NUM_RX_DESC];
+    //Allocate buffers for receive descriptors
+    ptr = 0;//malloc(sizeof(e1000_rx_desc) * E1000_NUM_RX_DESC + 16; //Why + 16?
+
+    descs = (struct e1000_rx_desc*) ptr;
+    for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
+        rx_desc[i] = (struct e1000_rx_desc*) descs + i; //TODO check pointer arithmetic for structs
+        rx_desc[i]->addr = kmalloc(8192 + 16); // malloc 2**13 + 16 TODO
+        rx_desc[i]->status = 0;
+    }
+    //Here we set the buffer size, which will be 8192
+    //writeCommand(REG_RCTRL, ); //Table 13-67, page 300
+}
 uint32_t inportl( uint16_t p_port)
 {
     uint32_t l_ret;
