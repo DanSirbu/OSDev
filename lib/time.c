@@ -1,4 +1,6 @@
 #include "../include/types.h"
+#include "../include/boot.h"
+#include "../include/serial.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71

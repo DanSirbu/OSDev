@@ -1,4 +1,5 @@
 #include "../include/types.h"
+#include "../include/boot.h"
 
 extern void load_idt(unsigned long *idt_ptr);
 extern void idt_0(void);

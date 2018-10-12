@@ -7,6 +7,7 @@
 #include "include/string.h"
 #include "include/kmalloc.h"
 #include "include/e1000.h"
+#include "include/screen.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -17,10 +18,7 @@ extern void initialize_gdt();
 extern void kb_init();
 extern void paging_init();
 extern void idt_init();
-extern void kprint(char * str);
 extern void kprint_newline();
-extern char read_port(unsigned short port);
-extern void write_port(unsigned short port, unsigned char data);
 extern void sendEOI(uint32_t interrupt_no);
 
 void kmain(void)

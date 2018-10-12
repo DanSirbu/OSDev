@@ -100,11 +100,11 @@ void rxinit() {
     descs = (struct e1000_rx_desc*) ptr;
     for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
         rx_desc[i] = (struct e1000_rx_desc*) descs + i;
-        rx_desc[i]->addr = kmalloc(8192 + 16); // malloc 2**13 + 16 TODO
+        rx_desc[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc 2**13 + 16 TODO
         rx_desc[i]->status = 0;
     }
-    //Here we set the buffer size, which will be 8192
-
+    
+    //RCTL_BSIZE_8192 = set the receive buffer size, which is 8192
     //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
     //RCTL_BAM accept broadcast packets
     uint32_t rctl_params = RCTL_EN | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_BSIZE_8192;
@@ -144,10 +144,10 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t function, uint8_t 
 }
 #define NON_EXISTANT_DEVICE 0xFFFF
 uint16_t pciCheckVendor(uint8_t bus, uint8_t slot) {
-    uint16_t vendor, device;
+    uint16_t vendor;//, device;
     vendor = pciConfigReadWord(bus, slot, 0, 0);
     if(vendor != NON_EXISTANT_DEVICE) {
-        device = pciConfigReadWord(bus, slot, 0, 2); //High word of offset 0
+        //device = pciConfigReadWord(bus, slot, 0, 2); //High word of offset 0
     }
     return vendor;
 }
