@@ -88,22 +88,38 @@ void ethernet_main() {
 
     //kpanic_fmt("mac0 %x\n", (uint64_t) eeprom_read(0));
 }
-
+uint8_t rx_cur;
 void rxinit() {
     //NIC works with physical addresses
     void *ptr;
     struct e1000_rx_desc *descs;
     struct e1000_rx_desc *rx_desc[E1000_NUM_RX_DESC];
-    //Allocate buffers for receive descriptors
-    ptr = 0;//malloc(sizeof(e1000_rx_desc) * E1000_NUM_RX_DESC + 16; //Why + 16?
+    //Allocate space for receive descriptors info
+    ptr = kmalloc_align(sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16, 16); //Why + 16?
 
     descs = (struct e1000_rx_desc*) ptr;
     for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
         rx_desc[i] = (struct e1000_rx_desc*) descs + i;
-        rx_desc[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc 2**13 + 16 TODO
-        rx_desc[i]->status = 0;
+        rx_desc[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc TODO, check why additional 16 bytes are needed
+        rx_desc[i]->status = 0; //RDesc.status Table3-2, page 21
     }
-    
+    //Set up the receive descriptor layout base pointer
+    //Note 4 lowest bits are ignored, so it must be 16 bytes aligned ex. 0xF0, TODO check 
+    writeCommand(REG_RXDESCLO, (size_t) ptr); //Low 32 bits, page 306
+    writeCommand(REG_RXDESCHI, 0);   //High 32 bits
+
+    //page 307
+    //Receive buffer/descriptors length in bytes (sizeof(e1000_rx_desc) = 16)
+    writeCommand(REG_RXDESCLEN, E1000_NUM_RX_DESC * 16);
+
+    //Setup head and tail pointers to descriptors 0 and the last one
+    //TODO why?
+    writeCommand(REG_RXDESCHEAD, 0);
+    writeCommand(REG_RXDESCTAIL, E1000_NUM_RX_DESC - 1);
+
+    //Initialize receive descriptor index (that we will use to get the data)
+    rx_cur = 0;
+
     //RCTL_BSIZE_8192 = set the receive buffer size, which is 8192
     //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
     //RCTL_BAM accept broadcast packets

@@ -7,7 +7,7 @@ extern char kernel_end;
 struct block_header {
     size_t size;
     struct block_header *next_free;
-};
+} __attribute__((packed)); //Block header is 8 bytes total
 typedef struct block_header block;
 
 #define B2P(mblock) (mblock+1)
@@ -18,6 +18,30 @@ void* heap_head = (void*) 0xc0800000;
 void* heap_top = (void*) 0xc0800000;
 //kpanic_fmt("kmalloc 0x%x\n", (u64) (u32) (void *) &kernel_end);
 
+void* kmalloc_align(size_t size, uint8_t alignment) {
+    if(size == 0) {
+        return NULL;
+    }
+    //For now to keep it simple, just allocate new space, don't use previous space
+
+    if(alignment < 8) {
+        kpanic_fmt("KMALLOC_ALIGNED NOT IMPLEMENTED WITH smaller than 8");
+    }
+    //TODO make this code thread safe
+    uint32_t curAlignment = (uint32_t) sbrk(0);
+    uint32_t wantedAlignment = curAlignment; //8 bits aligned
+    ALIGN(wantedAlignment, 8);
+    wantedAlignment += 8;
+    ALIGN(wantedAlignment, alignment);
+    //Now we know wanted alignment has at least 8 bytes free before it and is currently aligned to "alignment"
+    sbrk((wantedAlignment - 8) - curAlignment);
+    
+    ALIGN(size, 8);
+    block *cur_block = (block*) sbrk(sizeof(block) + size);
+    cur_block->next_free = 0;
+    cur_block->size = size;
+    return B2P(cur_block);
+}
 void* kmalloc(size_t size) {
     if(size == 0) {
         return NULL;
