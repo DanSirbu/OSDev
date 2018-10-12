@@ -30,7 +30,8 @@ void paging_init() {
 	}
 	setPTE(0xC0000000, 0x0);
     //Leave a space to get a page fault if kernel exceeds 4mb
-    setPTE(0xc0800000, 2*PAGE_SIZE); //Map 0xc0800000 to use as heap 
+	//TODO?, get rid of dependency virtual memory = physical memory
+    setPTE(0xc0800000, 0xc0800000); //Map 0xc0800000 to same location on physical memory to make it easier to convert physical memory for ethernet buffers
 	setPTE(0xfe800000, 0xfe800000); //ETHERNET_BASE equ 0xFEBC0000
     //0xfe800000->0xfec00000
 
