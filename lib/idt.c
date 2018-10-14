@@ -3,6 +3,8 @@
 
 extern void load_idt(unsigned long *idt_ptr);
 extern void idt_0(void);
+extern uint8_t PIC1_INT;
+extern uint8_t PIC2_INT;
 
 #define IDT_SIZE 256
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
@@ -79,8 +81,8 @@ void idt_init(void)
 	/* Initialization finished */
 
 	/* mask interrupts *///TODO remove this
-	write_port(PIC1_DATA, 0xFF);
-	write_port(PIC2_DATA, 0xFF);
+	write_port(PIC1_DATA, PIC1_INT);
+	write_port(PIC2_DATA, PIC2_INT);
 
 	/* fill the IDT descriptor */
 	idt_address = (unsigned long)IDT;
