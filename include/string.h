@@ -5,7 +5,7 @@ u32 strlen(char *str);
 void reverse(char *str);
 void itoa(u64 number, char *str, u32 base);
 
-static char *exceptions[32] = {
+static char *exceptions_string[32] = {
 "Divide-by-zero",
 "Debug",
 "Non-maskable Interrupt",
@@ -38,4 +38,23 @@ static char *exceptions[32] = {
 "Reserved",
 "Security Exception",	//30 (0x1E)
 "Reserved" //31 (0x1F)
+};
+
+static char *interrupts_string[32] = {
+"Programmable Interrupt Timer",
+"Keyboard",
+"Cascade",
+"Com2",
+"Com1",
+"LPT2",
+"Floppy disk",
+"LPT1",
+"CMOS Real time clock",
+"Peripherals",
+"Peripherals",
+"Peripherals",
+"PS2 Mouse",
+"FPU/Coprocessor",
+"Primary ATA Hard Disk",
+"Secondary ATA Hard Disk"
 };
