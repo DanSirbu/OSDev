@@ -96,7 +96,7 @@ void ethernet_main() {
     //TODO??? what is this
     writeCommand(REG_IMASK, 0x1F6DC); //Page 297, 13.4.20
     writeCommand(REG_IMASK, 0xff & ~4); //TODO WHY SET IT AGAIN to enable different interrupts?
-    readCommand(0xc0); //Page 293, Interrupt Cause Read register.
+    readCommand(0xc0); //Page 293, Interrupt Cause Read register. or 360 total octets read
     rxinit();
 
     kpanic_fmt("E1000 card initialized\n");
@@ -138,6 +138,13 @@ void rxinit() {
     //RCTL_BAM accept broadcast packets
     uint32_t rctl_params = RCTL_EN | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_BSIZE_8192;
     writeCommand(REG_RCTRL, rctl_params); //Table 13-67, page 300
+}
+void E1000_Interrupt() {
+    writeCommand(REG_IMASK, 0x1); //Aknowledge interrupt received
+    uint32_t interrupt_cause = readCommand(0xc0); //Interrupt cause register, set when an interrupt occurs, p 293
+    //0x4 = link status changed
+    //
+    kpanic_fmt("E1000 interrupt cause 0x%x\n", (u64) interrupt_cause);
 }
 void rx() {
     uint16_t old_cur;

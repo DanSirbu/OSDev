@@ -66,6 +66,9 @@ void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32
 	/* else if(interrupt_no == IRQ_PIT) {
 		print_time();
 	}*/
+	if(interrupt_no == 11 + 32) {
+		E1000_Interrupt();
+	}
 
 	sendEOI(interrupt_no);
 }

@@ -113,3 +113,4 @@ struct e1000_rx_desc {//Table 3.1, page 20
 void ethernet_main();
 void rxinit();
 void rx();
+void E1000_Interrupt();
