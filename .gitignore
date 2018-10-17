@@ -4,3 +4,4 @@ temp/
 serial.log
 .vscode/
 .gdb_history
+dump.pcap
