@@ -1,4 +1,4 @@
-//From https://wiki.osdev.org/Etherneti217 TODO
+//From https://wiki.osdev.org/Etherneti217
 #pragma once
 #include "types.h"
 
@@ -111,3 +111,5 @@ struct e1000_rx_desc {//Table 3.1, page 20
  
 
 void ethernet_main();
+void rxinit();
+void rx();

@@ -6,7 +6,8 @@
 //TODO, get these values using PCI
 #define ETHERNET_IO_BASE 0xc03f
 #define ETHERNET_MEM_BASE 0xFEBC0000
-//                        0xC0100000
+#define ETHERNET_IRQ_NUMBER 11
+
 uint8_t mac[6];
 uint32_t readCommand(uint16_t offset) {
     return *((uint32_t *) (ETHERNET_MEM_BASE + offset));
@@ -86,22 +87,34 @@ void ethernet_main() {
     kpanic_fmt(" 0x%x", (uint32_t) mac[4]);
     kpanic_fmt(" 0x%x\n", (uint32_t) mac[5]);
 
-    //kpanic_fmt("mac0 %x\n", (uint64_t) eeprom_read(0));
+    //TODO???
+    for(int i = 0; i < 0x80; i++) {
+        writeCommand(0x5200 + i*4, 0); //Multicast array table?, page 327
+    }
+
+    //Enable interrupts
+    //TODO??? what is this
+    writeCommand(REG_IMASK, 0x1F6DC); //Page 297, 13.4.20
+    writeCommand(REG_IMASK, 0xff & ~4); //TODO WHY SET IT AGAIN to enable different interrupts?
+    readCommand(0xc0); //Page 293, Interrupt Cause Read register.
+    rxinit();
+
+    kpanic_fmt("E1000 card initialized\n");
 }
 uint8_t rx_cur;
+struct e1000_rx_desc *rx_descs[E1000_NUM_RX_DESC];
 void rxinit() {
     //NIC works with physical addresses
     void *ptr;
     struct e1000_rx_desc *descs;
-    struct e1000_rx_desc *rx_desc[E1000_NUM_RX_DESC];
     //Allocate space for receive descriptors info
     ptr = kmalloc_align(sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16, 16); //Why + 16?
 
     descs = (struct e1000_rx_desc*) ptr;
     for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
-        rx_desc[i] = (struct e1000_rx_desc*) descs + i;
-        rx_desc[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc TODO, check why additional 16 bytes are needed
-        rx_desc[i]->status = 0; //RDesc.status Table3-2, page 21
+        rx_descs[i] = (struct e1000_rx_desc*) descs + i;
+        rx_descs[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc TODO, check why additional 16 bytes are needed
+        rx_descs[i]->status = 0; //RDesc.status Table3-2, page 21
     }
     //Set up the receive descriptor layout base pointer
     //Note 4 lowest bits are ignored, so it must be 16 bytes aligned ex. 0xF0, TODO check 
@@ -125,6 +138,13 @@ void rxinit() {
     //RCTL_BAM accept broadcast packets
     uint32_t rctl_params = RCTL_EN | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_BSIZE_8192;
     writeCommand(REG_RCTRL, rctl_params); //Table 13-67, page 300
+}
+void rx() {
+    uint16_t old_cur;
+
+    while(rx_descs[rx_cur]->status & 0x1) {
+        
+    }
 }
 uint32_t inportl( uint16_t p_port)
 {
