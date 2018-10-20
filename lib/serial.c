@@ -60,6 +60,11 @@ void kpanic_fmt(char *message, ...) {
                 kpanic(buf);
             } else if(message[i] == 's') {
                 kpanic(va_arg(args, char*));
+            } else if(message[i] == 'p') {
+                char buf[256];
+                itoa((size_t) va_arg(args, size_t*), buf, 16);
+                kpanic(HEX_PREFIX);
+                kpanic(buf);
             }
         } else {
             write_serial(message[i]);
