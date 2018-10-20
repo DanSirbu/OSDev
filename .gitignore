@@ -5,3 +5,4 @@ serial.log
 .vscode/
 .gdb_history
 dump.pcap
+test/
