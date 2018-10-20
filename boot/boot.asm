@@ -1,13 +1,14 @@
 ; Copyright (C) 2014  Arjun Sreedharan
 ; License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
-
+; When debugging this file, don't forget to substract 0xC0000000 from the address since it's linked there
+FLAGS EQU 0x02
 bits 32
 section .text
         ;multiboot spec
         align 4
         dd 0x1BADB002              ;magic
-        dd 0x00                    ;flags
-        dd - (0x1BADB002 + 0x00)   ;checksum. m+f+c should be zero
+        dd FLAGS                    ;flags
+        dd - (0x1BADB002 + FLAGS)   ;checksum. m+f+c should be zero
 
 global start
 global keyboard_handler
@@ -77,6 +78,8 @@ page_directory:
 section .text
 start:
 	;cli 				;block interrupts
+	; Carefull not to mess up ebx, it is the multiboot header pointer 
+
 	; Write page_directory to cpu
 	mov ecx, (page_directory - KERN_BASE)
 	mov cr3, ecx
@@ -103,7 +106,11 @@ StartHigherHalf:
 
 	mov esp, kernel_stack_lowest_address + KERNEL_STACK_SIZE
 	mov ebp, esp
-	
+
+	; Push the multiboot header info
+	add ebx, KERN_BASE
+	push ebx
+
 	call kmain
 	hlt 				;halt the CPU
 

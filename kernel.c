@@ -8,6 +8,7 @@
 #include "include/kmalloc.h"
 #include "include/e1000.h"
 #include "include/screen.h"
+#include "include/multiboot.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -23,8 +24,22 @@ extern void sendEOI(uint32_t interrupt_no);
 
 uint8_t PIC1_INT = 0x01;
 uint8_t PIC2_INT = 0x00;
-void kmain(void)
+
+void memory_map_handler(u32 mmap_addr, u32 mmap_len) {
+	//Must add KERN_BASE because mmap is a physical address
+	void *mmap = (void*) mmap_addr + KERN_BASE; //-4 Because size starts at -4
+	void *mmap_end = mmap + mmap_len;
+
+	kpanic("Memory Map\n");
+	for(; mmap < mmap_end; mmap += ((memory_map_t*) mmap)->size + sizeof(unsigned long)) { //unsigned long = sizeof(memory_map_t->size)
+	memory_map_t *mmap_cur = (memory_map_t*) mmap;
+
+		kpanic_fmt("Address: %p-%p, type %x\n", mmap_cur->base_addr_low, (mmap_cur->base_addr_low + mmap_cur->length_low - 1), mmap_cur->type);
+	}
+}
+void kmain(multiboot_info_t *multiboot_info)
 {
+	memory_map_handler(multiboot_info->mmap_addr, multiboot_info->mmap_length);
 	const char *str = "my first kernel with keyboard support";
 	clear_screen();
 	kprint(str);
