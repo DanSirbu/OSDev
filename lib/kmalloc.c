@@ -14,8 +14,8 @@ typedef struct block_header block;
 #define P2B(mblock) (((block *) mblock) - 1)
 
 block *free_list;
-void* heap_head = (void*) 0xc0800000; 
-void* heap_top = (void*) 0xc0800000;
+void* heap_head = (void*) 0x00800000; 
+void* heap_top = (void*) 0x00800000;
 //kpanic_fmt("kmalloc 0x%x\n", (u64) (u32) (void *) &kernel_end);
 
 void* kmalloc_align(size_t size, uint8_t alignment) {
