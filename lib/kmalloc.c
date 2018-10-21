@@ -14,8 +14,9 @@ typedef struct block_header block;
 #define P2B(mblock) (((block *) mblock) - 1)
 
 block *free_list;
-void* heap_head = (void*) 0x00800000; 
-void* heap_top = (void*) 0x00800000;
+void* heap_head = (void*) 0x00800000;
+void* heap_max = (void*)  0x00c00000; 
+void* heap_top = (void*)  0x00800000;
 //kpanic_fmt("kmalloc 0x%x\n", (u64) (u32) (void *) &kernel_end);
 
 void* kmalloc_align(size_t size, uint8_t alignment) {
@@ -116,11 +117,14 @@ void* sbrk(u32 size) {
         return heap_top;
     }
     void *returnVal = heap_top;
-    heap_top += size; //TODO check if passes limit
+    heap_top += size;
+    if(heap_top > heap_max) {
+        kpanic_fmt("HEAP TOP OVER HEAP MAX\n");
+    }
 
     //Should never happen
     if(heap_top < heap_head) {
-        kpanic_fmt("PANIC: heap top < heap head");
+        kpanic_fmt("PANIC: heap top < heap head\n");
     }
     return returnVal;
 }

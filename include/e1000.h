@@ -101,7 +101,8 @@
 #define E1000_NUM_RX_DESC 32
 #define E1000_NUM_TX_DESC 8
 struct e1000_rx_desc {//Table 3.1, page 20
-        volatile uint64_t addr;
+        volatile uint32_t addr_low;
+        volatile uint32_t addr_high;
         volatile uint16_t length;
         volatile uint16_t checksum;
         volatile uint8_t status;

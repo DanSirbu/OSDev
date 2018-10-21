@@ -6,7 +6,7 @@
 #define CMOS_PORT_INOUT 0x71
 #define IRQ_PIT 0x20
 
-char read_cmos(u8 cmos_reg) {
+uint8_t read_cmos(u8 cmos_reg) {
 	write_port(CMOS_PORT, cmos_reg); //Must always reselect before reading because it seems reading clears the selection
 	return read_port(CMOS_PORT_INOUT);
 }
@@ -25,6 +25,6 @@ void print_time() {
 	0x0A      Status Register A
 	0x0B      Status Register B
 	*/
-	u64 value = (u64) read_cmos(0);
-	kpanic_fmt("%d\n", value);
+	uint8_t value = read_cmos(0);
+	kpanic_fmt("%d\n", value); //Default promotion takes care of casting
 }

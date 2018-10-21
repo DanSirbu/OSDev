@@ -4,8 +4,8 @@
 
 #define PORT 0x3f8   /* COM1 */
 
-extern char read_port(unsigned short port);
-extern void write_port(unsigned short port, unsigned char data);
+uint8_t read_port(uint16_t port);
+extern void write_port(uint16_t port, int8_t data);
 
 #define outb(port, data) write_port(port, data)
 #define inb(port) read_port(port)
@@ -52,11 +52,11 @@ void kpanic_fmt(char *message, ...) {
             }
             else if(message[i] == 'x') {
                 char buf[256];
-                itoa(va_arg(args, u64), buf, 16);
+                itoa(va_arg(args, uint32_t), buf, 16);
                 kpanic(buf);
             } else if(message[i] == 'd') {
                 char buf[256];
-                itoa(va_arg(args, u64), buf, 10);
+                itoa(va_arg(args, uint32_t), buf, 10);
                 kpanic(buf);
             } else if(message[i] == 's') {
                 kpanic(va_arg(args, char*));

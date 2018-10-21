@@ -1,7 +1,7 @@
 #include "../include/types.h"
 #include "../include/boot.h"
 
-extern void load_idt(unsigned long *idt_ptr);
+extern void load_idt(size_t *idt_ptr);
 extern void idt_0(void);
 extern uint8_t PIC1_INT;
 extern uint8_t PIC2_INT;
@@ -89,7 +89,7 @@ void idt_init(void)
 	idt_description_structure.size = sizeof(IDT) - 1;
 	idt_description_structure.offset = (u32) IDT;
 
-	load_idt((u64*) &idt_description_structure);
+	load_idt((size_t*) &idt_description_structure);
 }
 
 void sendEOI(uint32_t interrupt_no) {

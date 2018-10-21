@@ -77,7 +77,7 @@ void ethernet_main() {
     /*for(int i = 0; i < 10; i++) {
         uint16_t vendor1 = pciCheckVendor(0, i);
     }*/
-    kpanic_fmt("detectEEProm %x\n", (uint64_t) detectEEProm());
+    kpanic_fmt("detectEEProm %x\n", detectEEProm());
     readMacAddress();
 
     kpanic_fmt("Mac: 0x%x", (uint32_t) mac[0]);
@@ -113,7 +113,8 @@ void rxinit() {
     descs = (struct e1000_rx_desc*) ptr;
     for(int i = 0; i < E1000_NUM_RX_DESC; i++) {
         rx_descs[i] = (struct e1000_rx_desc*) descs + i;
-        rx_descs[i]->addr = (uint64_t) kmalloc(8192 + 16); // malloc TODO, check why additional 16 bytes are needed
+        rx_descs[i]->addr_low = (uint32_t) kmalloc_align(8192 + 16, 16); // malloc TODO, check why additional 16 bytes are needed
+        rx_descs[i]->addr_high = 0;
         rx_descs[i]->status = 0; //RDesc.status Table3-2, page 21
     }
     //Set up the receive descriptor layout base pointer
@@ -143,8 +144,9 @@ void E1000_Interrupt() {
     writeCommand(REG_IMASK, 0x1); //Aknowledge interrupt received
     uint32_t interrupt_cause = readCommand(0xc0); //Interrupt cause register, set when an interrupt occurs, p 293
     //0x4 = link status changed
-    //
-    kpanic_fmt("E1000 interrupt cause 0x%x\n", (u64) interrupt_cause);
+    rx();
+
+    kpanic_fmt("E1000 interrupt cause 0x%x\n", interrupt_cause);
 }
 void rx() {
     uint16_t old_cur;
