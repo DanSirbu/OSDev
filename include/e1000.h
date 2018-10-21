@@ -109,9 +109,20 @@ struct e1000_rx_desc {//Table 3.1, page 20
         volatile uint8_t errors;
         volatile uint16_t special;
 } __attribute__((packed));
- 
+
+struct e1000_tx_desc {
+        volatile uint32_t addr_low;
+        volatile uint32_t addr_high;
+        volatile uint16_t length;
+        volatile uint8_t cso;
+        volatile uint8_t cmd;
+        volatile uint8_t status;
+        volatile uint8_t css;
+        volatile uint16_t special;
+} __attribute__((packed));
 
 void ethernet_main();
 void rxinit();
+void txinit();
 void rx();
 void E1000_Interrupt();

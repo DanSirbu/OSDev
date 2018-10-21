@@ -87,22 +87,32 @@ void ethernet_main() {
     kpanic_fmt(" 0x%x", (uint32_t) mac[4]);
     kpanic_fmt(" 0x%x\n", (uint32_t) mac[5]);
 
-    //TODO???
+    //Set link up
+    uint32_t rctl_val = readCommand(REG_CTRL);
+    writeCommand(REG_CTRL, rctl_val | ECTRL_SLU);
+
+    //Clear multicast filter
+    //Apparently needed because it breaks stuff
+    //https://github.com/blanham/ChickenOS/blob/master/src/device/net/e1000.c , line 255
     for(int i = 0; i < 0x80; i++) {
-        writeCommand(0x5200 + i*4, 0); //Multicast array table?, page 327
+        writeCommand(0x5200 + i*4, 0); //Multicast array table, page 327
     }
 
     //Enable interrupts
     //TODO??? what is this
     writeCommand(REG_IMASK, 0x1F6DC); //Page 297, 13.4.20
     writeCommand(REG_IMASK, 0xff & ~4); //TODO WHY SET IT AGAIN to enable different interrupts?
-    readCommand(0xc0); //Page 293, Interrupt Cause Read register. or 360 total octets read
+    uint32_t cause = readCommand(0xc0); //Page 293, Interrupt Cause Read register
+    //kpanic_fmt("E1000, interrupts init: 0x%x\n", cause);
     rxinit();
+    txinit();
 
     kpanic_fmt("E1000 card initialized\n");
 }
-uint8_t rx_cur;
+uint8_t rx_cur, tx_cur;
 struct e1000_rx_desc *rx_descs[E1000_NUM_RX_DESC];
+struct e1000_tx_desc *tx_descs[E1000_NUM_RX_DESC];
+
 void rxinit() {
     //NIC works with physical addresses
     void *ptr;
@@ -117,11 +127,13 @@ void rxinit() {
         rx_descs[i]->addr_high = 0;
         rx_descs[i]->status = 0; //RDesc.status Table3-2, page 21
     }
+    //Give card the pointer to descriptor
     //Set up the receive descriptor layout base pointer
     //Note 4 lowest bits are ignored, so it must be 16 bytes aligned ex. 0xF0, TODO check 
     writeCommand(REG_RXDESCLO, (size_t) ptr); //Low 32 bits, page 306
     writeCommand(REG_RXDESCHI, 0);   //High 32 bits
 
+    //Give card the total length of descriptors
     //page 307
     //Receive buffer/descriptors length in bytes (sizeof(e1000_rx_desc) = 16)
     writeCommand(REG_RXDESCLEN, E1000_NUM_RX_DESC * 16);
@@ -129,7 +141,7 @@ void rxinit() {
     //Setup head and tail pointers to descriptors 0 and the last one
     //TODO why?
     writeCommand(REG_RXDESCHEAD, 0);
-    writeCommand(REG_RXDESCTAIL, E1000_NUM_RX_DESC - 1);
+    writeCommand(REG_RXDESCTAIL, E1000_NUM_RX_DESC);
 
     //Initialize receive descriptor index (that we will use to get the data)
     rx_cur = 0;
@@ -137,14 +149,60 @@ void rxinit() {
     //RCTL_BSIZE_8192 = set the receive buffer size, which is 8192
     //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
     //RCTL_BAM accept broadcast packets
-    uint32_t rctl_params = RCTL_EN | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_BSIZE_8192;
+    //RCTL_SECRC strip CRC
+    //RCTL_UPE | RCTL_MPE Unicast Promiscuous Enabled, Multicast Promiscuous Enabled
+
+    //RCTL_EN | ?? where is it
+    uint32_t rctl_params = (2 << 16) | (1 << 25) | (1 << 26) | (1 << 15) | (1 << 5) | (0 << 8) | (0 << 4) | (0 << 3) | ( 1 << 2);//RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_QUARTER | RCTL_LPE | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192;
     writeCommand(REG_RCTRL, rctl_params); //Table 13-67, page 300
+}
+void txinit() {
+    //NIC works with physical addresses
+    void *ptr;
+    struct e1000_tx_desc *descs;
+    //Allocate space for receive descriptors info
+    ptr = kmalloc_align(sizeof(struct e1000_tx_desc) * E1000_NUM_TX_DESC + 16, 16); //Why + 16?
+
+    descs = (struct e1000_tx_desc*) ptr;
+    for(int i = 0; i < E1000_NUM_TX_DESC; i++) {
+        tx_descs[i] = (struct e1000_tx_desc*) descs + i;
+        tx_descs[i]->addr_low = 0;
+        tx_descs[i]->addr_high = 0;
+        tx_descs[i]->cmd = 0; //RDesc.status Table3-2, page 21
+    }
+    //Give card the pointer to descriptor
+    //Set up the receive descriptor layout base pointer
+    //Note 4 lowest bits are ignored, so it must be 16 bytes aligned ex. 0xF0, TODO check 
+    writeCommand(REG_TXDESCLO, (size_t) ptr); //Low 32 bits, page 306
+    writeCommand(REG_TXDESCHI, 0);   //High 32 bits
+
+    //Give card the total length of descriptors
+    //page 307
+    //Receive buffer/descriptors length in bytes (sizeof(e1000_rx_desc) = 16)
+    writeCommand(REG_TXDESCLEN, E1000_NUM_TX_DESC * 16);
+
+    //Setup head and tail pointers to descriptors 0 and the last one
+    //TODO why?
+    writeCommand(REG_TXDESCHEAD, 0);
+    writeCommand(REG_TXDESCTAIL, E1000_NUM_TX_DESC);
+
+    //Initialize receive descriptor index (that we will use to get the data)
+    tx_cur = 0;
+
+    //RCTL_BSIZE_8192 = set the receive buffer size, which is 8192
+    //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
+    //RCTL_BAM accept broadcast packets
+    //RCTL_SECRC strip CRC
+    //RCTL_UPE | RCTL_MPE Unicast Promiscuous Enabled, Multicast Promiscuous Enabled
+
+    //RCTL_EN | ?? where is it
+    writeCommand(REG_TCTRL, TCTL_EN | TCTL_PSP); //page 311
 }
 void E1000_Interrupt() {
     writeCommand(REG_IMASK, 0x1); //Aknowledge interrupt received
     uint32_t interrupt_cause = readCommand(0xc0); //Interrupt cause register, set when an interrupt occurs, p 293
     //0x4 = link status changed
-    rx();
+    //rx();
 
     kpanic_fmt("E1000 interrupt cause 0x%x\n", interrupt_cause);
 }
