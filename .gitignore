@@ -6,3 +6,4 @@ serial.log
 .gdb_history
 dump.pcap
 test/
+env.mk
