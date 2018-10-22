@@ -97,6 +97,9 @@ void ethernet_main() {
     for(int i = 0; i < 0x80; i++) {
         writeCommand(0x5200 + i*4, 0); //Multicast array table, page 327
     }
+    uint32_t RAL = readCommand(0x5400);
+    uint32_t RAH = readCommand(0x5404);
+    kpanic_fmt("RAL: 0x%x\n", RAL);
 
     //Enable interrupts
     //TODO??? what is this
@@ -108,6 +111,9 @@ void ethernet_main() {
     txinit();
 
     kpanic_fmt("E1000 card initialized\n");
+
+    uint32_t rctrl_flags = readCommand(REG_RCTRL);
+    writeCommand(REG_RCTRL, rctrl_flags | RCTL_EN); //Enable receive
 }
 uint8_t rx_cur, tx_cur;
 struct e1000_rx_desc *rx_descs[E1000_NUM_RX_DESC];
@@ -153,7 +159,7 @@ void rxinit() {
     //RCTL_UPE | RCTL_MPE Unicast Promiscuous Enabled, Multicast Promiscuous Enabled
 
     //RCTL_EN | ?? where is it
-    uint32_t rctl_params = (2 << 16) | (1 << 25) | (1 << 26) | (1 << 15) | (1 << 5) | (0 << 8) | (0 << 4) | (0 << 3) | ( 1 << 2);//RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_QUARTER | RCTL_LPE | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192;
+    uint32_t rctl_params = (2 << 16) | (1 << 25) | (1 << 26) | (1 << 15) | (1 << 5) | (0 << 8) | (0 << 4) | (0 << 3) | RCTL_SBP;//RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_QUARTER | RCTL_LPE | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192;
     writeCommand(REG_RCTRL, rctl_params); //Table 13-67, page 300
 }
 void txinit() {
@@ -189,13 +195,7 @@ void txinit() {
     //Initialize receive descriptor index (that we will use to get the data)
     tx_cur = 0;
 
-    //RCTL_BSIZE_8192 = set the receive buffer size, which is 8192
-    //RTCL_RDMTS_HALF =  ICR.RXDMT0 interrupt fired when half of the receive descriptors are used
-    //RCTL_BAM accept broadcast packets
-    //RCTL_SECRC strip CRC
-    //RCTL_UPE | RCTL_MPE Unicast Promiscuous Enabled, Multicast Promiscuous Enabled
-
-    //RCTL_EN | ?? where is it
+    //RCTL_EN
     writeCommand(REG_TCTRL, TCTL_EN | TCTL_PSP); //page 311
 }
 void E1000_Interrupt() {
@@ -203,7 +203,8 @@ void E1000_Interrupt() {
     uint32_t interrupt_cause = readCommand(0xc0); //Interrupt cause register, set when an interrupt occurs, p 293
     //0x4 = link status changed
     //rx();
-
+    //0x2 = Transmit Queue Empty
+    
     kpanic_fmt("E1000 interrupt cause 0x%x\n", interrupt_cause);
 }
 void rx() {
