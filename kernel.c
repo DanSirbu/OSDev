@@ -10,6 +10,7 @@
 #include "include/screen.h"
 #include "include/multiboot.h"
 #include "include/rtl8139.h"
+#include "include/acpi.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -61,8 +62,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	//Initialize paging
 	kpanic_fmt("Paging init\n");
 	paging_init();
-	kpanic_fmt("Paging init finished\n");
-	//Malloc and ethernet now work
+	kpanic_fmt("Paging init finished\n"); //Malloc now works
+	acpi_init();
 	
 	//ethernet_main();
 	RTL8139_Init();

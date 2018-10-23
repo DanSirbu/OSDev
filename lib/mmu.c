@@ -33,7 +33,9 @@ void paging_init() {
 	//TODO?, get rid of dependency virtual memory = physical memory
     setPTE(0x00800000, 0x00800000); //Identity mapping to use in malloc since the e1000 requires a physical address (no conversion needed!)
 	setPTE(0xfe800000, 0xfe800000); //ETHERNET_BASE equ 0xFEBC0000
-    //0xfe800000->0xfec00000
+    setPTE(0xcfc00000, 0x0fc00000); //Mapping for acpi
+	
+	//0xfe800000->0xfec00000
 
 	uint32_t pd_target = ((uint32_t) page_directory) - 0xC0000000;
 	LoadNewPageDirectory(pd_target);
