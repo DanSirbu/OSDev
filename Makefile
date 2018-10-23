@@ -24,9 +24,12 @@ PORT80 = 5556
 
 run: kernel.elf
 	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel ./binary_x86/kernel.elf -serial file:serial.log $(QEMU-NETWORK-ARGS)
+	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
+
 run-debug: kernel.elf
 	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel ./binary_x86/kernel.elf -serial file:serial.log $(QEMU-NETWORK-ARGS)
-
+	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
+	
 debug-r2:
 	r2 -e bin.baddr=0x001000000 -e dbg.exe.path=/home/admin/Github/SmallKernel/binary_x86/kernel.elf -d -b 32 -c v! gdb://127.0.0.1:1234
 debug:
@@ -53,7 +56,6 @@ test: test.asm
 	@clear
 	@objdump -M intel -D -m i386 test.o | tail -n +5
 net-test:
-	ncat 127.0.0.1 5555
-	
+	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 PHONY:
 	$(info $$OBJFILES is [${OBJFILES}])

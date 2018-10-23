@@ -16,8 +16,7 @@ void RTL8139_Interrupt() {
 
     outw(RTL_IO_BASE + REG_ISR, 0x1); //Aknowledge the interrupt, NOTE: reading isn't enough, the documentation is wrong
     
-    kpanic_fmt("Status %x", status);
-    
+    kpanic_fmt("Status %x\n", status);
 }
 
 size_t *rx_buffer;
@@ -41,7 +40,7 @@ void RTL8139_Init() {
     //Interrupt Mask Register IMR (1 = enabled)
     //Interrupt Service Register (ISR)
     
-    outw(RTL_IO_BASE + 0x3C, 0x0005); //Enable the Transmit OK (TOK) and Receive Ok (ROK) interrupts
+    outw(RTL_IO_BASE + REG_IMR, 0x0005); //Enable the Transmit OK (TOK) and Receive Ok (ROK) interrupts
 
     //Tell RTL8139 to accept packets
     outl(RTL_IO_BASE + 0x44, 0xf | (1 << 7)); // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP
