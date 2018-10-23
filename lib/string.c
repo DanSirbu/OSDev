@@ -53,3 +53,10 @@ void itoa(u32 number, char *str, u32 base) {
 
 	reverse(str);
 }
+void strcpy_max_len(char* src, char* dest, uint32_t maxLen) {
+	uint32_t x;
+	for(x = 0; x < maxLen; x++) {
+        dest[x] = src[x];
+    }
+	dest[x] = '\0';
+}

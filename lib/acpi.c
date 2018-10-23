@@ -42,5 +42,15 @@ void acpi_init() {
 
 void acpi_10_init(RSDPDescriptor_t* rsdp_10) {
     kpanic_fmt("RSDT addr: 0x%x\n", rsdp_10->RsdtAddress);
-    ACPISDTHeader_t *rsdt_table_header = (ACPISDTHeader_t*) (rsdp_10->RsdtAddress + 0xC0000000); //convert to virtual address
+    RSDT_t *rsdt_table_header = (RSDT_t*) (rsdp_10->RsdtAddress + 0xC0000000); //convert to virtual address
+    uint32_t numPtr = (rsdt_table_header->h.Length - sizeof(ACPISDTHeader_t)) / 4;
+    
+    for(uint32_t x = 0; x < numPtr; x++) {
+        ACPISDTHeader_t *sdt_ptr = (ACPISDTHeader_t*) (((void*) (rsdt_table_header->SDT_PTR_ARRAY + x)) + 0xC0000000);
+        
+        char temp[5];
+        strcpy_max_len(sdt_ptr->Signature, temp, 4);
+        kpanic_fmt("ACPI Sig: %s\n", temp);
+    }
+
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
 #include "serial.h"
+#include "string.h"
 
 typedef struct RSDPDescriptor {
  char Signature[8];
@@ -32,6 +33,10 @@ typedef struct ACPISDTHeader {
   uint32_t CreatorRevision;
 } __attribute__ ((packed)) ACPISDTHeader_t;
 
+typedef struct RSDT {
+  ACPISDTHeader_t h;
+  uint32_t *SDT_PTR_ARRAY;
+} __attribute__ ((packed)) RSDT_t;
 
 void acpi_init();
 void acpi_10_init(RSDPDescriptor_t* rsdp_10);

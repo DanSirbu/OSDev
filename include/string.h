@@ -7,6 +7,7 @@
 u32 strlen(char *str);
 void reverse(char *str);
 void itoa(u32 number, char *str, u32 base);
+void strcpy_max_len(char* src, char* dest, uint32_t maxLen);
 
 static char *exceptions_string[32] = {
 "Divide-by-zero",
