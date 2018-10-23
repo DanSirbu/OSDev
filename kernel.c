@@ -9,6 +9,7 @@
 #include "include/e1000.h"
 #include "include/screen.h"
 #include "include/multiboot.h"
+#include "include/rtl8139.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -63,7 +64,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	kpanic_fmt("Paging init finished\n");
 	//Malloc and ethernet now work
 	
-	ethernet_main();
+	//ethernet_main();
+	RTL8139_Init();
 	while(1);
 }
 
@@ -82,7 +84,8 @@ void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx, u32
 		print_time();
 	}*/
 	if(interrupt_no == 11 + 32) {
-		E1000_Interrupt();
+		//E1000_Interrupt();
+		RTL8139_Interrupt();
 	}
 
 	sendEOI(interrupt_no);

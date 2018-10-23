@@ -52,6 +52,8 @@ test: test.asm
 	@nasm -f elf32 test.asm
 	@clear
 	@objdump -M intel -D -m i386 test.o | tail -n +5
-
+net-test:
+	ncat 127.0.0.1 5555
+	
 PHONY:
 	$(info $$OBJFILES is [${OBJFILES}])

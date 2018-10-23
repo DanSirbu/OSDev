@@ -4,12 +4,6 @@
 
 #define PORT 0x3f8   /* COM1 */
 
-uint8_t read_port(uint16_t port);
-extern void write_port(uint16_t port, int8_t data);
-
-#define outb(port, data) write_port(port, data)
-#define inb(port) read_port(port)
-
 void init_serial() {
    outb(PORT + 1, 0x00);    // Disable all interrupts
    outb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
