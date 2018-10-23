@@ -1,6 +1,7 @@
 //Taken from https://wiki.osdev.org/Serial_Ports
 #include <stdarg.h>
 #include "../include/serial.h"
+#include "../include/string.h"
 
 #define PORT 0x3f8   /* COM1 */
 
@@ -38,15 +39,39 @@ void kpanic_fmt(char *message, ...) {
     va_start(args, message);
     
     int i = 0;
+    uint8_t minSize = 0;
     while(message[i] != '\0') {
         if(message[i] == '%') {
             i++;
+
+            minSize = 0;
+            if((message[i] - ASCII_NUMBER_CONST) > 0 && (message[i] - ASCII_NUMBER_CONST) < 10) { //Its a number
+                minSize = message[i] - ASCII_NUMBER_CONST;
+                i++;
+            }
+
             if(message[i] == '%') {
                 write_serial('%');
             }
-            else if(message[i] == 'x') {
+            else if(message[i] == 'x' || message[i] == 'p') {
                 char buf[256];
-                itoa(va_arg(args, uint32_t), buf, 16);
+                itoa(va_arg(args, size_t), buf, 16);
+
+                uint8_t bufLen = strlen(buf);
+                int padding_needed = minSize - bufLen;
+                if(padding_needed > 0) {
+                    for(int x = bufLen - 1; x >= 0; x--) {
+                        buf[x + padding_needed] = buf[x];
+                    }
+                    for(int x = 0; x < padding_needed; x++) {
+                        buf[x] = '0';
+                    }
+                    buf[bufLen + padding_needed] = '\0';
+                }
+                
+                if(message[i] == 'p') {
+                    kpanic(HEX_PREFIX);
+                }
                 kpanic(buf);
             } else if(message[i] == 'd') {
                 char buf[256];
@@ -54,11 +79,6 @@ void kpanic_fmt(char *message, ...) {
                 kpanic(buf);
             } else if(message[i] == 's') {
                 kpanic(va_arg(args, char*));
-            } else if(message[i] == 'p') {
-                char buf[256];
-                itoa((size_t) va_arg(args, size_t*), buf, 16);
-                kpanic(HEX_PREFIX);
-                kpanic(buf);
             }
         } else {
             write_serial(message[i]);

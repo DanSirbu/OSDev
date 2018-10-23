@@ -19,8 +19,7 @@ void reverse(char *str) {
 		end--;
 	}
 }
-#define ASCII_NUMBER_CONST 0x30
-#define ASCII_LETTER_CONST 0x57
+
 void itoa(u32 number, char *str, u32 base) {
 	if(number == 0) {
 		str[0] = '0';

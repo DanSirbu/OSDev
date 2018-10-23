@@ -36,7 +36,7 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len) {
 	for(; mmap < mmap_end; mmap += ((memory_map_t*) mmap)->size + sizeof(unsigned long)) { //unsigned long = sizeof(memory_map_t->size)
 	memory_map_t *mmap_cur = (memory_map_t*) mmap;
 
-		kpanic_fmt("Address: %p-%p, type %x\n", mmap_cur->base_addr_low, (mmap_cur->base_addr_low + mmap_cur->length_low - 1), mmap_cur->type);
+		kpanic_fmt("Address: %8p-%8p, type %x\n", mmap_cur->base_addr_low, (mmap_cur->base_addr_low + mmap_cur->length_low - 1), mmap_cur->type);
 	}
 }
 void kmain(multiboot_info_t *multiboot_info)
