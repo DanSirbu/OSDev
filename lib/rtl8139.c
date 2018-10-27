@@ -1,9 +1,14 @@
 //https://wiki.osdev.org/RTL8139
 #include "../include/rtl8139.h"
 #include "../include/serial.h"
+#include "../include/pci.h"
 
-//Gotten from qemu info pci
-//TODO use actual pci code
+
+#define RLT_VENDOR_ID 0x10EC
+#define RTL_DEVICE_ID 0x8139
+
+#define RTL_DEVICE pci_get_device(RLT_VENDOR_ID, RTL_DEVICE_ID)
+
 #define RTL_IO_BASE 0xc000
 //IRQ 11
 
@@ -25,7 +30,10 @@ size_t *rx_buffer;
 
 void RTL8139_Init() {
     //Enable PCI Bus Mastering
-    //TODO
+    uint32_t pci_command_reg = pci_read_field(RTL_DEVICE, PCI_CMD_REG, PCI_CMD_SIZE);
+    pci_command_reg |= 1 << 2;
+    pci_write_field(RTL_DEVICE, PCI_CMD_REG, PCI_CMD_SIZE, pci_command_reg);
+
 
     outb(RTL_IO_BASE + REG_CONFIG_1, 0x0); //Power on device
     

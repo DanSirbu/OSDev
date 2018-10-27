@@ -7,6 +7,7 @@
 #define PCI_DATA 0xCFC
 
 #define PCI_CMD_REG 0x4
+#define PCI_CMD_SIZE 2
 
 typedef struct {
     uint16_t vendor_id;
@@ -51,3 +52,5 @@ uint32_t pci_read_field(uint32_t dev, uint8_t field, uint8_t size);
 uint32_t getPCIAddress(uint32_t dev);
 
 static const uint32_t bit_masks[] = { 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF };
+
+#define pci_get_device(vendor_id, device_id) ((uint32_t) (vendor_id << 16 | device_id))
