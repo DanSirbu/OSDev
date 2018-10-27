@@ -1,9 +1,12 @@
 #pragma once
 #include "types.h"
 #include "io.h"
+#include "serial.h"
 
 #define PCI_ADDR 0xCF8
 #define PCI_DATA 0xCFC
+
+#define PCI_CMD_REG 0x4
 
 typedef struct {
     uint16_t vendor_id;
@@ -42,4 +45,9 @@ typedef struct {
     uint8_t max_latency;
 } __attribute__((packed)) pci_dev_t;
 
-uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t function, uint8_t reg);
+void pci_find_devices();
+void pci_write_field(uint32_t dev, uint8_t field, uint8_t size, uint32_t value_to_write);
+uint32_t pci_read_field(uint32_t dev, uint8_t field, uint8_t size);
+uint32_t getPCIAddress(uint32_t dev);
+
+static const uint32_t bit_masks[] = { 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF };

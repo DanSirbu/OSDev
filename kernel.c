@@ -11,6 +11,7 @@
 #include "include/multiboot.h"
 #include "include/rtl8139.h"
 #include "include/acpi.h"
+#include "include/pci.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -63,8 +64,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	kpanic_fmt("Paging init\n");
 	paging_init();
 	kpanic_fmt("Paging init finished\n"); //Malloc now works
-	acpi_init();
+	//acpi_init();
+	pci_find_devices(); //PCI init
 	
+	//pci_write_field(0x80861237, 0x08, 1, 0xFFFFFFFF); //Test out pci read and write
+
 	//ethernet_main();
 	RTL8139_Init();
 	while(1);
