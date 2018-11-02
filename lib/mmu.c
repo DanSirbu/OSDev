@@ -31,6 +31,7 @@ void paging_init()
 		page_directory[x] = 0;
 	}
 	setPTE(0xC0000000, 0x0);
+	setPTE(0xC0400000, 0x00400000);
 	// Leave a space to get a page fault if kernel exceeds 4mb
 	// TODO?, get rid of dependency virtual memory = physical memory
 	setPTE(0x00800000,

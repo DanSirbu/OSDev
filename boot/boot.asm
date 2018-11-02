@@ -73,7 +73,8 @@ page_directory:
 	dd 0x00000083 ; Set Present, set 4mb pages, set rw #Maps 0x0 to 0x0
 	times (KERN_PAGE_NUM - 1) dd 0
 	dd 0x00000083 ; Set Present, set 4mb pages, set rw # Maps 0xC0000000 to 0x0
-	times (1024 - KERN_PAGE_NUM - 1) dd 0
+	dd 0x00400083 ; Set Present, set 4mb pages, set rw # Maps 0xC0400000 to 0x00400000
+	times (1024 - KERN_PAGE_NUM - 2) dd 0
 
 section .text
 start:
