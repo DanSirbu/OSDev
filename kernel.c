@@ -12,6 +12,7 @@
 #include "include/screen.h"
 #include "include/serial.h"
 #include "include/string.h"
+#include "include/p_allocator.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -76,6 +77,16 @@ void kmain(multiboot_info_t *multiboot_info)
 	kpanic_fmt("Paging init\n");
 	paging_init();
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
+
+	//2nd level paging
+	frame_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
+
+	//Testing
+	frame_set_used(0x0);
+	frame_set_used(0x00700000);
+	frame_set_used(0x0efdffff);
+	frame_set_used(0x0ffe0000);
+
 	// acpi_init();
 	pci_find_devices(); // PCI init
 

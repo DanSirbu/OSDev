@@ -50,6 +50,9 @@ clean:
 	rm -f serial.log
 	rm -f .gdb_history
 
+testc:
+	gcc test/p_allocator.c -o test/p_allocator.o
+	gcc test/test.c -o test/test.o
 
 test: test.asm
 	@nasm -f elf32 test.asm
