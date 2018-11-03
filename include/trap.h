@@ -4,6 +4,7 @@
 #include "serial.h"
 
 #define TRAP_PAGE_FAULT 14
+#define TRAP_KEYBOARD (32 + 1)
 
 static char *exceptions_string[32] = {
 	"Divide-by-zero",

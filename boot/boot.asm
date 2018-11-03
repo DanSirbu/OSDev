@@ -11,12 +11,10 @@ section .text
         dd - (0x1BADB002 + FLAGS)   ;checksum. m+f+c should be zero
 
 global start
-global keyboard_handler
 global load_idt
 global LoadNewPageDirectory, DisablePSE, boot_page_directory
 
 extern kmain 		;this is defined in the c file
-extern keyboard_handler_main
 
 global asm_lgdt
 
@@ -42,11 +40,6 @@ load_idt:
 	lidt [edx]
 	sti 				;turn on interrupts
 	ret
-
-keyboard_handler:                 
-	call    keyboard_handler_main
-	iretd
-
 
 KERN_BASE equ 0xC0000000
 KERN_PAGE_NUM equ KERN_BASE >> 22

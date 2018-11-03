@@ -18,7 +18,6 @@
 typedef unsigned int u32;
 
 extern unsigned char keyboard_map[128];
-extern void keyboard_handler(void);
 extern void initialize_gdt();
 extern void kb_init();
 extern void paging_init();
