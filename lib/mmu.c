@@ -107,19 +107,6 @@ void paging_init()
 	//Disable PSE (4 MiB pages)
 	DisablePSE();
 }
-struct PAGE_DIRECTORY_ENTRY {
-	unsigned char present : 1;
-	unsigned char writable : 1;
-	unsigned char user : 1;
-	unsigned char write_through : 1;
-	unsigned char cache_disabled : 1;
-	unsigned char accessed : 1;
-	unsigned char zero : 1;
-	unsigned char size_4mb : 1;
-	unsigned char g : 1;
-	unsigned char avail : 3;
-	unsigned int address : 20;
-};
 
 void page_fault_handler(int error_no)
 {

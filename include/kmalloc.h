@@ -8,8 +8,5 @@ void *kmalloc_align(size_t size, uint8_t alignment);
 void kfree(void *ptr);
 void *sbrk(size_t size);
 
-// TODO move this out of here
-uint32_t physical_to_virtual(uint32_t phys);
-
 void memset(char *ptr, uint8_t value, size_t s);
 void memcpy(char *dst, char *src, size_t s);
