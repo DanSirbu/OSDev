@@ -96,6 +96,8 @@ void kpanic_fmt(char *message, ...)
 		}
 		i++;
 	}
+
+	va_end(args);
 }
 void kpanic(char *message)
 {

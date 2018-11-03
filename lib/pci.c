@@ -90,7 +90,7 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t function,
 	uint32_t slotl = (uint32_t)slot;
 	uint32_t functionl = (uint32_t)function;
 
-	address_to_read |= 1 << 31; // Enable bit
+	address_to_read |= 1U << 31; // Enable bit
 	address_to_read |= busl << 16;
 	address_to_read |= (slotl & 0x1F) << 11;
 	address_to_read |= (functionl & 0x3) << 8;
@@ -108,7 +108,7 @@ uint32_t convertToPCIAddress(uint8_t bus, uint8_t slot, uint8_t function)
 	uint32_t slotl = (uint32_t)slot;
 	uint32_t functionl = (uint32_t)function;
 
-	address_to_read |= 1 << 31; // Enable bit
+	address_to_read |= 1U << 31; // Enable bit
 	address_to_read |= busl << 16;
 	address_to_read |= (slotl & 0x1F) << 11;
 	address_to_read |= (functionl & 0x3) << 8;

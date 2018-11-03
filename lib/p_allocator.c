@@ -59,8 +59,8 @@ ptr_phy_t alloc_frame()
 		if (frames[x] != 0xFFFFFFFF) {
 			for (int i = 0; i < 32; i++) {
 				//Free frame
-				if ((frames[x] & (1 << i)) == 0) {
-					frames[x] |= (1 << i); //Set used
+				if ((frames[x] & (1U << i)) == 0) {
+					frames[x] |= (1U << i); //Set used
 					return x * BIT_FRAME_SIZE + i * PGSIZE;
 				}
 			}
@@ -72,7 +72,7 @@ ptr_phy_t alloc_frame()
 void frame_set_used(ptr_phy_t frame)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
-	uint32_t frame_shift = 1 << ((frame % BIT_FRAME_SIZE) / PGSIZE);
+	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
 
 	if ((frames[frame_index] & frame_shift) == 0) {
 		frames[frame_index] |= frame_shift;
@@ -83,7 +83,7 @@ void frame_set_used(ptr_phy_t frame)
 void free_frame(ptr_phy_t frame)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
-	uint32_t frame_shift = 1 << ((frame % BIT_FRAME_SIZE) / PGSIZE);
+	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
 
 	if (frames[frame_index] & frame_shift) {
 		frames[frame_index] &= ~frame_shift;
