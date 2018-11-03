@@ -22,6 +22,7 @@ PORT80 = 5556
 # By default os has ip 10.0.2.15
 # Virtual Router has 10.0.2.2
 
+#-monitor telnet:127.0.0.1:1235,server,nowait
 run: kernel.elf
 	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel ./binary_x86/kernel.elf -serial file:serial.log $(QEMU-NETWORK-ARGS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
