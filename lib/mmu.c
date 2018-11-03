@@ -133,5 +133,5 @@ void page_fault_handler(int error_no)
 		"User process tried to write to a non-present page entry",
 		"User process tried to write a page and caused a protection fault"
 	};
-	kpanic_fmt("Page Fault Error: %s\n", page_fault_msgs[error_no]);
+	fail_stmt("Page Fault Error: %s\n", page_fault_msgs[error_no]);
 }
