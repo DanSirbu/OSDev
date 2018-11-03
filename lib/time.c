@@ -1,6 +1,7 @@
 #include "../include/boot.h"
 #include "../include/serial.h"
 #include "../include/types.h"
+#include "../include/io.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71
@@ -8,11 +9,10 @@
 
 uint8_t read_cmos(u8 cmos_reg)
 {
-	write_port(
-		CMOS_PORT,
-		cmos_reg); // Must always reselect before reading because it seems
-		// reading clears the selection
-	return read_port(CMOS_PORT_INOUT);
+	outb(CMOS_PORT,
+	     cmos_reg); // Must always reselect before reading because it seems
+	// reading clears the selection
+	return inb(CMOS_PORT_INOUT);
 }
 
 void print_time()

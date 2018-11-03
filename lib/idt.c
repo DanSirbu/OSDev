@@ -1,5 +1,5 @@
-#include "../include/boot.h"
 #include "../include/types.h"
+#include "../include/io.h"
 
 extern void load_idt(size_t *idt_ptr);
 extern void idt_0(void);
@@ -44,7 +44,7 @@ void idt_init(void)
 	for (int x = 0; x < 256; x++) {
 		idt_address =
 			idt_0_address + (x * 0x10); // each handler is 16 bytes
-			// aligned
+		// aligned
 		IDT[x].offset_lowerbits = idt_address & 0xffff;
 		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
 		IDT[x].zero = 0;
@@ -66,26 +66,26 @@ void idt_init(void)
    */
 
 	/* ICW1 - begin initialization */
-	write_port(PIC1_CMD, 0x11);
-	write_port(PIC2_CMD, 0x11);
+	outb(PIC1_CMD, 0x11);
+	outb(PIC2_CMD, 0x11);
 
 	/* ICW2 - remap offset address of IDT */
-	write_port(PIC1_DATA, 0x20);
-	write_port(PIC2_DATA, 0x28);
+	outb(PIC1_DATA, 0x20);
+	outb(PIC2_DATA, 0x28);
 
 	/* ICW3 - setup cascading */
-	write_port(PIC1_DATA,
-		   0x04); // Tell pic1 that pic2 is at pin 3 (0x0000 0100)
-	write_port(PIC2_DATA, 0x02); // Tell pic2 its cascade number is 2
+	outb(PIC1_DATA,
+	     0x04); // Tell pic1 that pic2 is at pin 3 (0x0000 0100)
+	outb(PIC2_DATA, 0x02); // Tell pic2 its cascade number is 2
 
 	/* ICW4 - environment info */
-	write_port(PIC1_DATA, ICW4_8086);
-	write_port(PIC2_DATA, ICW4_8086);
+	outb(PIC1_DATA, ICW4_8086);
+	outb(PIC2_DATA, ICW4_8086);
 	/* Initialization finished */
 
 	/* mask interrupts */ // TODO remove this
-	write_port(PIC1_DATA, PIC1_INT);
-	write_port(PIC2_DATA, PIC2_INT);
+	outb(PIC1_DATA, PIC1_INT);
+	outb(PIC2_DATA, PIC2_INT);
 
 	/* fill the IDT descriptor */
 	idt_address = (unsigned long)IDT;
@@ -100,8 +100,8 @@ void sendEOI(uint32_t interrupt_no)
 	if (interrupt_no >= 0x20 && interrupt_no <= 0x30) {
 		int irqNum = interrupt_no - 0x20;
 		if (irqNum > 0x7) {
-			write_port(PIC2_CMD, END_OF_INTERRUPT);
+			outb(PIC2_CMD, END_OF_INTERRUPT);
 		}
-		write_port(PIC1_CMD, END_OF_INTERRUPT);
+		outb(PIC1_CMD, END_OF_INTERRUPT);
 	}
 }
