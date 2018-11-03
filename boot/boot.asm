@@ -15,7 +15,7 @@ global keyboard_handler
 global read_port
 global write_port
 global load_idt
-global LoadNewPageDirectory
+global LoadNewPageDirectory, DisablePSE, boot_page_directory
 
 extern kmain 		;this is defined in the c file
 extern keyboard_handler_main
@@ -68,8 +68,8 @@ KERNEL_STACK_SIZE equ 4096
 
 section .data
 align 0x1000
-global page_directory
-page_directory:
+
+boot_page_directory:
 	dd 0x00000083 ; Set Present, set 4mb pages, set rw #Maps 0x0 to 0x0
 	times (KERN_PAGE_NUM - 1) dd 0
 	dd 0x00000083 ; Set Present, set 4mb pages, set rw # Maps 0xC0000000 to 0x0
@@ -81,8 +81,8 @@ start:
 	;cli 				;block interrupts
 	; Carefull not to mess up ebx, it is the multiboot header pointer 
 
-	; Write page_directory to cpu
-	mov ecx, (page_directory - KERN_BASE)
+	; Write boot_page_directory to cpu
+	mov ecx, (boot_page_directory - KERN_BASE)
 	mov cr3, ecx
 
 	mov ecx, cr4
@@ -101,8 +101,14 @@ LoadNewPageDirectory:
 	mov cr3, ecx
 	ret
 
+DisablePSE:
+	mov eax, cr4
+ 	and eax, 0xFFFFFFEF
+ 	mov cr4, eax
+	ret
+
 StartHigherHalf:
-	mov dword [page_directory], 0
+	mov dword [boot_page_directory], 0
 	invlpg [0]
 
 	mov esp, kernel_stack_lowest_address + KERNEL_STACK_SIZE

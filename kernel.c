@@ -73,28 +73,28 @@ void kmain(multiboot_info_t *multiboot_info)
 	kfree(ptr);
 	*/
 
-	// Initialize paging
+	//Switch to more advanced paging (2 level)
 	kpanic_fmt("Paging init\n");
+	frame_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
 	paging_init();
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
 
-	//2nd level paging
-	frame_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
+	//assert(1 == 2); //Test assert
 
 	//Testing
-	frame_set_used(0x0);
+	/*frame_set_used(0x0);
 	frame_set_used(0x00700000);
 	frame_set_used(0x0efdffff);
-	frame_set_used(0x0ffe0000);
+	frame_set_used(0x0ffe0000);*/
 
 	// acpi_init();
-	pci_find_devices(); // PCI init
+	//pci_find_devices(); // PCI init
 
 	// pci_write_field(0x80861237, 0x08, 1, 0xFFFFFFFF); //Test out pci read and
 	// write
 
 	// ethernet_main();
-	RTL8139_Init();
+	//RTL8139_Init();
 
 	// clang-format off
 	while (1);
