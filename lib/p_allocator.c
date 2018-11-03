@@ -2,11 +2,6 @@
 #include "../include/kmalloc.h"
 #include "../include/serial.h"
 
-#define PGSIZE 4096
-typedef uint32_t ptr_phy_t;
-#define PG_ROUND_DOWN(addr) (addr & ~(PGSIZE - 1))
-#define PG_ROUND_UP(addr) PG_ROUND_DOWN((addr + (PGSIZE - 1)))
-
 //Comes from the linker
 extern char kernel_end;
 
