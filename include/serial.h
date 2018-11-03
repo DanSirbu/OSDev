@@ -18,6 +18,11 @@ void kpanic(char *message);
 #define fail_stmt(why, stmt)                                                   \
 	assert_failed_msg(__FILE__, __LINE__, why, EXPAND_ARGS(stmt))
 
+#define fail_stmt_stop(why, stmt)                                              \
+	fail_stmt(why, stmt);                                                  \
+	while (1)                                                              \
+		;
+
 #define ANSI_COLOR_RED "\x1b[31m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 

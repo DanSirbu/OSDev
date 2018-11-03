@@ -110,7 +110,7 @@ void paging_init()
 
 void page_fault_handler(int error_no)
 {
-	char *page_fault_msgs[] = {
+	static char *page_fault_msgs[] = {
 		"Supervisory process tried to read a non-present page entry",
 		"Supervisory process tried to read a page and caused a protection fault",
 		"Supervisory process tried to write to a non-present page entry",
@@ -120,5 +120,5 @@ void page_fault_handler(int error_no)
 		"User process tried to write to a non-present page entry",
 		"User process tried to write a page and caused a protection fault"
 	};
-	fail_stmt("Page Fault Error: %s\n", page_fault_msgs[error_no]);
+	fail_stmt_stop("Page Fault Error: %s\n", page_fault_msgs[error_no]);
 }
