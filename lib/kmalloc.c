@@ -14,10 +14,11 @@ typedef struct block_header block;
 #define P2B(mblock) (((block *)mblock) - 1)
 
 block *free_list;
-void *heap_head = (void *)0x00800000;
-void *heap_max = (void *)0x00c00000;
-void *heap_top = (void *)0x00800000;
-// kpanic_fmt("kmalloc 0x%x\n", (u64) (u32) (void *) &kernel_end);
+
+#define HEAP_HEAD ((void *)0x00a00000)
+#define HEAP_MAX (HEAP_HEAD + 0x00400000)
+
+void *heap_top = HEAP_HEAD;
 
 void *kmalloc_align(size_t size, uint8_t alignment)
 {
@@ -57,7 +58,7 @@ void *kmalloc(size_t size)
 	// Find best fit for size while keeping track of smallest fit
 	block *curBestFit = NULL, *curBestFitPrevious = NULL;
 	block *prev_block, *cur_block;
-	
+
 	for (cur_block = free_list, prev_block = free_list; cur_block != NULL;
 	     prev_block = cur_block, cur_block = cur_block->next_free) {
 		if (cur_block->size < size)
@@ -99,7 +100,7 @@ void kfree(void *ptr)
 	if (ptr == 0) {
 		return;
 	}
-	if (ptr < heap_head) {
+	if (ptr < HEAP_HEAD) {
 		kpanic_fmt(
 			"Trying to free ptr before the head of the heap. %p\n",
 			ptr);
@@ -136,12 +137,12 @@ void *sbrk(u32 size)
 	}
 	void *returnVal = heap_top;
 	heap_top += size;
-	if (heap_top > heap_max) {
+	if (heap_top > HEAP_MAX) {
 		kpanic_fmt("HEAP TOP OVER HEAP MAX\n");
 	}
 
 	// Should never happen
-	if (heap_top < heap_head) {
+	if (heap_top < HEAP_HEAD) {
 		kpanic_fmt("PANIC: heap top < heap head\n");
 	}
 	return returnVal;

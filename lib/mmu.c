@@ -2,10 +2,13 @@
 #include "../include/p_allocator.h"
 #include "../include/mmu.h"
 #include "../include/serial.h"
+#include "../include/trap.h"
 
 extern void LoadNewPageDirectory(uint32_t pd);
 extern void DisablePSE();
 extern size_t boot_page_directory[1024];
+
+void page_fault_handler(int error_no);
 
 uint32_t page_directory[1024] __attribute__((aligned(0x1000)));
 
@@ -65,6 +68,7 @@ void setPTE(size_t vaddr, ptr_phy_t phyaddr)
 
 void paging_init()
 {
+	register_handler(TRAP_PAGE_FAULT, page_fault_handler);
 	/*
   ; Map 0xFEBC0000 -> 0xFEBC0000
   ETHERNET_BASE equ 0xFEBC0000
@@ -116,3 +120,18 @@ struct PAGE_DIRECTORY_ENTRY {
 	unsigned char avail : 3;
 	unsigned int address : 20;
 };
+
+void page_fault_handler(int error_no)
+{
+	char *page_fault_msgs[] = {
+		"Supervisory process tried to read a non-present page entry",
+		"Supervisory process tried to read a page and caused a protection fault",
+		"Supervisory process tried to write to a non-present page entry",
+		"Supervisory process tried to write a page and caused a protection fault",
+		"User process tried to read a non-present page entry",
+		"User process tried to read a page and caused a protection fault",
+		"User process tried to write to a non-present page entry",
+		"User process tried to write a page and caused a protection fault"
+	};
+	kpanic_fmt("Page Fault Error: %s\n", page_fault_msgs[error_no]);
+}

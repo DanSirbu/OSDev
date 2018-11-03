@@ -2,6 +2,7 @@
 #include "../include/rtl8139.h"
 #include "../include/pci.h"
 #include "../include/serial.h"
+#include "../include/trap.h"
 
 #define RLT_VENDOR_ID 0x10EC
 #define RTL_DEVICE_ID 0x8139
@@ -32,6 +33,9 @@ size_t *rx_buffer;
 
 void RTL8139_Init()
 {
+	//Register Interrupt Handler
+	register_handler(32 + 11, RTL8139_Interrupt);
+
 	// Enable PCI Bus Mastering
 	uint32_t pci_command_reg =
 		pci_read_field(RTL_DEVICE, PCI_CMD_REG, PCI_CMD_SIZE);

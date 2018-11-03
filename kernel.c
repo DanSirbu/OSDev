@@ -24,7 +24,6 @@ extern void kb_init();
 extern void paging_init();
 extern void idt_init();
 extern void kprint_newline();
-extern void sendEOI(uint32_t interrupt_no);
 
 uint8_t PIC1_INT = 0x01;
 uint8_t PIC2_INT = 0x00;
@@ -79,6 +78,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	paging_init();
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
 
+	//char *test = (char *)0xA0000000;
+	//char asd = *test; //Page fault
+
 	//assert(1 == 2); //Test assert
 
 	//Testing
@@ -99,34 +101,4 @@ void kmain(multiboot_info_t *multiboot_info)
 	// clang-format off
 	while (1);
 	// clang-format on
-}
-
-void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx,
-		       u32 edx, u32 ecx, u32 eax, const u32 interrupt_no,
-		       u32 error_code, size_t eip)
-{
-	if (interrupt_no < 32) {
-		kpanic_fmt("Exception %d (%s) at 0x%x, error %d\n",
-			   (u32)interrupt_no, exceptions_string[interrupt_no],
-			   eip, error_code);
-	} else {
-		kpanic_fmt("Interrupt %d (%s) at 0x%x, error %d\n",
-			   (u32)interrupt_no - 32,
-			   interrupts_string[interrupt_no - 32], eip,
-			   error_code);
-	}
-
-	if (interrupt_no == 0) { // Don't know what to do yet so just ignore
-		eip += 1;
-	}
-
-	/* else if(interrupt_no == IRQ_PIT) {
-            print_time();
-    }*/
-	if (interrupt_no == 11 + 32) {
-		// E1000_Interrupt();
-		RTL8139_Interrupt();
-	}
-
-	sendEOI(interrupt_no);
 }
