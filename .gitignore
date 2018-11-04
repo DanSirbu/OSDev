@@ -1,9 +1,11 @@
-binary_x86/
-temp/
+obj/
 *.o
+env.mk
+
+# Debugging files
 serial.log
-.vscode/
 .gdb_history
 dump.pcap
-test/
-env.mk
+
+# Other
+.vscode/

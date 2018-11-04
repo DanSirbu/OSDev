@@ -1,14 +1,23 @@
 include env.mk
 
+# Makefile based on
+# http://scottmcpeak.com/autodepend/autodepend.html
+
+OBJDIR = obj
+
 SRCFILES = $(wildcard boot/*.asm) $(wildcard lib/*.c) $(wildcard *.c)
-SRCFILES1 = $(SRCFILES:.c=.o)
-OBJFILES = $(SRCFILES1:.asm=.o)
+SRCFILES1 = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCFILES))
+OBJFILES = $(patsubst %.asm, $(OBJDIR)/%.o, $(SRCFILES1))
+
+OBJDIRS:=$(dir $(OBJFILES))
+OBJDIRS:=$(shell echo $(OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
+
 
 ARGS = -m32 -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
-QEMU-EXTRA-ARGS = 
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 256M
-QEMU-ARGS += $(QEMU-EXTRA-ARGS)
+
+
 # -d int shows interrupts
 QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=udp::5555-:22 -device rtl8139,netdev=network0 -object filter-dump,id=f1,netdev=network0,file=dump.pcap
 #QEMU-NETWORK-ARGS = -netdev tap,helper=/usr/lib/qemu/qemu-bridge-helper,id=thor_net0 -device e1000,netdev=thor_net0,id=thor_nic0 -object filter-dump,id=f1,netdev=thor_net0,file=dump.pcap
@@ -23,31 +32,36 @@ PORT80 = 5556
 # Virtual Router has 10.0.2.2
 
 #-monitor telnet:127.0.0.1:1235,server,nowait
-run: kernel.elf
-	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel ./binary_x86/kernel.elf -serial file:serial.log $(QEMU-NETWORK-ARGS)
+run: $(OBJDIR)/kernel.elf
+	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 
-run-debug: kernel.elf
-	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel ./binary_x86/kernel.elf -serial file:serial.log $(QEMU-NETWORK-ARGS)
+run-debug: $(OBJDIR)/kernel.elf
+	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 	
-debug-r2:
-	r2 -e bin.baddr=0x001000000 -e dbg.exe.path=/home/admin/Github/SmallKernel/binary_x86/kernel.elf -d -b 32 -c v! gdb://127.0.0.1:1234
-debug:
-	gdb ./binary_x86/kernel.elf
+debug-r2: $(OBJDIR)/kernel.elf
+	r2 -e bin.baddr=0x001000000 -e dbg.exe.path=$< -d -b 32 -c v! gdb://127.0.0.1:1234
+debug: $(OBJDIR)/kernel.elf
+	gdb ./obj/kernel.elf
 
-kernel.elf: ${OBJFILES}
-	@ld -T link.ld -m elf_i386 $^ -o ./binary_x86/$@
+$(OBJDIR)/kernel.elf: ${OBJFILES}
+	@ld -T link.ld -m elf_i386 $^ -o $@
 
-%.o: %.c
+#-include $(OBJS:.o=.d)
+
+$(OBJDIR)/%.o: %.c mkdirectories
 	@gcc ${ARGS} $< -c -o $@ -I include/
+	@#gcc -MM ${ARGS} $< > $*.d
 
-%.o: %.asm
-	@nasm -f elf32 -g $<
+$(OBJDIR)/%.o: %.asm mkdirectories
+	@nasm -f elf32 -g $< -o $@
 
+mkdirectories:
+	@mkdir -p $(OBJDIRS)
+	
 clean:
-	rm -f ${OBJFILES}
-	rm -f ./binary_x86/kernel.elf
+	rm -rf obj/
 	rm -f serial.log
 	rm -f .gdb_history
 
