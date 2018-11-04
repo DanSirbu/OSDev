@@ -1,4 +1,4 @@
-#include "../include/io.h"
+#include "io.h"
 
 uint8_t inb(uint16_t p_port)
 {

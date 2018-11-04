@@ -1,6 +1,6 @@
-#include "../include/p_allocator.h"
-#include "../include/kmalloc.h"
-#include "../include/serial.h"
+#include "p_allocator.h"
+#include "kmalloc.h"
+#include "serial.h"
 
 //Comes from the linker
 extern char kernel_end;

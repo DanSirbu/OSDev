@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.h"
-#include "../include/multiboot.h"
+#include "multiboot.h"
 
 #define PGSIZE 4096
 #define PG_ROUND_DOWN(addr) (addr & ~(PGSIZE - 1))

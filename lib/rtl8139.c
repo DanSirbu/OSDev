@@ -1,8 +1,8 @@
 // https://wiki.osdev.org/RTL8139
-#include "../include/rtl8139.h"
-#include "../include/pci.h"
-#include "../include/serial.h"
-#include "../include/trap.h"
+#include "rtl8139.h"
+#include "pci.h"
+#include "serial.h"
+#include "trap.h"
 
 #define RLT_VENDOR_ID 0x10EC
 #define RTL_DEVICE_ID 0x8139

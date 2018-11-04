@@ -1,4 +1,4 @@
-#include "../include/screen.h"
+#include "screen.h"
 /* current cursor location */
 unsigned int current_loc = 0;
 

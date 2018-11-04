@@ -1,4 +1,4 @@
-#include "../include/pci.h"
+#include "pci.h"
 
 #define NON_EXISTANT_DEVICE 0xFFFF
 

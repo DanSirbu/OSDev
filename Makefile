@@ -40,7 +40,7 @@ kernel.elf: ${OBJFILES}
 	@ld -T link.ld -m elf_i386 $^ -o ./binary_x86/$@
 
 %.o: %.c
-	@gcc ${ARGS} $< -c -o $@
+	@gcc ${ARGS} $< -c -o $@ -I include/
 
 %.o: %.asm
 	@nasm -f elf32 -g $<

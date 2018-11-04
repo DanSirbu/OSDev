@@ -1,6 +1,6 @@
-#include "../include/kmalloc.h"
-#include "../include/serial.h"
-#include "../include/types.h"
+#include "kmalloc.h"
+#include "serial.h"
+#include "types.h"
 
 extern char kernel_end;
 

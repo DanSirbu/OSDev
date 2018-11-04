@@ -2,17 +2,17 @@
  * Copyright (C) 2014  Arjun Sreedharan
  * License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
  */
-#include "include/acpi.h"
-#include "include/e1000.h"
-#include "include/keyboard_map.h"
-#include "include/kmalloc.h"
-#include "include/multiboot.h"
-#include "include/pci.h"
-#include "include/rtl8139.h"
-#include "include/screen.h"
-#include "include/serial.h"
-#include "include/string.h"
-#include "include/p_allocator.h"
+#include "acpi.h"
+#include "e1000.h"
+#include "keyboard_map.h"
+#include "kmalloc.h"
+#include "multiboot.h"
+#include "pci.h"
+#include "rtl8139.h"
+#include "screen.h"
+#include "serial.h"
+#include "string.h"
+#include "p_allocator.h"
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;

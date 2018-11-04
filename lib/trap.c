@@ -1,4 +1,4 @@
-#include "../include/trap.h"
+#include "trap.h"
 
 extern void sendEOI(uint32_t interrupt_no);
 

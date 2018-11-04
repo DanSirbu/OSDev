@@ -1,8 +1,8 @@
-#include "../include/types.h"
-#include "../include/p_allocator.h"
-#include "../include/mmu.h"
-#include "../include/serial.h"
-#include "../include/trap.h"
+#include "types.h"
+#include "p_allocator.h"
+#include "mmu.h"
+#include "serial.h"
+#include "trap.h"
 
 extern void LoadNewPageDirectory(uint32_t pd);
 extern void DisablePSE();

@@ -1,4 +1,4 @@
-#include "../include/acpi.h"
+#include "acpi.h"
 
 #define RSDP_BASE 0xc00f5b80 // Hardcoded for now
 

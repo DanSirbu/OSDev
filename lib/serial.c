@@ -1,6 +1,6 @@
 // Taken from https://wiki.osdev.org/Serial_Ports
-#include "../include/serial.h"
-#include "../include/string.h"
+#include "serial.h"
+#include "string.h"
 
 #define PORT 0x3f8 /* COM1 */
 

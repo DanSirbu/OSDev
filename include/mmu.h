@@ -1,6 +1,6 @@
 #pragma once
-#include "../include/types.h"
-#include "../include/kmalloc.h"
+#include "types.h"
+#include "kmalloc.h"
 
 #define PTE_P 1
 

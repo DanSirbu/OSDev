@@ -1,5 +1,5 @@
-#include "../include/types.h"
-#include "../include/io.h"
+#include "types.h"
+#include "io.h"
 
 extern void load_idt(size_t *idt_ptr);
 extern void idt_0(void);

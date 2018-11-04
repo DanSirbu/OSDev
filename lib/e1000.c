@@ -1,7 +1,7 @@
-#include "../include/e1000.h"
-#include "../include/kmalloc.h"
-#include "../include/serial.h"
-#include "../include/types.h"
+#include "e1000.h"
+#include "kmalloc.h"
+#include "serial.h"
+#include "types.h"
 
 // TODO, get these values using PCI
 #define ETHERNET_IO_BASE 0xc03f
@@ -180,7 +180,7 @@ void rxinit()
 		(2 << 16) | (1 << 25) | (1 << 26) | (1 << 15) | (1 << 5) |
 		(0 << 8) | (0 << 4) | (0 << 3) |
 		RCTL_SBP; // RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RTCL_RDMTS_QUARTER
-		// | RCTL_LPE | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192;
+	// | RCTL_LPE | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192;
 	writeCommand(REG_RCTRL, rctl_params); // Table 13-67, page 300
 }
 void txinit()

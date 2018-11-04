@@ -1,7 +1,7 @@
-#include "../include/boot.h"
-#include "../include/serial.h"
-#include "../include/types.h"
-#include "../include/io.h"
+#include "boot.h"
+#include "serial.h"
+#include "types.h"
+#include "io.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71
