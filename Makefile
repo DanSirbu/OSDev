@@ -5,7 +5,7 @@ include env.mk
 
 OBJDIR = obj
 
-SRCFILES = $(wildcard boot/*.asm) $(wildcard lib/*.c) $(wildcard *.c)
+SRCFILES = $(wildcard boot/*.asm) $(wildcard kernel/*.c) $(wildcard lib/*.c)
 SRCFILES1 = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCFILES))
 OBJFILES = $(patsubst %.asm, $(OBJDIR)/%.o, $(SRCFILES1))
 
