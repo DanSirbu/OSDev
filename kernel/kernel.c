@@ -13,6 +13,11 @@
 #include "serial.h"
 #include "string.h"
 #include "p_allocator.h"
+#include "mmu.h"
+#include "device.h"
+
+//ramdisk
+extern void initrd_init(size_t start, size_t size);
 
 #define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
@@ -77,6 +82,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	paging_init();
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
 
+	mmap(0xB0000000, 0x4000);
+	initrd_init(0xB0000000, 0x4000);
+
+	char *abc = "AAAAAAABBBBBCCCCC";
+	device_write(0x1000, abc, 1);
 	//char *test = (char *)0xA0000000;
 	//char asd = *test; //Page fault
 
