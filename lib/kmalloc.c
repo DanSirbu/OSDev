@@ -148,15 +148,15 @@ void *sbrk(u32 size)
 	return returnVal;
 }
 
-void memset(char *ptr, uint8_t value, size_t s)
+void memset(void *ptr, char value, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
-		ptr[x] = value;
+		((char *)ptr)[x] = value;
 	}
 }
-void memcpy(char *dst, char *src, size_t s)
+void memcpy(void *dst, void *src, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
-		dst[x] = src[x];
+		((uint8_t *)dst)[x] = ((uint8_t *)src)[x];
 	}
 }
