@@ -16,7 +16,7 @@ OBJDIRS:=$(shell echo $(OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep uniq
 CROSS-COMPILER:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
-ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding
+ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 256M
 
@@ -49,7 +49,7 @@ debug: $(OBJDIR)/kernel.elf
 	gdb ./obj/kernel.elf
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
-	@$(CROSS-LINKER) -T link.ld $^ -o $@
+	@$(CROSS-COMPILER) ${ARGS} -T link.ld $^ -o $@
 
 #-include $(OBJS:.o=.d)
 
