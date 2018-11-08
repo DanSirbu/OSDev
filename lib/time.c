@@ -1,7 +1,9 @@
+#include "time.h"
 #include "boot.h"
 #include "serial.h"
 #include "types.h"
 #include "io.h"
+#include "trap.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71
@@ -32,4 +34,33 @@ void print_time()
   */
 	uint8_t value = read_cmos(0);
 	kpanic_fmt("%d\n", value); // Default promotion takes care of casting
+}
+#define PIT_BASE_FREQUENCY 1193180
+#define PIT_CMD 0x43
+#define PIT0_DATA 0x40
+
+#define BYTE0(a) ((a)&0xFF)
+#define BYTE1(a) ((a) >> 8 & 0xFF)
+#define BYTE2(a) ((a) >> 16 & 0xFF)
+#define BYTE3(a) ((a) >> 24 & 0xFF)
+
+void timer_interrupt();
+
+void timer_init(uint32_t frequency)
+{
+	uint32_t div = PIT_BASE_FREQUENCY / frequency;
+	outb(PIT_CMD, 0x36);
+	outb(PIT0_DATA, BYTE0(div));
+	outb(PIT0_DATA, BYTE1(div));
+	register_handler(TRAP_TIMER, timer_interrupt);
+}
+
+uint32_t ticks = 0; //Since frequency is 1000, this is a millisecond
+uint32_t unix_time = 0; //Seconds
+void timer_interrupt()
+{
+	ticks++;
+	if (ticks % 1000 == 0) {
+		unix_time++;
+	}
 }

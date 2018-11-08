@@ -69,7 +69,7 @@ void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx,
 		kpanic_fmt("Exception %d (%s) at 0x%x, error %d\n",
 			   interrupt_no, exceptions_string[interrupt_no], eip,
 			   error_code);
-	} else {
+	} else if (interrupt_no != 32) {
 		kpanic_fmt("Interrupt %d (%s) at 0x%x, error %d\n",
 			   interrupt_no - 32,
 			   interrupts_string[interrupt_no - 32], eip,

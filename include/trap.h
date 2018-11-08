@@ -4,6 +4,8 @@
 #include "serial.h"
 
 #define TRAP_PAGE_FAULT 14
+
+#define TRAP_TIMER 32
 #define TRAP_KEYBOARD (32 + 1)
 
 void register_handler(int interrupt_no, void *handler);

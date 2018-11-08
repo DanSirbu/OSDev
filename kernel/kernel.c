@@ -15,6 +15,7 @@
 #include "p_allocator.h"
 #include "mmu.h"
 #include "device.h"
+#include "time.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -29,7 +30,7 @@ extern void paging_init();
 extern void idt_init();
 extern void kprint_newline();
 
-uint8_t PIC1_INT = 0x01;
+uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
 void memory_map_handler(u32 mmap_addr, u32 mmap_len)
@@ -89,6 +90,9 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	char *abc = "AAAAAAABBBBBCCCCC";
 	device_write(0x1000, abc, 1);
+
+	timer_init(1000);
+
 	//char *test = (char *)0xA0000000;
 	//char asd = *test; //Page fault
 
