@@ -69,6 +69,7 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	init_serial();
 	kpanic_fmt("Serial initialized\n");
+
 	/*
 	int a = 5 / 0;
 	kmalloc(10);
@@ -78,12 +79,13 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	//Switch to more advanced paging (2 level)
 	kpanic_fmt("Paging init\n");
-	frame_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
-	paging_init();
+	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
 
-	mmap(0xB0000000, 0x4000);
-	initrd_init(0xB0000000, 0x4000);
+	mmap(0x90000000, 0x4000);
+	initrd_init(0x90000000, 0x4000);
+
+	mmap(0xA0000000, 0x00F00000);
 
 	char *abc = "AAAAAAABBBBBCCCCC";
 	device_write(0x1000, abc, 1);

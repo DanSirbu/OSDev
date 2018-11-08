@@ -7,6 +7,7 @@
 extern void LoadNewPageDirectory(uint32_t pd);
 extern void DisablePSE();
 extern size_t boot_page_directory[1024];
+extern char kernel_end;
 
 void page_fault_handler(int error_no);
 
@@ -25,22 +26,35 @@ void mmap(size_t base, size_t len)
 }
 
 //Map it to a specific address, ex. for the kernel code or MMIO
-void mmap_addr(size_t vaddr, size_t phyaddr, size_t len)
+void mmap_addr(size_t vaddr_start, size_t phyaddr_start, size_t len,
+	       uint8_t flags)
 {
-	assert((vaddr & PGSIZE) == 0); //Has to be 4k aligned
-	assert((phyaddr & PGSIZE) == 0); //Has to be 4k aligned
+	assert((vaddr_start & 0xFFF) == 0); //Has to be 4k aligned
+	assert((phyaddr_start & 0xFFF) == 0); //Has to be 4k aligned
 
-	size_t vaddr_pdx = PDX(vaddr);
-	size_t vaddr_ptx = PTX(vaddr);
+	size_t vaddr_pdx = PDX(vaddr_start);
+	size_t vaddr_ptx = PTX(vaddr_start);
 
-	//len = PG_ROUND_UP(len);
+	//Mark all the pages as used first and then actually create the entries
+	//This ensures the pages are contiguous
+	//Also, at boot time, it makes sure the kernel code is marked as used, then the
+	//page tables are allocated
+
+	//Mark pages used
 	for (size_t x = 0; x < len / PGSIZE; x++) {
-		size_t cur_vaddr = vaddr + x * PGSIZE;
-		ptr_phy_t cur_phyaddr = phyaddr + x * PGSIZE;
-		setPTE(cur_vaddr, cur_phyaddr);
+		size_t vaddr = vaddr_start + x * PGSIZE;
+		ptr_phy_t phyaddr = phyaddr_start + x * PGSIZE;
+
+		frame_set_used(phyaddr, flags & FLAG_IGNORE_PHY_REUSE);
+	}
+
+	//Make the page entries
+	for (size_t x = 0; x < len / PGSIZE; x++) {
+		size_t vaddr = vaddr_start + x * PGSIZE;
+		ptr_phy_t phyaddr = phyaddr_start + x * PGSIZE;
+		setPTE(vaddr, phyaddr);
 	}
 }
-
 void setPTE(size_t vaddr, ptr_phy_t phyaddr)
 {
 	uint32_t pdx = PDX(vaddr);
@@ -66,17 +80,11 @@ void setPTE(size_t vaddr, ptr_phy_t phyaddr)
 	pg_tbl[ptx] = PTE_ADDR(phyaddr) | PTE_P; //Set the frame address
 }
 
-void paging_init()
+void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 {
+	frame_init(memory_map_base, memory_map_full_len);
 	register_handler(TRAP_PAGE_FAULT, page_fault_handler);
-	/*
-  ; Map 0xFEBC0000 -> 0xFEBC0000
-  ETHERNET_BASE equ 0xFEBC0000
-  ETHERNET_PAGE_NUM equ ETHERNET_BASE >> 22
 
-  Map 0xC0000000 -> 0x0 for our kernel
-
-  */
 	//We need the last page directory to map to page directory
 	// so we can map the page tables to memory
 	boot_page_directory[1023] =
@@ -86,21 +94,47 @@ void paging_init()
 	//TODO: Look into using invlpg
 	LoadNewPageDirectory((size_t)boot_page_directory - 0xC0000000);
 
-	for (int x = 0; x < 1024; x++) {
-		page_directory[x] = 0;
-	}
+	//Clear page directory
+	memset(page_directory, 0, sizeof(page_directory));
+
+	//Add recursive mapping
 	page_directory[1023] =
-		PTE_ADDR((size_t)page_directory - 0xC0000000) | PTE_P;
+		PTE_ADDR((size_t)page_directory - KERN_BASE) | PTE_P;
 
-	mmap_addr(0xC0000000, 0x0, 0x800000);
+	size_t kernel_end_phy_addr =
+		PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
 
-	// Identity mapping to use in malloc since we often need a physical address
-	mmap_addr(0x00a00000, 0x00a00000, 0x400000);
+	//Map kernel code
+	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, FLAG_IGNORE_PHY_REUSE);
 
-	// ETHERNET_BASE equ 0xFEBC0000
-	//mmap_addr(0xfe800000, 0xfe800000, 0x400000);
-	//setPTE(0xcfc00000, 0x0fc00000); // Mapping for acpi
+	//Now we need to mark the IO as used
+	//We map all IO to KERN_IO_BASE - size of all IO
+	void *memory_map = (void *)memory_map_base + KERN_BASE;
+	void *memory_map_end = memory_map + memory_map_full_len;
 
+	size_t io_cur_location = KERN_IO_BASE;
+	for (; memory_map < memory_map_end;
+	     memory_map +=
+	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
+		memory_map_t *mmap_cur = (memory_map_t *)memory_map;
+
+		if (mmap_cur->type != 2) {
+			continue;
+		}
+
+		uint8_t map_flag =
+			mmap_cur->base_addr_low < kernel_end_phy_addr ?
+				FLAG_IGNORE_PHY_REUSE :
+				NULL;
+
+		mmap_addr(io_cur_location,
+			  PG_ROUND_DOWN(mmap_cur->base_addr_low),
+			  PG_ROUND_UP(mmap_cur->length_low), map_flag);
+
+		io_cur_location += PG_ROUND_UP(mmap_cur->length_low);
+	}
+
+	//Load new page directory
 	uint32_t pd_target = ((uint32_t)page_directory) - 0xC0000000;
 	LoadNewPageDirectory(pd_target);
 

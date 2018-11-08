@@ -15,8 +15,8 @@ typedef struct block_header block;
 
 block *free_list;
 
-#define HEAP_HEAD ((void *)0x00a00000)
-#define HEAP_MAX (HEAP_HEAD + 0x00400000)
+#define HEAP_HEAD ((void *)0xA0000000)
+#define HEAP_MAX (HEAP_HEAD + 0xA0F00000)
 
 void *heap_top = HEAP_HEAD;
 

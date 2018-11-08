@@ -1,7 +1,6 @@
 #pragma once
 #include "types.h"
-
-#define KERN_BASE 0xC0000000
+#include "mmu.h"
 
 void *kmalloc(size_t size);
 void *kmalloc_align(size_t size, uint8_t alignment);

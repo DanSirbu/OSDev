@@ -16,39 +16,40 @@ extern char kernel_end;
 
 uint32_t frames[NUM_BIT_FRAMES] __attribute__((aligned(32)));
 
-void frame_init(size_t mmap_addr, size_t mmap_len)
+void frame_init(size_t memory_map_base, size_t memory_map_len)
 {
 	//Set all used, then free the ones that are actually usable
 	memset((void *)frames, 0xFF,
 	       NUM_BIT_FRAMES * 4); //* 4 since 32 bits = 4 bytes
 
-	void *mmap = (void *)mmap_addr + KERN_BASE;
-	void *mmap_end = mmap + mmap_len;
+	void *memory_map = (void *)memory_map_base + KERN_BASE;
+	void *memory_map_end = memory_map + memory_map_len;
 
 	//Keep < kernel_end as used to not overwrite kernel stuff
-	size_t kernel_end_addr = PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
+	size_t kernel_end_phy_addr =
+		PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
 
-	for (; mmap < mmap_end;
-	     mmap += ((memory_map_t *)mmap)->size + sizeof(unsigned long)) {
-		memory_map_t *mmap_cur = (memory_map_t *)mmap;
+	for (; memory_map < memory_map_end;
+	     memory_map +=
+	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
+		memory_map_t *mmap_cur = (memory_map_t *)memory_map;
 
-		if (mmap_cur->type == 1) {
-			size_t base_addr = PG_ROUND_UP(mmap_cur->base_addr_low);
-			size_t base_len = mmap_cur->length_low;
-			if (base_addr < kernel_end_addr) {
-				size_t substract_len =
-					kernel_end_addr - base_addr;
+		size_t base_addr = PG_ROUND_UP(mmap_cur->base_addr_low);
+		size_t base_len = PG_ROUND_DOWN(mmap_cur->length_low);
 
-				if (substract_len >
-				    base_len) { //We just ignore this memory
-					base_len = 0;
-				} else {
-					base_addr = kernel_end_addr;
-					base_len -= substract_len;
-				}
+		if (base_addr < kernel_end_phy_addr) {
+			size_t substract_len = kernel_end_phy_addr - base_addr;
+
+			//base_addr + base_len < kernel_end_addr
+			if (substract_len > base_len) {
+				base_len = 0; //So ignore this memory region
+			} else {
+				base_addr = kernel_end_phy_addr;
+				base_len -= substract_len;
 			}
-			free_frame_range(base_addr, base_len);
 		}
+
+		free_frame_range(base_addr, base_len);
 	}
 }
 
@@ -69,14 +70,14 @@ ptr_phy_t alloc_frame()
 	kpanic_fmt("No more free frames\n");
 	return 0xFFFFFFFF;
 }
-void frame_set_used(ptr_phy_t frame)
+void frame_set_used(ptr_phy_t frame, uint8_t reuse_ok)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
 	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
 
 	if ((frames[frame_index] & frame_shift) == 0) {
 		frames[frame_index] |= frame_shift;
-	} else {
+	} else if (!reuse_ok) {
 		kpanic_fmt("Error: frame already used 0x%x\n", frame);
 	}
 }
