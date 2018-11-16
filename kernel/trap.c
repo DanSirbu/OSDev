@@ -81,7 +81,7 @@ void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx,
 		void (*func)(uint32_t) = interrupt_handlers[interrupt_no];
 		(*func)(error_code);
 	} else {
-		fail("No handler for interrupt\n");
+		fail_stmt("No handler for interrupt %d\n", interrupt_no);
 	}
 
 	if (interrupt_no >= 32) {

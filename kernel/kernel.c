@@ -16,6 +16,7 @@
 #include "mmu.h"
 #include "device.h"
 #include "time.h"
+#include "spinlock.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -92,6 +93,15 @@ void kmain(multiboot_info_t *multiboot_info)
 	device_write(0x1000, abc, 1);
 
 	timer_init(1000);
+
+	int x = 0;
+	spinlock_acquire(&x);
+
+	kpanic("Lock acquired\n");
+
+	spinlock_release(&x);
+
+	kpanic("Lock released\n");
 
 	//char *test = (char *)0xA0000000;
 	//char asd = *test; //Page fault

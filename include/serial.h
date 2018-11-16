@@ -12,7 +12,14 @@ void kpanic(char *message);
 #define assert(statement)                                                      \
 	(statement) ? (void)0 : assert_failed(__FILE__, __LINE__, #statement)
 
-#define fail(why) assert_failed(__FILE__, __LINE__, why)
+#define fail_stop(why)                                                         \
+	do {                                                                   \
+		fail((why));                                                   \
+		while (1)                                                      \
+			;                                                      \
+	} while (0)
+
+#define fail(why) assert_failed(__FILE__, __LINE__, (why))
 
 #define EXPAND_ARGS(...) __VA_ARGS__
 #define fail_stmt(why, stmt)                                                   \
