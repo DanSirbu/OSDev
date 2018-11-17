@@ -100,6 +100,42 @@ StartHigherHalf:
 	call kmain
 	hlt 				;halt the CPU
 
+; since we are using cdecl
+; the following registers are assumed to be changed to the called method (i.e. the caller saves them)
+; eax, ecx and edx
+
+; we can think of a context switch as if the process calls the cpu_switch_proc method and it returns some time later
+; **old_context [ebp+4]
+; *new_context [ebp+8]
+
+ ; Remember, c struct is lowest address to highest address
+ ; so edi is lowest, eip is highest
+switch_context:
+	; EIP saved from method call
+	push ebp
+	push ebx
+	push esi
+	push edi
+
+	; Switch context
+
+	; set old_context pointer to the values saved above (so esp)
+	; i.e. *old_context = esp (note the single *)
+	mov eax, [ebp+4]
+	mov [eax], esp
+	; update stack pointer to new context
+	mov esp, [ebp+8] ; Now, we are on the new stack
+
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+
+	ret ; Continue execution
+	
+
+	
+
 global kernel_stack_lowest_address
 section .bss
 align 4
