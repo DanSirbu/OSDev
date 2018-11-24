@@ -17,6 +17,7 @@
 #include "device.h"
 #include "time.h"
 #include "spinlock.h"
+#include "proc.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -55,6 +56,23 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 	}
 }
 
+void test_process1()
+{
+	while (1) {
+		kpanic("a");
+		schedule();
+	}
+}
+void test_process2()
+{
+	while (1) {
+		kpanic("b");
+		schedule();
+	}
+}
+extern process_t task[];
+extern volatile process_t *current;
+
 void kmain(multiboot_info_t *multiboot_info)
 {
 	memory_map_handler(multiboot_info->mmap_addr,
@@ -87,7 +105,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	mmap(0x90000000, 0x4000);
 	initrd_init(0x90000000, 0x4000);
 
-	mmap(0xA0000000, 0x00F00000);
+	mmap(0xA0000000, 0x0F000000);
 
 	char *abc = "AAAAAAABBBBBCCCCC";
 	device_write(0x1000, abc, 1);
@@ -102,6 +120,25 @@ void kmain(multiboot_info_t *multiboot_info)
 	spinlock_release(&x);
 
 	kpanic("Lock released\n");
+
+	//Processes
+	//copy_process(test_process1);
+	//copy_process(test_process2);
+
+	clone(test_process1, kmalloc(0x1000) + 0x1000);
+	clone(test_process2, kmalloc(0x1000) + 0x1000);
+
+	process_t *proc1 = &task[1];
+	void *tmpStack = kmalloc(0x100) + 0x100;
+	current->context =
+		(context_t *)tmpStack; //Does not matter, we won't return here
+	current->state = 100;
+	schedule();
+	//switch_context((context_t **)&current->context, proc1->context);
+
+	/*while (1) {
+		schedule();
+	}*/
 
 	//char *test = (char *)0xA0000000;
 	//char asd = *test; //Page fault
