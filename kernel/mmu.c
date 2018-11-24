@@ -85,7 +85,7 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	frame_init(memory_map_base, memory_map_full_len);
 	register_handler(TRAP_PAGE_FAULT, page_fault_handler);
 
-	//We need the last page directory to map to page directory
+	//We need the last page directory entry to map to page directory
 	// so we can map the page tables to memory
 	boot_page_directory[1023] =
 		PTE_ADDR((size_t)page_directory - 0xC0000000) |
