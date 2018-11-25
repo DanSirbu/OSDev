@@ -110,7 +110,12 @@ StartHigherHalf:
 
  ; Remember, c struct is lowest address to highest address
  ; so edi is lowest, eip is highest
+global switch_context
+ 
 switch_context:
+	mov eax, [esp+4] ; Ptr to Ptr of context, which we will set to this stack
+	mov edx, [esp+8] ; Ptr to new context
+
 	; EIP saved from method call
 	push ebp
 	push ebx
@@ -121,10 +126,10 @@ switch_context:
 
 	; set old_context pointer to the values saved above (so esp)
 	; i.e. *old_context = esp (note the single *)
-	mov eax, [ebp+4]
 	mov [eax], esp
+
 	; update stack pointer to new context
-	mov esp, [ebp+8] ; Now, we are on the new stack
+	mov esp, edx ; Now, we are on the new stack
 
 	pop edi
 	pop esi
