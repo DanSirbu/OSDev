@@ -13,19 +13,32 @@ struct cpu {
 	context_t *scheduler_ctx;
 };
 
+enum STATES { STATE_READY = 1, STATE_RUNNING = 2, STATE_FINISHED = 0 };
+
 //https://github.com/s-matyukevich/raspberry-pi-os/blob/master/docs/lesson04/rpi-os.md
 //The counter allows preemption
 //We decrease it by one at every tick and schedule another task when it reaches 0
 //Priority = what we set the counter to when we schedule the process for a time slice
 //If criticalRegion is non-zero, then it means process should not be interrupted
+
+/*So here is the thing, why does everybody say the kernel has processes and threads?
+THOSE DON'T EXIST AT ALL!
+All the kernel (specifically, the scheduler) knows about is tasks
+
+clone(task) = copy registers and create new stack, page_directory stays the same = analogous to thread
+fork(task) = copy everything = analogous to process
+*/
+
+//Oh and idle task exists because there is no task left to run
 typedef struct {
 	context_t *context;
 
-	uint32_t state;
+	enum STATES state;
 	uint32_t counter;
 	uint32_t priority;
-	uint32_t criticalRegion;
-} process_t;
+
+	page_directory_t page_directory;
+} task_t;
 
 /*
 Note: when we switch a context, we basically do a thread switch
