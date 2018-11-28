@@ -5,9 +5,7 @@ extern void asm_lgdt();
 
 #define KERNEL_STACK_SIZE 4096
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
+#include "types.h"
 
 const uint16_t NULL_SEGMENT_SELECTOR;
 const uint16_t KERNAL_CODE_SEGMENT_SELECTOR;
@@ -145,4 +143,8 @@ void initialize_gdt()
 
 	// Grub has already loaded the segment registers
 	// with the correct values (0x8 for cs, 0x10 for the others)
+}
+void set_kernel_stack(void *stack)
+{
+	tss.esp0 = (uint32_t)stack;
 }
