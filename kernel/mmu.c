@@ -13,6 +13,16 @@ void page_fault_handler(int error_no);
 
 uint32_t page_directory[1024] __attribute__((aligned(0x1000)));
 
+uint32_t virtual_to_physical(uint32_t addr)
+{
+	uint32_t pdx = PDX(addr);
+	uint32_t ptx = PTX(addr);
+
+	page_directory_t *page_table =
+		(page_directory_t *)(0xFFC00000 | pdx << 12);
+	return (page_table->tables[ptx] & ~0xFFF) | (addr & 0xFFF);
+}
+
 //Just map it, we don't care where
 void mmap(size_t base, size_t len)
 {
@@ -155,4 +165,24 @@ void page_fault_handler(int error_no)
 		"User process tried to write a page and caused a protection fault"
 	};
 	fail_stmt_stop("Page Fault Error: %s\n", page_fault_msgs[error_no]);
+}
+
+/*
+ * Copies the page directory, all the user page tables and the contents of the user page tables
+*/
+page_directory_t *clone_directory(page_directory_t *src)
+{
+	/*	void *new_pg_directory = kmalloc(sizeof(page_directory_t));
+
+	for (int x = 0; x < 1024; x++) {
+		if (src->tables[x] != 0) {
+		}
+
+		//Keep kernel tables the same
+		if (x > (KERN_BASE / PGSIZE)) {
+			new_pg_directory->tables[x] = pd->tables[x];
+		}
+	}
+	*/
+	return src; //TODO
 }

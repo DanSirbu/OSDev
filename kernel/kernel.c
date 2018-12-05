@@ -32,7 +32,7 @@ extern void paging_init();
 extern void idt_init();
 extern void kprint_newline();
 
-uint8_t PIC1_INT = 0x00;
+uint8_t PIC1_INT = 0x01;
 uint8_t PIC2_INT = 0x00;
 
 void memory_map_handler(u32 mmap_addr, u32 mmap_len)
@@ -70,9 +70,10 @@ void test_process2()
 		schedule();
 	}
 }
-extern process_t task[];
-extern volatile process_t *current;
+//extern process_t task[];
+//extern volatile process_t *current;
 
+extern uint32_t virtual_to_physical(uint32_t addr);
 void kmain(multiboot_info_t *multiboot_info)
 {
 	memory_map_handler(multiboot_info->mmap_addr,
@@ -102,6 +103,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
 	kpanic_fmt("Paging init finished\n"); // Malloc now works
 
+	uint32_t kern_phy_addr = virtual_to_physical(KERN_IO_BASE);
+	kpanic_fmt("Kernel physical 0x%x\n", kern_phy_addr);
+
 	mmap(0x90000000, 0x4000);
 	initrd_init(0x90000000, 0x4000);
 
@@ -128,12 +132,12 @@ void kmain(multiboot_info_t *multiboot_info)
 	clone(test_process1, kmalloc(0x1000) + 0x1000);
 	clone(test_process2, kmalloc(0x1000) + 0x1000);
 
-	process_t *proc1 = &task[1];
+	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
 	current->context =
 		(context_t *)tmpStack; //Does not matter, we won't return here
 	current->state = 100;
-	schedule();
+	schedule();*/
 	//switch_context((context_t **)&current->context, proc1->context);
 
 	/*while (1) {
