@@ -30,3 +30,6 @@ typedef uint8_t bool;
 	if (val % alignment != 0) {                                            \
 		val += alignment - (val % alignment);                          \
 	}
+
+#define cli() asm volatile("cli")
+#define sti() asm volatile("sti")
