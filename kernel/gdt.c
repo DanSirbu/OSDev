@@ -144,7 +144,7 @@ void initialize_gdt()
 	// Grub has already loaded the segment registers
 	// with the correct values (0x8 for cs, 0x10 for the others)
 }
-void set_kernel_stack(void *stack)
+void set_kernel_stack(size_t stack)
 {
 	tss.esp0 = (uint32_t)stack;
 }

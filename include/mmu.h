@@ -21,6 +21,10 @@
 //Ignore that the physical page is already in use
 #define FLAG_IGNORE_PHY_REUSE 1
 
+typedef struct {
+	uint32_t tables[1024]; //Physical tables
+} page_directory_t;
+
 void mmap(size_t base, size_t len);
 void mmap_addr(size_t vaddr, size_t phyaddr, size_t len, uint8_t flags);
 void setPTE(size_t vaddr, size_t phyaddr);

@@ -63,4 +63,15 @@ void timer_interrupt()
 	if (ticks % 1000 == 0) {
 		unix_time++;
 	}
+
+	if (ticks % 100 == 0) {
+		//TODO schedule
+		//1. Write to TSS
+		//2. Switch to new stack
+		//   - What if the new stack wasn't from an interrupt?
+		//   	- Then it was a kernel thread not a user process
+		//That's it?
+
+		
+	}
 }

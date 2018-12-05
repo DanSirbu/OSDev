@@ -3,26 +3,15 @@
 #include "kmalloc.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
+#define STACK_SIZE 4096
 
-process_t task[NO_TASKS];
-volatile process_t *current = task;
+extern void set_kernel_stack(size_t);
+
+task_t tasks[NO_TASKS];
+volatile task_t *current = tasks;
 
 uint32_t last_process = 0;
 
-//Note: init task is the first one
-//The scheduler runs on the currently running process
-
-//It checks to see if a new process should be run
-#define STATE_READY 1
-#define STATE_RUNNING 2
-#define STATE_TERMINATED 3
-
-void preempt_disable()
-{
-}
-void preempt_enable()
-{
-}
 /*
 The following description is copied from the linux kernel, so I don't confuse the functionality
 */
@@ -36,10 +25,10 @@ The following description is copied from the linux kernel, so I don't confuse th
  */
 void clone(void (*func_addr)(void), void *new_stack)
 {
-	process_t *new_process = &task[last_process + 1];
+	task_t *new_process = &tasks[last_process + 1];
 
 	//Clear the old data
-	memset((void *)new_process, 0, sizeof(process_t));
+	memset((void *)new_process, 0, sizeof(task_t));
 
 	new_process->context = new_stack - sizeof(context_t);
 	new_process->context->eip = (size_t)func_addr;
@@ -49,25 +38,42 @@ void clone(void (*func_addr)(void), void *new_stack)
 
 	last_process++;
 }
-void spawn_init()
+void copy_task(task_t *task)
 {
-	process_t proc;
-	//proc->context.eip = 10;
+	task_t *new_process = &tasks[last_process + 1];
+
+	//Copy the stack
+	new_process->stack = (size_t)kmalloc(STACK_SIZE) + STACK_SIZE;
+	memcpy((void *)new_process->stack - STACK_SIZE,
+	       (void *)task->stack - STACK_SIZE, STACK_SIZE);
+
+	//Update the esp and ebp
+	//TODO WAIT, YOU HAVE TO UPDATE ALL THE LOCAL VARIABLES ON THE NEW STACK THIS WAY
+	//new_process->ebp = new_process->esp =
 }
 
-void schedule()
+task_t *pick_next_task()
 {
 	for (uint32_t i = 0; i <= last_process; i++) {
-		if (task[i].state == STATE_READY && &task[i] != current) {
-			context_t **current_context =
-				(context_t **)&current->context;
-			current = &task[i];
-			asm volatile("cli");
-			switch_context(current_context, task[i].context);
-			asm volatile("sti");
-			break;
+		if (tasks[i].state == STATE_READY && &tasks[i] != current) {
+			return (task_t *)&tasks[i];
 		}
 	}
+
+	return (task_t *)&tasks[0];
+}
+void schedule()
+{
+	task_t *next_task = pick_next_task();
+
+	context_t **current_context = (context_t **)&current->context;
+	current = next_task;
+
+	set_kernel_stack(next_task->stack);
+
+	cli(); //Next process is responsible to enable interrupts again
+	switch_context(current_context, next_task->context);
+	sti();
 }
 /*
 	preempt_disable();

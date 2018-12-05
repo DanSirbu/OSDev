@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "mmu.h"
 
 typedef struct context {
 	size_t edi;
@@ -32,6 +33,7 @@ fork(task) = copy everything = analogous to process
 //Oh and idle task exists because there is no task left to run
 typedef struct {
 	context_t *context;
+	size_t stack;
 
 	enum STATES state;
 	uint32_t counter;
