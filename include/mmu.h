@@ -5,6 +5,11 @@
 #define KERN_BASE 0xC0000000
 #define KERN_IO_BASE (KERN_BASE - 0x10000000)
 
+//Also defined in p_allocator.h
+#define PGSIZE 4096
+#define PG_ROUND_DOWN(addr) (addr & ~(PGSIZE - 1))
+#define PG_ROUND_UP(addr) PG_ROUND_DOWN((addr + (PGSIZE - 1)))
+
 #define PTE_P 1
 
 //Gets page directory index
