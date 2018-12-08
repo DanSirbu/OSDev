@@ -15,11 +15,19 @@ typedef struct block_header block;
 
 block *free_list;
 
-#define HEAP_HEAD ((void *)0xA0000000)
-#define HEAP_MAX ((HEAP_HEAD) + 0x0F000000)
+vptr_t heap_top;
+vptr_t heap_start;
+vptr_t heap_end;
+void kinit_malloc(vptr_t start, vptr_t end)
+{
+	if (heap_top) {
+		fail("Malloc already initialized");
+		return;
+	}
 
-void *heap_top = HEAP_HEAD;
-
+	heap_start = heap_top = start;
+	heap_end = end;
+}
 void *kmalloc_align(size_t size, uint8_t alignment)
 {
 	if (size == 0) {
@@ -100,7 +108,7 @@ void kfree(void *ptr)
 	if (ptr == 0) {
 		return;
 	}
-	if (ptr < HEAP_HEAD) {
+	if (ptr < heap_start) {
 		kpanic_fmt(
 			"Trying to free ptr before the head of the heap. %p\n",
 			ptr);
@@ -137,14 +145,10 @@ void *sbrk(u32 size)
 	}
 	void *returnVal = heap_top;
 	heap_top += size;
-	if (heap_top > HEAP_MAX) {
-		kpanic_fmt("HEAP TOP OVER HEAP MAX\n");
-	}
 
-	// Should never happen
-	if (heap_top < HEAP_HEAD) {
-		kpanic_fmt("PANIC: heap top < heap head\n");
-	}
+	assert(heap_top <= heap_end);
+	assert(heap_top >= heap_start); // Should never happen
+
 	return returnVal;
 }
 
