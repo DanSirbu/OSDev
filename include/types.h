@@ -16,6 +16,9 @@ typedef int int32_t;
 
 typedef u32 size_t;
 
+typedef void *vptr_t; //Pointer to virtual memory
+typedef void *pptr_t; //Pointer to physical memory
+
 #define NULL 0
 
 #define false 0
