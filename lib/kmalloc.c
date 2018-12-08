@@ -2,18 +2,16 @@
 #include "serial.h"
 #include "types.h"
 
-extern char kernel_end;
-
-struct block_header {
+// Block header is 8 bytes total
+typedef struct block {
 	size_t size;
-	struct block_header *next_free;
-} __attribute__((packed)); // Block header is 8 bytes total
-typedef struct block_header block;
+	struct block *next_free;
+} __attribute__((packed)) block_t;
 
 #define B2P(mblock) (mblock + 1)
-#define P2B(mblock) (((block *)mblock) - 1)
+#define P2B(mblock) (((block_t *)mblock) - 1)
 
-block *free_list;
+block_t *free_list;
 
 vptr_t heap_top;
 vptr_t heap_start;
@@ -51,7 +49,7 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 	sbrk((wantedAlignment - 8) - curAlignment);
 
 	ALIGN(size, 8);
-	block *cur_block = (block *)sbrk(sizeof(block) + size);
+	block_t *cur_block = (block_t *)sbrk(sizeof(block_t) + size);
 	cur_block->next_free = 0;
 	cur_block->size = size;
 	return B2P(cur_block);
@@ -64,8 +62,8 @@ void *kmalloc(size_t size)
 	// Make size 8 byte aligned
 	ALIGN(size, 8);
 	// Find best fit for size while keeping track of smallest fit
-	block *curBestFit = NULL, *curBestFitPrevious = NULL;
-	block *prev_block, *cur_block;
+	block_t *curBestFit = NULL, *curBestFitPrevious = NULL;
+	block_t *prev_block, *cur_block;
 
 	for (cur_block = free_list, prev_block = free_list; cur_block != NULL;
 	     prev_block = cur_block, cur_block = cur_block->next_free) {
@@ -97,7 +95,7 @@ void *kmalloc(size_t size)
 	}
 
 	// Else must allocate space
-	cur_block = (block *)sbrk(sizeof(block) + size);
+	cur_block = (block_t *)sbrk(sizeof(block_t) + size);
 	cur_block->next_free = 0;
 	cur_block->size = size;
 	return B2P(cur_block);
@@ -115,12 +113,12 @@ void kfree(void *ptr)
 		return;
 	}
 
-	block *cur_block = P2B(ptr);
+	block_t *cur_block = P2B(ptr);
 
 	// If the block is at the end of the heap, simply remove it and don't put in
 	// free_list
 	if ((ptr + cur_block->size) == heap_top) {
-		sbrk(-(sizeof(block) + cur_block->size));
+		sbrk(-(sizeof(block_t) + cur_block->size));
 		return;
 	}
 
@@ -130,7 +128,7 @@ void kfree(void *ptr)
 	}
 
 	// Else we append to free list
-	block *cur_free_block;
+	block_t *cur_free_block;
 	for (cur_free_block = free_list; cur_free_block->next_free != NULL;
 	     cur_free_block = cur_free_block->next_free)
 		;
