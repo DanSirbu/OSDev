@@ -110,7 +110,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	initrd_init(0x90000000, 0x4000);
 
 	mmap(0xA0000000, 0x0F000000);
-
+	kinit_malloc((vptr_t)0xA0000000, (vptr_t)0xAF000000);
 	char *abc = "AAAAAAABBBBBCCCCC";
 	device_write(0x1000, abc, 1);
 
