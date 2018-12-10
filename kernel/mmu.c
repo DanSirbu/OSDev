@@ -98,11 +98,10 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	//We need the last page directory entry to map to page directory
 	// so we can map the page tables to memory
 	boot_page_directory[1023] =
-		PTE_ADDR((size_t)page_directory - 0xC0000000) |
-		PTE_P; //4kb page
+		PTE_ADDR((size_t)page_directory - KERN_BASE) | PTE_P; //4kb page
 	//Invalidate tlb
 	//TODO: Look into using invlpg
-	LoadNewPageDirectory((size_t)boot_page_directory - 0xC0000000);
+	LoadNewPageDirectory((size_t)boot_page_directory - KERN_BASE);
 
 	//Clear page directory
 	memset(page_directory, 0, sizeof(page_directory));
@@ -145,7 +144,7 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	}
 
 	//Load new page directory
-	uint32_t pd_target = ((uint32_t)page_directory) - 0xC0000000;
+	uint32_t pd_target = ((uint32_t)page_directory) - KERN_BASE;
 	LoadNewPageDirectory(pd_target);
 
 	//Disable PSE (4 MiB pages)

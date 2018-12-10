@@ -22,7 +22,6 @@
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
 
-#define VIRT_TO_PHYS_ADDR(x) (x - 0xc0000000)
 typedef unsigned int u32;
 
 extern unsigned char keyboard_map[128];

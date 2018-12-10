@@ -2,6 +2,7 @@
 #include "serial.h"
 #include "string.h"
 #include "types.h"
+#include "mmu.h"
 
 typedef struct RSDPDescriptor {
 	char Signature[8];
