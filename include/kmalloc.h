@@ -4,7 +4,7 @@
 
 void *kmalloc(size_t size);
 void *kmalloc_align(size_t size, uint8_t alignment);
-void *kvmalloc();
+void *kvmalloc(size_t size);
 
 void kfree(void *ptr);
 void *sbrk(size_t size);

@@ -72,8 +72,12 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 /*
  * Allocate page-aligned block
  */
-void *kvmalloc()
+void *kvmalloc(size_t size)
 {
+	if (size == 0) {
+		return NULL;
+	}
+	size = PG_ROUND_UP(size);
 	block_t *current = NULL, *prev = NULL;
 
 	for (current = free_list; current != NULL;
@@ -87,7 +91,7 @@ void *kvmalloc()
 	//TODO: allocate new page
 	//We want to first align it to 4096 - block_t header size to make sure there is enough space
 	sbrk_alignto(4096 - sizeof(block_t));
-	return kmalloc(4096);
+	return kmalloc(size);
 }
 void *kmalloc(size_t size)
 {
