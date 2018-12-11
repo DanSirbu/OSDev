@@ -113,6 +113,19 @@ void kmain(multiboot_info_t *multiboot_info)
 	char *abc = "AAAAAAABBBBBCCCCC";
 	device_write(0x1000, abc, 1);
 
+	/* kmalloc testing code
+	char *addr1 = kmalloc(10);
+	addr1[0] = 0xAA;
+	addr1[9] = 0xBB;
+	char *addr2 = kmalloc(4080);
+
+	kfree(addr1);
+	vptr_t addr3 = kvmalloc();
+	kfree(addr3);
+	vptr_t test1 = kmalloc(1);
+	vptr_t test2 = kmalloc(1);
+	vptr_t addr4 = kvmalloc();
+	*/
 	timer_init(1000);
 
 	int x = 0;

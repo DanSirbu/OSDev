@@ -2,6 +2,8 @@
 #include "serial.h"
 #include "types.h"
 
+void sbrk_alignto(size_t alignment);
+
 // Block header is 8 bytes total
 typedef struct block {
 	size_t size;
@@ -25,6 +27,19 @@ void kinit_malloc(vptr_t start, vptr_t end)
 
 	heap_start = heap_top = start;
 	heap_end = end;
+}
+/*
+ * Remove a block from the free list
+ * If the prev_block is null, then it means it's the first block
+ */
+static inline void mark_block_used(block_t *prev_block, block_t *cur_block)
+{
+	if (prev_block == NULL) {
+		free_list = NULL;
+	} else {
+		prev_block->next_free = cur_block->next_free;
+		cur_block->next_free = NULL;
+	}
 }
 void *kmalloc_align(size_t size, uint8_t alignment)
 {
@@ -54,6 +69,26 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 	cur_block->size = size;
 	return B2P(cur_block);
 }
+/*
+ * Allocate page-aligned block
+ */
+void *kvmalloc()
+{
+	block_t *current = NULL, *prev = NULL;
+
+	for (current = free_list; current != NULL;
+	     prev = current, current = current->next_free) {
+		if (current->size == 4096) {
+			mark_block_used(prev, current);
+			return B2P(current);
+		}
+	}
+
+	//TODO: allocate new page
+	//We want to first align it to 4096 - block_t header size to make sure there is enough space
+	sbrk_alignto(4096 - sizeof(block_t));
+	return kmalloc(4096);
+}
 void *kmalloc(size_t size)
 {
 	if (size == 0) {
@@ -61,25 +96,24 @@ void *kmalloc(size_t size)
 	}
 	// Make size 8 byte aligned
 	ALIGN(size, 8);
-	// Find best fit for size while keeping track of smallest fit
+	// Find best fit for size while keeping track of smallest fit and previous block
 	block_t *curBestFit = NULL, *curBestFitPrevious = NULL;
-	block_t *prev_block, *cur_block;
+	block_t *prev_block = NULL, *cur_block = NULL;
 
-	for (cur_block = free_list, prev_block = free_list; cur_block != NULL;
+	for (cur_block = free_list; cur_block != NULL;
 	     prev_block = cur_block, cur_block = cur_block->next_free) {
-		if (cur_block->size < size)
+		//Note: cur_block->size == 4096: Leave page-sized blocks alone for page directories
+		if (cur_block->size < size || cur_block->size == 4096)
 			continue;
 
 		if (cur_block->size == size) { // Found our perfect match
-			prev_block->next_free =
-				cur_block->next_free; // Remove block from free_list
-			cur_block->next_free =
-				NULL; // Remove pointer since it's not free anymore
+			mark_block_used(prev_block, cur_block);
 			return B2P(cur_block);
 		}
 
-		if (cur_block->size <
-		    curBestFit->size) { // The current block is the smallest that fits the data
+		if (curBestFit == NULL ||
+		    cur_block->size <
+			    curBestFit->size) { // The current block is the smallest that fits the data
 			curBestFit = cur_block;
 			curBestFitPrevious = prev_block;
 		}
@@ -87,10 +121,7 @@ void *kmalloc(size_t size)
 
 	// Use the smallest fit even if not ideal
 	if (curBestFit != NULL) {
-		curBestFitPrevious->next_free =
-			cur_block->next_free; // Remove block from free_list
-		curBestFit->next_free =
-			NULL; // Remove pointer since it's not free anymore
+		mark_block_used(curBestFitPrevious, curBestFit);
 		return B2P(curBestFit);
 	}
 
@@ -122,20 +153,28 @@ void kfree(void *ptr)
 		return;
 	}
 
-	if (free_list == NULL) { // The first block we freed
-		free_list = cur_block;
-		return;
-	}
-
-	// Else we append to free list
-	block_t *cur_free_block;
-	for (cur_free_block = free_list; cur_free_block->next_free != NULL;
-	     cur_free_block = cur_free_block->next_free)
-		;
-	// We are at the last block, so append ours here
-	cur_free_block->next_free = cur_block;
+	//Else append to free list
+	cur_block->next_free = free_list;
+	free_list = cur_block;
 }
 
+/*
+ * NOTE: VERY WASTEFULL, this memory is never reclaimed
+ * TODO, change allocator type
+*/
+void sbrk_alignto(size_t alignment)
+{
+	vptr_t addr = sbrk(0);
+	size_t curOffset = (size_t)addr & 0xFFF;
+
+	if (alignment == curOffset) {
+		return;
+	} else if (curOffset < alignment) {
+		sbrk(alignment - curOffset);
+	} else {
+		sbrk(alignment - (curOffset - alignment));
+	}
+}
 void *sbrk(u32 size)
 {
 	if (size == 0) {
