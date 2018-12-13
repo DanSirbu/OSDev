@@ -2,8 +2,13 @@
 #include "types.h"
 #include "kmalloc.h"
 
-#define KERN_BASE 0xC0000000
-#define KERN_IO_BASE (KERN_BASE - 0x10000000)
+#define KERN_BASE /*      */ 0xC0000000
+
+#define KERN_HEAP_START /**/ 0xD0000000
+//Leave some pages unmapped after the heap so we know if we go past it
+#define KERN_HEAP_END /*  */ (0xE0000000 - 0x3000)
+
+#define KERN_IO_BASE /*   */ 0xE0000000
 
 //Also defined in p_allocator.h
 #define PGSIZE 4096
@@ -33,3 +38,4 @@ typedef struct {
 void mmap(size_t base, size_t len);
 void mmap_addr(size_t vaddr, size_t phyaddr, size_t len, uint8_t flags);
 void setPTE(size_t vaddr, size_t phyaddr);
+void paging_init(size_t memory_map_base, size_t memory_map_full_len);

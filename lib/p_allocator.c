@@ -26,18 +26,23 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	void *memory_map_end = memory_map + memory_map_len;
 
 	//Keep < kernel_end as used to not overwrite kernel stuff
-	size_t kernel_end_phy_addr =
-		PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
+	//size_t kernel_end_phy_addr =
+	//	PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
 
 	for (; memory_map < memory_map_end;
 	     memory_map +=
 	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
 		memory_map_t *mmap_cur = (memory_map_t *)memory_map;
+		
+		//Physical allocator only for non-io areas
+		if(mmap_cur->type != 1) {
+			continue;
+		}
 
 		size_t base_addr = PG_ROUND_UP(mmap_cur->base_addr_low);
 		size_t base_len = PG_ROUND_DOWN(mmap_cur->length_low);
 
-		if (base_addr < kernel_end_phy_addr) {
+		/*if (base_addr < kernel_end_phy_addr) {
 			size_t substract_len = kernel_end_phy_addr - base_addr;
 
 			//base_addr + base_len < kernel_end_addr
@@ -47,7 +52,7 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 				base_addr = kernel_end_phy_addr;
 				base_len -= substract_len;
 			}
-		}
+		}*/
 
 		free_frame_range(base_addr, base_len);
 	}

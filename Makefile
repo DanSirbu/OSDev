@@ -18,7 +18,7 @@ CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
 ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
-QEMU-ARGS = -no-shutdown -no-reboot -s -m 256M
+QEMU-ARGS = -no-shutdown -no-reboot -s -m 512M
 
 
 # -d int shows interrupts

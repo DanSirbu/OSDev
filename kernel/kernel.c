@@ -27,7 +27,6 @@ typedef unsigned int u32;
 extern unsigned char keyboard_map[128];
 extern void initialize_gdt();
 extern void kb_init();
-extern void paging_init();
 extern void idt_init();
 extern void kprint_newline();
 
@@ -90,28 +89,22 @@ void kmain(multiboot_info_t *multiboot_info)
 	init_serial();
 	kpanic_fmt("Serial initialized\n");
 
-	/*
-	int a = 5 / 0;
-	kmalloc(10);
-	void* ptr = kmalloc(0x100);
-	kfree(ptr);
-	*/
-
 	//Switch to more advanced paging (2 level)
 	kpanic_fmt("Paging init\n");
 	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
-	kpanic_fmt("Paging init finished\n"); // Malloc now works
+	kpanic_fmt("Paging init finished\n");
 
-	uint32_t kern_phy_addr = virtual_to_physical(KERN_IO_BASE);
-	kpanic_fmt("Kernel physical 0x%x\n", kern_phy_addr);
+	uint32_t kern_phy_addr = virtual_to_physical(KERN_HEAP_START);
+	kpanic_fmt("Kernel Heap physical address 0x%x\n", kern_phy_addr);
 
-	mmap(0x90000000, 0x4000);
-	initrd_init(0x90000000, 0x4000);
+	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
+	uint32_t *test = kmalloc(4);
+	*test = 0x11223344;
 
-	mmap(0xA0000000, 0x0F000000);
-	kinit_malloc((vptr_t)0xA0000000, (vptr_t)0xAF000000);
-	char *abc = "AAAAAAABBBBBCCCCC";
-	device_write(0x1000, abc, 1);
+	//mmap(0x90000000, 0x4000);
+	//initrd_init(0x90000000, 0x4000);
+	//char *abc = "AAAAAAABBBBBCCCCC";
+	//device_write(0x1000, abc, 1);
 
 	/* kmalloc testing code
 	char *addr1 = kmalloc(10);
@@ -120,11 +113,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	char *addr2 = kmalloc(4080);
 
 	kfree(addr1);
-	vptr_t addr3 = kvmalloc();
+	vptr_t addr3 = kvmalloc(PGSIZE);
 	kfree(addr3);
 	vptr_t test1 = kmalloc(1);
 	vptr_t test2 = kmalloc(1);
-	vptr_t addr4 = kvmalloc();
+	vptr_t addr4 = kvmalloc(PGSIZE);
 	*/
 	timer_init(1000);
 

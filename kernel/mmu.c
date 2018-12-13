@@ -13,14 +13,15 @@ void page_fault_handler(int error_no);
 
 uint32_t page_directory[1024] __attribute__((aligned(0x1000)));
 
-uint32_t virtual_to_physical(uint32_t addr)
+pptr_t virtual_to_physical(vptr_t addr)
 {
-	uint32_t pdx = PDX(addr);
-	uint32_t ptx = PTX(addr);
+	uint32_t pdx = PDX((size_t)addr);
+	uint32_t ptx = PTX((size_t)addr);
 
 	page_directory_t *page_table =
 		(page_directory_t *)(0xFFC00000 | pdx << 12);
-	return (page_table->tables[ptx] & ~0xFFF) | (addr & 0xFFF);
+	return (pptr_t)((page_table->tables[ptx] & ~0xFFF) |
+			((size_t)addr & 0xFFF));
 }
 
 //Just map it, we don't care where
@@ -90,6 +91,7 @@ void setPTE(size_t vaddr, ptr_phy_t phyaddr)
 	pg_tbl[ptx] = PTE_ADDR(phyaddr) | PTE_P; //Set the frame address
 }
 
+void paging_finalize();
 void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 {
 	frame_init(memory_map_base, memory_map_full_len);
@@ -101,7 +103,7 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 		PTE_ADDR((size_t)page_directory - KERN_BASE) | PTE_P; //4kb page
 	//Invalidate tlb
 	//TODO: Look into using invlpg
-	LoadNewPageDirectory((size_t)boot_page_directory - KERN_BASE);
+	LoadNewPageDirectory((uint32_t)boot_page_directory - KERN_BASE);
 
 	//Clear page directory
 	memset(page_directory, 0, sizeof(page_directory));
@@ -110,15 +112,9 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	page_directory[1023] =
 		PTE_ADDR((size_t)page_directory - KERN_BASE) | PTE_P;
 
-	size_t kernel_end_phy_addr =
-		PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
-
-	//Map kernel code
-	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, FLAG_IGNORE_PHY_REUSE);
-
 	//Now we need to mark the IO as used
 	//We map all IO to KERN_IO_BASE - size of all IO
-	void *memory_map = (void *)memory_map_base + KERN_BASE;
+	/*void *memory_map = (void *)memory_map_base + KERN_BASE;
 	void *memory_map_end = memory_map + memory_map_full_len;
 
 	size_t io_cur_location = KERN_IO_BASE;
@@ -141,16 +137,23 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 			  PG_ROUND_UP(mmap_cur->length_low), map_flag);
 
 		io_cur_location += PG_ROUND_UP(mmap_cur->length_low);
-	}
-
+	}*/
+	paging_finalize();
 	//Load new page directory
-	uint32_t pd_target = ((uint32_t)page_directory) - KERN_BASE;
-	LoadNewPageDirectory(pd_target);
+	LoadNewPageDirectory((uint32_t) virtual_to_physical(page_directory));
 
 	//Disable PSE (4 MiB pages)
 	DisablePSE();
 }
+void paging_finalize() {
+	size_t kernel_end_phy_addr =
+		PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
 
+	//Map kernel code
+	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, FLAG_IGNORE_PHY_REUSE);
+	//Map heap
+	mmap(KERN_HEAP_START, KERN_HEAP_END - KERN_HEAP_START);
+}
 void page_fault_handler(int error_no)
 {
 	static char *page_fault_msgs[] = {
