@@ -91,6 +91,10 @@ StartHigherHalf:
 	invlpg [0]
 
 	mov esp, kernel_stack_lowest_address + KERNEL_STACK_SIZE
+
+	push dword 0 ; "Previous" eip, so we know to stop our stack trace
+	push dword 0 ; "Previous" ebp
+
 	mov ebp, esp
 
 	; Push the multiboot header info
@@ -138,8 +142,10 @@ switch_context:
 
 	ret ; Continue execution
 	
-
-	
+global get_ebp
+get_ebp:
+	mov eax, ebp
+	ret
 
 global kernel_stack_lowest_address
 section .bss
