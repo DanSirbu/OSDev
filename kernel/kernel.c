@@ -70,8 +70,17 @@ void test_process2()
 }
 //extern process_t task[];
 //extern volatile process_t *current;
+extern void get_func_info(uint32_t addr, char **name, char **file);
+extern uint32_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
+extern page_directory_t *current_directory;
+extern void dump_stack_trace();
 
-extern uint32_t virtual_to_physical(uint32_t addr);
+void test2() {
+	dump_stack_trace();
+}
+void test1() {
+	test2();
+}
 void kmain(multiboot_info_t *multiboot_info)
 {
 	memory_map_handler(multiboot_info->mmap_addr,
@@ -89,17 +98,27 @@ void kmain(multiboot_info_t *multiboot_info)
 	init_serial();
 	kpanic_fmt("Serial initialized\n");
 
-	//Switch to more advanced paging (2 level)
+	//test1();
+
+	//We are guaranteed to have a 4MB heap (large page) at this point
+	kinit_malloc((vptr_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
+	//Switch to 2-level paging (2 level)
 	kpanic_fmt("Paging init\n");
 	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
 	kpanic_fmt("Paging init finished\n");
-
-	uint32_t kern_phy_addr = virtual_to_physical(KERN_HEAP_START);
+	//Malloc can now use the full heap
+	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
+	
+	pptr_t kern_phy_addr = virtual_to_physical(current_directory, KERN_HEAP_START);
 	kpanic_fmt("Kernel Heap physical address 0x%x\n", kern_phy_addr);
 
-	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
-	uint32_t *test = kmalloc(4);
+	
+	uint32_t *test = kmalloc(0x4000000);
 	*test = 0x11223344;
+	uint32_t *test2 = kmalloc(0x4000000);
+	*test2 = 0x1234;
+	kfree(test2);
+	kfree(test);
 
 	//mmap(0x90000000, 0x4000);
 	//initrd_init(0x90000000, 0x4000);

@@ -18,10 +18,15 @@ block_t *free_list;
 vptr_t heap_top;
 vptr_t heap_start;
 vptr_t heap_end;
+/*
+ * Can be called multiple times but the second time only updates the heap_end if it's bigger
+ */
 void kinit_malloc(vptr_t start, vptr_t end)
 {
-	if (heap_top) {
-		fail("Malloc already initialized");
+	if (heap_top) { //Already initialized
+		if(heap_end < end) {
+			heap_end = end;
+		}
 		return;
 	}
 
@@ -98,6 +103,11 @@ void *kmalloc(size_t size)
 	if (size == 0) {
 		return NULL;
 	}
+	if(!heap_start) {
+		kpanic_fmt("ERROR: Trying to malloc before the heap is initialized.");
+		return NULL;
+	}
+	
 	// Make size 8 byte aligned
 	ALIGN(size, 8);
 	// Find best fit for size while keeping track of smallest fit and previous block
@@ -142,9 +152,7 @@ void kfree(void *ptr)
 		return;
 	}
 	if (ptr < (void*)heap_start) {
-		kpanic_fmt(
-			"Trying to free ptr before the head of the heap. %p\n",
-			ptr);
+		kpanic_fmt("Trying to free %p, which is before the heap_start (%p)\n", (void*)ptr, (void*)heap_start);
 		return;
 	}
 

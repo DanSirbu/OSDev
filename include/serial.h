@@ -12,6 +12,9 @@ void kpanic(char *message);
 #define assert(statement)                                                      \
 	(statement) ? (void)0 : assert_failed(__FILE__, __LINE__, #statement)
 
+#define assert1(statement, why) \
+	(statement) ? (void) 0 : assert_failed_msg(__FILE__, __LINE__, why, 0)
+
 #define fail_stop(why)                                                         \
 	do {                                                                   \
 		fail((why));                                                   \

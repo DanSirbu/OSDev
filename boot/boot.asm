@@ -15,6 +15,7 @@ global load_idt
 global LoadNewPageDirectory, DisablePSE, boot_page_directory
 
 extern kmain 		;this is defined in the c file
+extern _kernel_end
 
 global asm_lgdt
 
@@ -42,26 +43,59 @@ load_idt:
 	ret
 
 KERN_BASE equ 0xC0000000
+KERN_HEAP equ 0xD0000000
+
 KERN_PAGE_NUM equ KERN_BASE >> 22
+KERN_HEAP_NUM equ KERN_HEAP >> 22
+
 KERNEL_STACK_SIZE equ 4096
 
 section .data
 align 0x1000
-
 boot_page_directory:
-	dd 0x00000083 ; Set Present, set 4mb pages, set rw #Maps 0x0 to 0x0
-	times (KERN_PAGE_NUM - 1) dd 0
-	dd 0x00000083 ; Set Present, set 4mb pages, set rw # Maps 0xC0000000 to 0x0
-	dd 0x00400083 ; Set Present, set 4mb pages, set rw # Maps 0xC0400000 to 0x00400000
-	times (1024 - KERN_PAGE_NUM - 2) dd 0
+	times 4096 dd 0
+
+_kernel_end_num: dd 0
+
+boot_page_directory_phy equ (boot_page_directory - KERN_BASE)
+_kernel_end_phy equ (_kernel_end - KERN_BASE)
+_kernel_end_num_phy equ (_kernel_end_num - KERN_BASE)
 
 section .text
 start:
 	;cli 				;block interrupts
 	; Carefull not to mess up ebx, it is the multiboot header pointer 
 
+	; Set _kernel_end_num (i.e. the index in boot_page_directory where _kernel_end is)
+	mov edi, _kernel_end
+	shr edi, 22
+	mov [_kernel_end_num_phy], edi
+
+	; Identity mapping
+	mov [boot_page_directory_phy], dword 0x00000083
+
+	; esi = index
+	; edi = physical address + flags
+	mov esi, KERN_PAGE_NUM
+	mov edi, 0x00000083
+map_kernel_code:
+	mov [boot_page_directory_phy + esi * 4], edi
+
+	inc esi
+	add edi, 0x00400000 ; Next 4MB
+
+	cmp esi, [_kernel_end_num_phy]
+	jl map_kernel_code
+
+	; Map first 4MB of heap to _kernel_end
+	mov esi, KERN_HEAP_NUM
+	mov edi, _kernel_end_phy
+	or edi, 0x83
+	mov [boot_page_directory_phy + esi * 4], edi
+	 
+
 	; Write boot_page_directory to cpu
-	mov ecx, (boot_page_directory - KERN_BASE)
+	mov ecx, boot_page_directory_phy
 	mov cr3, ecx
 
 	mov ecx, cr4
