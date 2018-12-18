@@ -141,7 +141,7 @@ void kfree(void *ptr)
 	if (ptr == 0) {
 		return;
 	}
-	if (ptr < heap_start) {
+	if (ptr < (void*)heap_start) {
 		kpanic_fmt(
 			"Trying to free ptr before the head of the heap. %p\n",
 			ptr);
@@ -152,7 +152,7 @@ void kfree(void *ptr)
 
 	// If the block is at the end of the heap, simply remove it and don't put in
 	// free_list
-	if ((ptr + cur_block->size) == heap_top) {
+	if ((ptr + cur_block->size) == (void*)heap_top) {
 		sbrk(-(sizeof(block_t) + cur_block->size));
 		return;
 	}
@@ -168,7 +168,7 @@ void kfree(void *ptr)
 */
 void sbrk_alignto(size_t alignment)
 {
-	vptr_t addr = sbrk(0);
+	vptr_t addr = (vptr_t)sbrk(0);
 	size_t curOffset = (size_t)addr & 0xFFF;
 
 	if (alignment == curOffset) {
@@ -181,10 +181,7 @@ void sbrk_alignto(size_t alignment)
 }
 void *sbrk(u32 size)
 {
-	if (size == 0) {
-		return heap_top;
-	}
-	void *returnVal = heap_top;
+	void *returnVal = (void*)heap_top;
 	heap_top += size;
 
 	assert(heap_top <= heap_end);
