@@ -2,9 +2,6 @@
 #include "kmalloc.h"
 #include "serial.h"
 
-//Comes from the linker
-extern char kernel_end;
-
 //Use a bitmap like the james malloy tutorial. TODO, change to how xv6 does it
 //Because this is inefficient, especially at initialization
 #define PGSIZE 4096
@@ -25,10 +22,6 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	void *memory_map = (void *)memory_map_base + KERN_BASE;
 	void *memory_map_end = memory_map + memory_map_len;
 
-	//Keep < kernel_end as used to not overwrite kernel stuff
-	//size_t kernel_end_phy_addr =
-	//	PG_ROUND_UP((size_t)&kernel_end - KERN_BASE);
-
 	for (; memory_map < memory_map_end;
 	     memory_map +=
 	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
@@ -42,23 +35,11 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 		size_t base_addr = PG_ROUND_UP(mmap_cur->base_addr_low);
 		size_t base_len = PG_ROUND_DOWN(mmap_cur->length_low);
 
-		/*if (base_addr < kernel_end_phy_addr) {
-			size_t substract_len = kernel_end_phy_addr - base_addr;
-
-			//base_addr + base_len < kernel_end_addr
-			if (substract_len > base_len) {
-				base_len = 0; //So ignore this memory region
-			} else {
-				base_addr = kernel_end_phy_addr;
-				base_len -= substract_len;
-			}
-		}*/
-
 		free_frame_range(base_addr, base_len);
 	}
 }
 
-ptr_phy_t alloc_frame()
+pptr_t alloc_frame()
 {
 	for (int x = 0; x < 0xFFFE0; x++) {
 		//There is a free frame here (since at least one bit is set to 0)
@@ -75,7 +56,7 @@ ptr_phy_t alloc_frame()
 	kpanic_fmt("No more free frames\n");
 	return 0xFFFFFFFF;
 }
-void frame_set_used(ptr_phy_t frame, uint8_t reuse_ok)
+void frame_set_used(pptr_t frame, uint8_t reuse_ok)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
 	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
@@ -86,7 +67,7 @@ void frame_set_used(ptr_phy_t frame, uint8_t reuse_ok)
 		kpanic_fmt("Error: frame already used 0x%x\n", frame);
 	}
 }
-void free_frame(ptr_phy_t frame)
+void free_frame(pptr_t frame)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
 	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
@@ -97,7 +78,7 @@ void free_frame(ptr_phy_t frame)
 		kpanic_fmt("Error: double free frame 0x%x\n", frame);
 	}
 }
-void free_frame_range(ptr_phy_t first_frame, uint32_t len)
+void free_frame_range(pptr_t first_frame, uint32_t len)
 {
 	for (uint32_t x = 0; x < len / PGSIZE; x++) {
 		free_frame(first_frame + x * PGSIZE);
