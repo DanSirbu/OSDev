@@ -61,30 +61,29 @@ void register_handler(int interrupt_no, void *handler)
 	interrupt_handlers[interrupt_no] = handler;
 }
 
-void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx,
-		       u32 edx, u32 ecx, u32 eax, const u32 interrupt_no,
-		       u32 error_code, size_t eip)
+void interrupt_handler(int_regs_t regs)
 {
-	if (interrupt_no < 32) {
+	if (regs.interrupt_no < 32) {
 		kpanic_fmt("Exception %d (%s) at 0x%x, error %d\n",
-			   interrupt_no, exceptions_string[interrupt_no], eip,
-			   error_code);
-	} else if (interrupt_no != 32) {
+			   regs.interrupt_no,
+			   exceptions_string[regs.interrupt_no], regs.eip,
+			   regs.error_code);
+	} else if (regs.interrupt_no != 32) {
 		kpanic_fmt("Interrupt %d (%s) at 0x%x, error %d\n",
-			   interrupt_no - 32,
-			   interrupts_string[interrupt_no - 32], eip,
-			   error_code);
+			   regs.interrupt_no - 32,
+			   interrupts_string[regs.interrupt_no - 32], regs.eip,
+			   regs.error_code);
 	}
 
 	//Send the interrupt if there is a handler
-	if (interrupt_handlers[interrupt_no] != NULL) {
-		void (*func)(uint32_t) = interrupt_handlers[interrupt_no];
-		(*func)(error_code);
+	if (interrupt_handlers[regs.interrupt_no] != NULL) {
+		void (*func)(uint32_t) = interrupt_handlers[regs.interrupt_no];
+		(*func)(regs.error_code);
 	} else {
-		fail_stmt("No handler for interrupt %d\n", interrupt_no);
+		fail_stmt("No handler for interrupt %d\n", regs.interrupt_no);
 	}
 
-	if (interrupt_no >= 32) {
-		sendEOI(interrupt_no);
+	if (regs.interrupt_no >= 32) {
+		sendEOI(regs.interrupt_no);
 	}
 }

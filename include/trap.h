@@ -8,8 +8,13 @@
 #define TRAP_TIMER 32
 #define TRAP_KEYBOARD (32 + 1)
 
+typedef struct {
+	uint32_t gs, fs, es, ds; //Segments pushed
+	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; //pushad
+	uint32_t interrupt_no, error_code; //Pushed by assembly code
+	uint32_t eip, cs, eflags, useresp, ss; //Pushed by CPU
+} int_regs_t;
+
 void register_handler(int interrupt_no, void *handler);
 
-void interrupt_handler(u32 cr2, u32 edi, u32 esi, u32 ebp, u32 esp, u32 ebx,
-		       u32 edx, u32 ecx, u32 eax, const u32 interrupt_no,
-		       u32 error_code, size_t eip);
+void interrupt_handler(int_regs_t regs);

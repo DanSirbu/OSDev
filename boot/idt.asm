@@ -4,24 +4,38 @@ global idt_0
 
 %macro no_error 1
 idt_%1:
-    push 0
-    push %1
+    push DWORD 0
+    push DWORD %1
     jmp common_interrupt_handler
 %endmacro
 %macro error 1
 idt_%1:
-    push %1
-    jmp common_interrupt_handler
+    push DWORD %1
+    jmp DWORD common_interrupt_handler
 %endmacro
 
 common_interrupt_handler:
     pushad
-    mov eax, cr2
-    push eax
+
+    push ds
+    push es
+    push fs
+    push gs
+
     call interrupt_handler
-    add esp, 4 ; ignore cr2 
+
+    ; Restore segment registers
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    ; Restore general registers
     popad
-    add esp, 8 ; pop handler number and error code
+
+    ; Pop handler number and error code
+    add esp, 8
+
     iretd
 align 0x10
 no_error 0
