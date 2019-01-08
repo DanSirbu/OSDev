@@ -4,7 +4,7 @@
 #include "types.h"
 #include "io.h"
 #include "trap.h"
-#include "proc.h"
+#include "task.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71

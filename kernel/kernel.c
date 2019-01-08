@@ -17,7 +17,7 @@
 #include "device.h"
 #include "time.h"
 #include "spinlock.h"
-#include "proc.h"
+#include "task.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
