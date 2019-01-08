@@ -1,6 +1,7 @@
 #include "proc.h"
 #include "mmu.h"
 #include "kmalloc.h"
+#include "serial.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
@@ -12,44 +13,39 @@ volatile task_t *current = tasks;
 
 uint32_t last_process = 0;
 
-/*
-The following description is copied from the linux kernel, so I don't confuse the functionality
-*/
-/*
- * This creates a new process as a copy of the old one,
- * but does not actually start it yet.
- *
- * It copies the registers, and all the appropriate
- * parts of the process environment (as per the clone
- * flags). The actual kick-off is left to the caller.
- */
-void clone(void (*func_addr)(void), void *new_stack)
+#define PUSH(stack, type, value)                                               \
+	stack -= sizeof(type);                                                 \
+	*((type *)stack) = value
+
+void exit_task()
 {
-	task_t *new_process = &tasks[last_process + 1];
+	kpanic_fmt("TASK RETURN");
+	while (1)
+		;
+}
+//Creates a new "thread" that runs the function fn
+//Also allocates a new stack
+//Does not start it yet
+task_t *copy_task(vptr_t fn, vptr_t args)
+{
+	task_t *new_task = &tasks[++last_process];
 
 	//Clear the old data
-	memset((void *)new_process, 0, sizeof(task_t));
+	memset((void *)new_task, 0, sizeof(task_t));
 
-	new_process->context = new_stack - sizeof(context_t);
-	new_process->context->eip = (size_t)func_addr;
-	new_process->context->ebp = (size_t)new_stack;
+	vptr_t stack = (vptr_t)(kmalloc(STACK_SIZE) + STACK_SIZE);
+	new_task->stack = stack;
 
-	new_process->state = STATE_READY;
+	PUSH(stack, vptr_t, args);
+	//Where fn returns to
+	PUSH(stack, vptr_t, (vptr_t)exit_task);
 
-	last_process++;
-}
-void copy_task(task_t *task)
-{
-	task_t *new_process = &tasks[last_process + 1];
+	new_task->context.eip = fn;
+	new_task->context.esp = stack;
 
-	//Copy the stack
-	new_process->stack = (size_t)kmalloc(STACK_SIZE) + STACK_SIZE;
-	memcpy((void *)new_process->stack - STACK_SIZE,
-	       (void *)task->stack - STACK_SIZE, STACK_SIZE);
+	new_task->page_directory = current->page_directory;
 
-	//Update the esp and ebp
-	//TODO WAIT, YOU HAVE TO UPDATE ALL THE LOCAL VARIABLES ON THE NEW STACK THIS WAY
-	//new_process->ebp = new_process->esp =
+	return new_task;
 }
 
 task_t *pick_next_task()
@@ -60,20 +56,21 @@ task_t *pick_next_task()
 		}
 	}
 
-	return (task_t *)&tasks[0];
+	return (task_t *)current;
 }
 void schedule()
 {
 	task_t *next_task = pick_next_task();
+	if (next_task == current) {
+		return;
+	}
 
-	context_t **current_context = (context_t **)&current->context;
+	context_t *current_context = (context_t *)&current->context;
 	current = next_task;
 
 	set_kernel_stack(next_task->stack);
 
-	cli(); //Next process is responsible to enable interrupts again
-	switch_context(current_context, next_task->context);
-	sti();
+	switch_context(current_context, &next_task->context);
 }
 /*
 	preempt_disable();

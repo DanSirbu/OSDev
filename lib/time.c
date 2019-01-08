@@ -4,6 +4,7 @@
 #include "types.h"
 #include "io.h"
 #include "trap.h"
+#include "proc.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71
@@ -54,7 +55,7 @@ void timer_init(uint32_t frequency)
 	outb(PIT0_DATA, BYTE1(div));
 	register_handler(TRAP_TIMER, timer_interrupt);
 }
-
+extern void sendEOI(uint32_t interrupt_no);
 uint32_t ticks = 0; //Since frequency is 1000, this is a millisecond
 uint32_t unix_time = 0; //Seconds
 void timer_interrupt()
@@ -65,13 +66,21 @@ void timer_interrupt()
 	}
 
 	if (ticks % 100 == 0) {
-		//TODO schedule
-		//1. Write to TSS
-		//2. Switch to new stack
-		//   - What if the new stack wasn't from an interrupt?
-		//   	- Then it was a kernel thread not a user process
-		//That's it?
-
-		
+		sendEOI(32);
+		schedule();
 	}
 }
+
+/*
+Note that you should probably have:
+A thread state for each thread (saying if it's "running", "ready to run", or blocked for some reason).
+The "switch_to(thread)" function that does nothing if the thread being switched to is currently running; or (otherwise):
+saves the currently running thread's register contents, etc
+checks if the currently running thread's state is "running" and if it is, puts the currently running thread back into the "ready to run" state", and puts it on whatever data structure the scheduler uses to keep track of "ready to run" threads
+sets the state of the thread being switched to to "running", and loads its register contents, etc.
+A "find_thread_to_switch_to()" function that chooses a thread to switch to (using whatever data structure the scheduler uses to keep track of "ready to run" threads), removes the selected thread from the scheduler's data structure, and then calls the "switch_to(thread)" function.
+A "block_thread(reason)" function which sets the currently running thread's state to whatever the reason is, then calls the "find_thread_to_switch_to()" function.
+An "unblock_thread(thread)" function which sets a thread's state to "read to run", then decides if the thread being unblocked should preempt the currently running thread. If the thread being unblocked shouldn't preempt then it puts the thread on whatever data structure the scheduler uses to keep track of "ready to run" threads; and if the thread being unblocked should preempt it calls the "switch_to(thread)" function instead (to cause an immediate task switch, without bothering with the unnecessary overhead of the "find_thread_to_switch_to()" function).
+*/
+
+//Handlers cannot call schedule

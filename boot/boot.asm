@@ -149,8 +149,34 @@ StartHigherHalf:
  ; Remember, c struct is lowest address to highest address
  ; so edi is lowest, eip is highest
 global switch_context
- 
+
+;EAX, ECX, and EDX are caller saved
 switch_context:
+	pop eax ; Eip is restored after context switch
+
+	mov ecx, [esp] ; Ptr to old context
+	mov edx, [esp+4] ; Ptr to new context
+
+	; Save registers in old context, if context_t changes, this must be changed
+	mov [ecx], eax ; eip
+	mov [ecx+4], esp
+	mov [ecx+8], ebp
+	mov [ecx+12], ebx
+	mov [ecx+16], esi
+	mov [ecx+20], edi
+
+	; Restore new context registers
+	mov ebp, [edx+8]
+	mov ebx, [edx+12]
+	mov esi, [edx+16]
+	mov edi, [edx+20]
+
+	; Change stack
+	mov esp, [edx+4]
+	push dword [edx] ; push eip
+	ret ; Continue execution from eip
+
+switch_context_old:
 	mov eax, [esp+4] ; Ptr to Ptr of context, which we will set to this stack
 	mov edx, [esp+8] ; Ptr to new context
 

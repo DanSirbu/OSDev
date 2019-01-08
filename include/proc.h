@@ -3,11 +3,13 @@
 #include "mmu.h"
 
 typedef struct context {
-	size_t edi;
-	size_t esi;
-	size_t ebx;
-	size_t ebp;
 	size_t eip;
+	size_t esp;
+	size_t ebp;
+
+	size_t ebx;
+	size_t esi;
+	size_t edi;
 } context_t;
 
 struct cpu {
@@ -32,7 +34,7 @@ fork(task) = copy everything = analogous to process
 
 //Oh and idle task exists because there is no task left to run
 typedef struct {
-	context_t *context;
+	context_t context;
 	size_t stack;
 
 	enum STATES state;
@@ -72,7 +74,7 @@ esi
 edi
 
 */
-void switch_context(context_t **cur_context, context_t *new_context);
+void switch_context(context_t *cur_context, context_t *new_context);
 void schedule();
-void copy_process(void (*func_addr)(void));
+task_t *copy_task(vptr_t fn, vptr_t args);
 void clone(void (*func_addr)(void), void *new_stack);

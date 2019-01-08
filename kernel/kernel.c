@@ -30,7 +30,7 @@ extern void kb_init();
 extern void idt_init();
 extern void kprint_newline();
 
-uint8_t PIC1_INT = 0x01;
+uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
 void memory_map_handler(u32 mmap_addr, u32 mmap_len)
@@ -54,18 +54,18 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 	}
 }
 
-void test_process1()
+void test_process1(vptr_t args)
 {
 	while (1) {
 		kpanic("a");
-		schedule();
+		//schedule();
 	}
 }
-void test_process2()
+void test_process2(vptr_t args)
 {
 	while (1) {
 		kpanic("b");
-		schedule();
+		//schedule();
 	}
 }
 //extern process_t task[];
@@ -75,10 +75,12 @@ extern uint32_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
 extern page_directory_t *current_directory;
 extern void dump_stack_trace();
 
-void test2() {
+void test2()
+{
 	dump_stack_trace();
 }
-void test1() {
+void test1()
+{
 	test2();
 }
 void kmain(multiboot_info_t *multiboot_info)
@@ -108,11 +110,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	kpanic_fmt("Paging init finished\n");
 	//Malloc can now use the full heap
 	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
-	
-	pptr_t kern_phy_addr = virtual_to_physical(current_directory, KERN_HEAP_START);
+
+	pptr_t kern_phy_addr =
+		virtual_to_physical(current_directory, KERN_HEAP_START);
 	kpanic_fmt("Kernel Heap physical address 0x%x\n", kern_phy_addr);
 
-	
 	uint32_t *test = kmalloc(0x4000000);
 	*test = 0x11223344;
 	uint32_t *test2 = kmalloc(0x4000000);
@@ -153,9 +155,17 @@ void kmain(multiboot_info_t *multiboot_info)
 	//copy_process(test_process1);
 	//copy_process(test_process2);
 
-	clone(test_process1, kmalloc(0x1000) + 0x1000);
-	clone(test_process2, kmalloc(0x1000) + 0x1000);
+	//clone(test_process1, kmalloc(0x1000) + 0x1000);
+	//clone(test_process2, kmalloc(0x1000) + 0x1000);
 
+	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
+	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
+	task1->state = STATE_READY;
+	task2->state = STATE_READY;
+
+	while (1) {
+		schedule();
+	}
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
 	current->context =
