@@ -37,6 +37,25 @@ common_interrupt_handler:
     add esp, 8
 
     iretd
+
+global enter_userspace
+; eip, cs, eflags, useresp, ss pushed by cpu
+enter_userspace:
+    mov esp, ebp
+
+    mov ax,0x23
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+
+    push 0x23
+    push DWORD [ebp+8]
+    pushf
+    push 0x1B ; User code segment with bottom 2 bits
+    push DWORD [ebp+4]
+    iret
+
 align 0x10
 no_error 0
 align 16

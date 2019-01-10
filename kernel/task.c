@@ -47,6 +47,12 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 
 	return new_task;
 }
+extern void enter_userspace(vptr_t fn, vptr_t stack);
+void exec(task_t *task, vptr_t fn)
+{
+	vptr_t stack = (vptr_t)kmalloc(0x1000);
+	enter_userspace(stack, fn);
+}
 
 task_t *pick_next_task()
 {

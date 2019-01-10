@@ -26,6 +26,7 @@ typedef unsigned int u32;
 
 extern unsigned char keyboard_map[128];
 extern void initialize_gdt();
+extern void initialize_tss();
 extern void kb_init();
 extern void idt_init();
 extern void kprint_newline();
@@ -54,13 +55,20 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 	}
 }
 
+void err()
+{
+	asm("cli");
+}
+extern void exec(task_t *task, vptr_t fn);
 void test_process1(vptr_t args)
 {
 	while (1) {
 		kpanic("a");
 		//schedule();
+		exec(NULL, (vptr_t)err);
 	}
 }
+
 void test_process2(vptr_t args)
 {
 	while (1) {
@@ -94,6 +102,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	kprint_newline();
 
 	initialize_gdt();
+	initialize_tss();
+
 	idt_init();
 	kb_init();
 
