@@ -3,6 +3,7 @@
 #include "mmu.h"
 
 void *kmalloc(size_t size);
+void *kcalloc(size_t size);
 void *kmalloc_align(size_t size, uint8_t alignment);
 void *kvmalloc(size_t size);
 

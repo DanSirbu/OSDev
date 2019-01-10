@@ -24,7 +24,7 @@ vptr_t heap_end;
 void kinit_malloc(vptr_t start, vptr_t end)
 {
 	if (heap_top) { //Already initialized
-		if(heap_end < end) {
+		if (heap_end < end) {
 			heap_end = end;
 		}
 		return;
@@ -103,11 +103,12 @@ void *kmalloc(size_t size)
 	if (size == 0) {
 		return NULL;
 	}
-	if(!heap_start) {
-		kpanic_fmt("ERROR: Trying to malloc before the heap is initialized.");
+	if (!heap_start) {
+		kpanic_fmt(
+			"ERROR: Trying to malloc before the heap is initialized.");
 		return NULL;
 	}
-	
+
 	// Make size 8 byte aligned
 	ALIGN(size, 8);
 	// Find best fit for size while keeping track of smallest fit and previous block
@@ -145,14 +146,22 @@ void *kmalloc(size_t size)
 	cur_block->size = size;
 	return B2P(cur_block);
 }
+void *kcalloc(size_t size)
+{
+	void *ptr = kmalloc(size);
+	memset(ptr, 0, size);
+	return ptr;
+}
 
 void kfree(void *ptr)
 {
 	if (ptr == 0) {
 		return;
 	}
-	if (ptr < (void*)heap_start) {
-		kpanic_fmt("Trying to free %p, which is before the heap_start (%p)\n", (void*)ptr, (void*)heap_start);
+	if (ptr < (void *)heap_start) {
+		kpanic_fmt(
+			"Trying to free %p, which is before the heap_start (%p)\n",
+			(void *)ptr, (void *)heap_start);
 		return;
 	}
 
@@ -160,7 +169,7 @@ void kfree(void *ptr)
 
 	// If the block is at the end of the heap, simply remove it and don't put in
 	// free_list
-	if ((ptr + cur_block->size) == (void*)heap_top) {
+	if ((ptr + cur_block->size) == (void *)heap_top) {
 		sbrk(-(sizeof(block_t) + cur_block->size));
 		return;
 	}
@@ -189,7 +198,7 @@ void sbrk_alignto(size_t alignment)
 }
 void *sbrk(u32 size)
 {
-	void *returnVal = (void*)heap_top;
+	void *returnVal = (void *)heap_top;
 	heap_top += size;
 
 	assert(heap_top <= heap_end);
