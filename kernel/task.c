@@ -8,8 +8,8 @@
 
 extern void set_kernel_stack(size_t);
 
-task_t tasks[NO_TASKS];
-volatile task_t *current = tasks;
+task_t task_list[NO_TASKS];
+volatile task_t *current = task_list;
 
 uint32_t last_process = 0;
 
@@ -28,7 +28,7 @@ void exit_task()
 //Does not start it yet
 task_t *copy_task(vptr_t fn, vptr_t args)
 {
-	task_t *new_task = &tasks[++last_process];
+	task_t *new_task = &task_list[++last_process];
 
 	//Clear the old data
 	memset((void *)new_task, 0, sizeof(task_t));
@@ -57,8 +57,9 @@ void exec(task_t *task, vptr_t fn)
 task_t *pick_next_task()
 {
 	for (uint32_t i = 0; i <= last_process; i++) {
-		if (tasks[i].state == STATE_READY && &tasks[i] != current) {
-			return (task_t *)&tasks[i];
+		if (task_list[i].state == STATE_READY &&
+		    &task_list[i] != current) {
+			return (task_t *)&task_list[i];
 		}
 	}
 
