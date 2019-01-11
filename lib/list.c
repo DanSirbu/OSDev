@@ -44,11 +44,18 @@ void list_remove(list_t *list, node_t *node)
 	}
 
 	node_t *prev = node->prev;
-	node->prev = node->next;
-	node->next = prev;
+	node_t *next = node->next;
+
+	if(prev) {
+		prev->next = next;
+	}
+	if(next) {
+		next->prev = prev;
+	}
 
 	node->prev = NULL;
 	node->next = NULL;
+	free(node);
 	list->len--;
 }
 void list_free(list_t *list)
@@ -61,12 +68,9 @@ void list_free(list_t *list)
 		n = tmp;
 	}
 }
-#define foreach_list(list, current)                                            \
-	for (current = (list)->head; current != NULL; current = current->next)
 
 node_t *list_find(list_t *list, vptr_t value)
 {
-	node_t *cur;
 	foreach_list(list, cur)
 	{
 		if (cur->value == value) {

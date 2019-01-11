@@ -23,3 +23,7 @@ void list_free(list_t *list);
 node_t *list_find(list_t *list, vptr_t value);
 int list_index_of(list_t *list, vptr_t value);
 node_t *list_index(list_t *list, int target_index);
+
+#define foreach_list(list, n)                                            \
+	for (node_t *n = (list)->head; n != NULL;                  \
+	     n = n->next)
