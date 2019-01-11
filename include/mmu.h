@@ -21,7 +21,8 @@
 #define PG_ROUND_DOWN(addr) (addr & ~(PGSIZE - 1))
 #define PG_ROUND_UP(addr) PG_ROUND_DOWN((addr + (PGSIZE - 1)))
 
-#define FRAME_TO_ADDR(frame) ((frame) << 12)
+#define FRAME_TO_ADDR(frame) ((pptr_t)((frame) << POFFSHIFT))
+#define ADDR_TO_FRAME(addr) ((addr) >> POFFSHIFT)
 
 #define PTE_P 1
 
@@ -40,6 +41,8 @@
 //Ignore that the physical page is already in use
 #define FLAG_IGNORE_PHY_REUSE 1
 
+#define KERN_BASE_PAGE_NO (KERN_BASE >> 22)
+
 typedef struct {
 	unsigned int present : 1;
 	unsigned int rw : 1;
@@ -54,7 +57,8 @@ typedef struct {
 	unsigned int frame : 20;
 } __attribute__((packed)) pte_t;
 
-typedef struct {
+typedef union {
+struct {
 	unsigned int present : 1;
 	unsigned int rw : 1;
 	unsigned int user : 1;
@@ -66,7 +70,9 @@ typedef struct {
 	unsigned int global : 1;
 	unsigned int unused : 3;
 	unsigned int frame : 20;
-} __attribute__((packed)) page_dir_entry_t;
+} __attribute__((packed));
+uint32_t bits;
+ } page_dir_entry_t;
 
 typedef struct {
 	pte_t pages[1024];
@@ -82,3 +88,7 @@ void mmap(size_t base, size_t len);
 void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, uint8_t flags);
 void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user);
 void paging_init(size_t memory_map_base, size_t memory_map_full_len);
+pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
+void switch_page_directory(page_directory_t *new_pg_dir);
+page_directory_t *clone_directory(page_directory_t *pgdir);
+void memcpy_frame_contents(pptr_t dst, pptr_t src);

@@ -3,9 +3,8 @@
 #include "mmu.h"
 #include "serial.h"
 #include "trap.h"
+#include "asm.h"
 
-extern void LoadNewPageDirectory(uint32_t pd);
-extern void DisablePSE();
 extern char _kernel_end;
 
 void page_fault_handler(int error_no);
@@ -30,7 +29,11 @@ pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
 
 	return (pgdir->tables[pdx]->pages[ptx].frame << POFFSHIFT) | (addr & 0xFFF);
 }
-
+void switch_page_directory(page_directory_t *new_pg_dir) {
+	pptr_t pgdir_phy = virtual_to_physical(current_directory, (vptr_t)new_pg_dir);
+	current_directory = new_pg_dir;
+	LoadNewPageDirectory(pgdir_phy);
+}
 //Just map it, we don't care where
 void mmap(size_t base, size_t len)
 {
@@ -128,8 +131,7 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	//Map the rest of it
 	mmap(KERN_HEAP_START + 0x400000, KERN_HEAP_END - KERN_HEAP_START - 0x400000);
 
-
-	LoadNewPageDirectory((size_t)virtual_to_physical(current_directory, (vptr_t)current_directory));
+	switch_page_directory(current_directory); //Load the new page directory
 	DisablePSE(); //Disable 4 MiB pages
 
 	PAGING_INIT = 1;
@@ -161,25 +163,54 @@ void alloc_page(pte_t *page, int is_user, int is_writable)
 	page->frame = frame >> 12;
 	page->present = 1;
 }
+
+page_table_t *clone_table(page_table_t *src) {
+	page_table_t *dst = kvmalloc(sizeof(page_table_t));
+	memset(dst, 0, sizeof(page_table_t));
+
+	for(int x = 0; x < 1024; x++) {
+		pte_t pg = src->pages[x];
+
+		pptr_t oldFrame = FRAME_TO_ADDR(pg.frame);
+		pptr_t newFrame = alloc_frame();
+
+		memcpy_frame_contents(newFrame, oldFrame);
+
+		pg.frame = ADDR_TO_FRAME(newFrame);
+
+		dst->pages[x] = pg;
+	}
+
+	return dst;
+}
 /*
  * Copies the page directory
  * Keeps the kernel mappings, but copies the user entries/tables
 */
-page_directory_t *clone_directory()
+page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 {
-	/*page_directory_t *new_pg_directory = kvmalloc(sizeof(page_directory_t));
+	page_directory_t *new_pg_directory = kvmalloc(sizeof(page_directory_t));
+	memset(new_pg_directory, 0, sizeof(page_directory_t));
 
-
-	for (int x = 0; x < 1024; x++) {
-		if (current_page_table->pages[x] != 0) {
-			new_pg_directory->tables[x] = virtual_to_physical(
-				clone_table(&real_page_directory->tables[x]));
-		}
+	for (uint32_t x = 0; x < 1024; x++) {
+		page_dir_entry_t entry_bits = src_pg_dir->actual_tables[x];
+		page_table_t *src_tbl = src_pg_dir->tables[x];
 
 		//Keep kernel tables the same
-		if (x >= (KERN_BASE / PGSIZE)) {
-			new_pg_directory->tables[x] =
-				current_page_table->pages[x];
+		if (x >= KERN_BASE_PAGE_NO) {
+			new_pg_directory->actual_tables[x] = src_pg_dir->actual_tables[x];
+			new_pg_directory->tables[x] = src_pg_dir->tables[x];
+			continue;
+		}
+
+		if (entry_bits.bits != 0) {
+			page_table_t *dst_tbl = clone_table(src_tbl);
+
+			entry_bits.frame = virtual_to_physical(current_directory, (vptr_t)dst_tbl);
+
+			//Set the entry for the cloned table
+			new_pg_directory->actual_tables[x] = entry_bits;
+			new_pg_directory->tables[x] = dst_tbl;
 		}
 	}
 
@@ -209,24 +240,6 @@ void memcpy_frame_contents(pptr_t dst, pptr_t src)
 	//invalidate entries
 }
 
-vptr_t clone_table(page_table_t *table)
-{
-	page_table_t *newTbl = kmalloc(PGSIZE);
-
-	for (int x = 0; x < 1024; x++) {
-		if (!table->pages[x].frame) {
-			continue;
-		}
-
-		alloc_page(&newTbl->pages[x], table->pages[x].user,
-			   table->pages[x].rw);
-
-		memcpy_frame_contents(FRAME_TO_ADDR(newTbl->pages[x].frame),
-				      FRAME_TO_ADDR(table->pages[x].frame));
-	}
-
-	return (vptr_t)newTbl;
-}
 
 //Graphic showing memory layout, modified from https://pdos.csail.mit.edu/6.828/2008/lec/l5.html
 /*

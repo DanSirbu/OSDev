@@ -2,6 +2,8 @@
 #include "mmu.h"
 #include "kmalloc.h"
 #include "serial.h"
+#include "list.h"
+#include "mmu.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
@@ -9,7 +11,9 @@
 extern void set_kernel_stack(size_t);
 
 task_t task_list[NO_TASKS];
-volatile task_t *current = task_list;
+task_t *current = NULL;
+list_t *ready_queue = NULL;
+task_t *kernel_idle_task = NULL;
 
 uint32_t last_process = 0;
 
@@ -23,6 +27,31 @@ void exit_task()
 	while (1)
 		;
 }
+void idle_task() {
+	while(1) {
+		schedule();
+	}
+}
+extern page_directory_t *current_directory;
+task_t *spawn_init() {
+	task_t *init_task = kcalloc(sizeof(task_t));
+
+	init_task->state = STATE_RUNNING;
+
+	init_task->stack = (vptr_t)kmalloc(STACK_SIZE); //TODO, reuse kernel stack?
+	init_task->page_directory = current_directory;
+
+	return init_task;
+}
+
+task_t *spawn_idle() {
+	return copy_task((vptr_t)idle_task, NULL);
+}
+void tasking_install() {
+	current = spawn_init();
+	kernel_idle_task = spawn_idle();
+}
+
 //Creates a new "thread" that runs the function fn
 //Also allocates a new stack
 //Does not start it yet
@@ -43,7 +72,7 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 	new_task->context.eip = fn;
 	new_task->context.esp = stack;
 
-	new_task->page_directory = current->page_directory;
+	new_task->page_directory = clone_directory(current->page_directory);
 
 	return new_task;
 }
@@ -53,60 +82,47 @@ void exec(task_t *task, vptr_t fn)
 	vptr_t stack = (vptr_t)kmalloc(0x1000);
 	enter_userspace(stack, fn);
 }
+void make_task_ready(task_t *task)
+{
+	if(task == kernel_idle_task) {
+		return;
+	}
+	
+	task->state = STATE_READY;
+	if(ready_queue == NULL) {
+		ready_queue = list_create();
+	}
+	list_append_item(ready_queue, (vptr_t)task);
+}
 
 task_t *pick_next_task()
 {
-	for (uint32_t i = 0; i <= last_process; i++) {
-		if (task_list[i].state == STATE_READY &&
-		    &task_list[i] != current) {
-			return (task_t *)&task_list[i];
-		}
+	if(ready_queue->len == 0) {
+		return kernel_idle_task;
 	}
 
-	return (task_t *)current;
+	node_t *task_node = list_index(ready_queue, 0);
+	task_t *task = (task_t*) task_node->value;
+
+	list_remove(ready_queue, task_node);
+
+	return task;
 }
 void schedule()
 {
 	task_t *next_task = pick_next_task();
+	make_task_ready(current);
 	if (next_task == current) {
 		return;
 	}
 
-	context_t *current_context = (context_t *)&current->context;
+	context_t *old_context = (context_t *)&current->context;
+
+	//Set up everything for the new process
 	current = next_task;
+	set_kernel_stack(current->stack);
 
-	set_kernel_stack(next_task->stack);
+	switch_page_directory(current->page_directory);
 
-	switch_context(current_context, &next_task->context);
+	switch_context(old_context, &current->context);
 }
-/*
-	preempt_disable();
-
-	//if (current->counter == 0) {
-	for (uint32_t i = 0; i <= last_process; i++) {
-		if (task[i].state == STATE_READY) {
-			task[i].counter = task[i].priority;
-			task[i].state = STATE_RUNNING;
-
-			//Set the state as stopped for the currently running process
-			current->state = STATE_READY;
-
-			switch_to(&task[i]);
-
-			break;
-		}
-	}
-	//}
-	preempt_enable();
-}
-void switch_to(struct task_struct *next)
-{
-	if (current == next) {
-		return;
-	}
-	struct task_struct *prev = current;
-	current = next;
-
-	//Since ctx is first in current, this is fine
-	switch_context((context_t **)&prev, (context_t *)next);
-}*/

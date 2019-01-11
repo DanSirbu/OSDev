@@ -63,9 +63,11 @@ extern void exec(task_t *task, vptr_t fn);
 void test_process1(vptr_t args)
 {
 	while (1) {
+		cli();
 		kpanic("a");
+		sti();
 		//schedule();
-		exec(NULL, (vptr_t)err);
+		//exec(NULL, (vptr_t)err);
 	}
 }
 
@@ -73,14 +75,12 @@ void test_process2(vptr_t args)
 {
 	while (1) {
 		kpanic("b");
-		//schedule();
+		schedule();
 	}
 }
 //extern process_t task[];
 //extern volatile process_t *current;
 extern void get_func_info(uint32_t addr, char **name, char **file);
-extern uint32_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
-extern page_directory_t *current_directory;
 extern void dump_stack_trace();
 
 void test2()
@@ -93,6 +93,8 @@ void test1()
 }
 void kmain(multiboot_info_t *multiboot_info)
 {
+	cli();
+
 	memory_map_handler(multiboot_info->mmap_addr,
 			   multiboot_info->mmap_length);
 	const char *str = "my first kernel with keyboard support";
@@ -120,10 +122,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	kpanic_fmt("Paging init finished\n");
 	//Malloc can now use the full heap
 	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
-
-	pptr_t kern_phy_addr =
-		virtual_to_physical(current_directory, KERN_HEAP_START);
-	kpanic_fmt("Kernel Heap physical address 0x%x\n", kern_phy_addr);
 
 	uint32_t *test = kmalloc(0x4000000);
 	*test = 0x11223344;
@@ -168,14 +166,14 @@ void kmain(multiboot_info_t *multiboot_info)
 	//clone(test_process1, kmalloc(0x1000) + 0x1000);
 	//clone(test_process2, kmalloc(0x1000) + 0x1000);
 
+	tasking_install();
+	sti();
+	
 	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
 	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
-	task1->state = STATE_READY;
-	task2->state = STATE_READY;
+	make_task_ready(task1);
+	make_task_ready(task2);
 
-	while (1) {
-		schedule();
-	}
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
 	current->context =

@@ -10,7 +10,7 @@ typedef struct context {
 	size_t ebx;
 	size_t esi;
 	size_t edi;
-} context_t;
+} __attribute__((packed)) context_t;
 
 struct cpu {
 	context_t *scheduler_ctx;
@@ -35,13 +35,11 @@ fork(task) = copy everything = analogous to process
 //Oh and idle task exists because there is no task left to run
 typedef struct {
 	context_t context;
-	size_t stack;
+	vptr_t stack;
 
 	enum STATES state;
-	uint32_t counter;
-	uint32_t priority;
 
-	page_directory_t page_directory;
+	page_directory_t *page_directory;
 } task_t;
 
 /*
@@ -74,7 +72,9 @@ esi
 edi
 
 */
+void tasking_install();
 void switch_context(context_t *cur_context, context_t *new_context);
 void schedule();
+void make_task_ready(task_t *task);
 task_t *copy_task(vptr_t fn, vptr_t args);
 void clone(void (*func_addr)(void), void *new_stack);
