@@ -19,8 +19,6 @@ void list_append(list_t *list, node_t *node)
 	node->prev = list->tail;
 	list->tail = node;
 
-	node->next = NULL;
-
 	list->len++;
 }
 node_t *list_append_item(list_t *list, vptr_t item)
@@ -34,6 +32,26 @@ list_t *list_create(void)
 {
 	return calloc(sizeof(list_t));
 }
+void list_merge(list_t *dst, list_t *src) {
+	if(src->len == 0) {
+		list_free(src);
+		return;
+	}
+
+	if(dst->len == 0) {
+		list_free(dst);
+		dst = src;
+		return;
+	}
+
+	dst->tail->next = src->head;
+	src->head->prev = dst->tail;
+
+	dst->len += src->len;
+
+	list_free(src);
+}
+
 void list_remove(list_t *list, node_t *node)
 {
 	if (list->head == node) {
@@ -58,15 +76,23 @@ void list_remove(list_t *list, node_t *node)
 	free(node);
 	list->len--;
 }
+void list_free_contents(list_t *list) {
+	node_t *n = list->head;
+	while (n) {
+		node_t *tmp = n->next;
+		free((void *)n->value);
+		n = tmp;
+	}
+}
 void list_free(list_t *list)
 {
 	node_t *n = list->head;
 	while (n) {
 		node_t *tmp = n->next;
-		free((void *)n->value);
 		free(n);
 		n = tmp;
 	}
+	free(list);
 }
 
 node_t *list_find(list_t *list, vptr_t value)
