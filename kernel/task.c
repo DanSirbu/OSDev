@@ -48,6 +48,7 @@ task_t *spawn_idle() {
 	return copy_task((vptr_t)idle_task, NULL);
 }
 void tasking_install() {
+	ready_queue = list_create();
 	current = spawn_init();
 	kernel_idle_task = spawn_idle();
 }
@@ -89,9 +90,6 @@ void make_task_ready(task_t *task)
 	}
 	
 	task->state = STATE_READY;
-	if(ready_queue == NULL) {
-		ready_queue = list_create();
-	}
 	list_append_item(ready_queue, (vptr_t)task);
 }
 
