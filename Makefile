@@ -5,7 +5,7 @@ include env.mk
 
 OBJDIR = obj
 
-SRCFILES = $(wildcard boot/*.asm) $(wildcard kernel/*.c) $(wildcard lib/*.c)
+SRCFILES = $(wildcard boot/*.asm) $(wildcard kernel/*.c) $(wildcard lib/*.c) $(wildcard tests/*.c)
 SRCFILES1 = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCFILES))
 OBJFILES = $(patsubst %.asm, $(OBJDIR)/%.o, $(SRCFILES1))
 
@@ -54,7 +54,7 @@ $(OBJDIR)/kernel.elf: ${OBJFILES}
 #-include $(OBJS:.o=.d)
 
 $(OBJDIR)/%.o: %.c mkdirectories
-	@$(CROSS-COMPILER) ${ARGS} $< -c -o $@ -I include/
+	@$(CROSS-COMPILER) ${ARGS} $< -c -o $@ -I include/ -I tests/
 	@#gcc -MM ${ARGS} $< > $*.d
 
 $(OBJDIR)/%.o: %.asm mkdirectories

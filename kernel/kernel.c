@@ -19,6 +19,8 @@
 #include "spinlock.h"
 #include "task.h"
 
+#include "test.h"
+
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
 
@@ -167,12 +169,16 @@ void kmain(multiboot_info_t *multiboot_info)
 	//clone(test_process2, kmalloc(0x1000) + 0x1000);
 
 	tasking_install();
-	sti();
+	//sti();
 	
 	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
 	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
 	make_task_ready(task1);
 	make_task_ready(task2);
+	
+	kpanic("Starting Tests\n");
+	run_tests();
+	kpanic("Tests complete!\n");
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
