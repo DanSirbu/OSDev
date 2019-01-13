@@ -68,14 +68,6 @@ clean:
 	rm -f serial.log
 	rm -f .gdb_history
 
-testc:
-	gcc test/p_allocator.c -o test/p_allocator.o
-	gcc test/test.c -o test/test.o
-
-test: test.asm
-	@nasm -f elf32 test.asm
-	@clear
-	@objdump -M intel -D -m i386 test.o | tail -n +5
 net-test:
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 PHONY:
