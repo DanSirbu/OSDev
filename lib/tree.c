@@ -1,5 +1,6 @@
 #include "tree.h"
 #include "kmalloc.h"
+#include "assert.h"
 
 #define malloc kmalloc
 #define free kfree
@@ -31,11 +32,16 @@ tree_node_t *tree_node_insert_child(tree_node_t *parent, void *value)
 	return child;
 }
 /* Removes node and moves all its children to the parent */
-void tree_remove_reparent_root(tree_node_t *node)
+void tree_remove_reparent_root(tree_node_t *child)
 {
-	//TODOTODOTODO
-	while (1)
-		;
+	tree_node_t *parent = child->parent;
+	assert(parent != NULL);
+
+	list_remove(parent->children, list_find(parent->children, (vptr_t)child));
+
+	list_merge(parent->children, child->children);
+
+	free(child);
 }
 
 tree_node_t *tree_find(tree_node_t *node, void *search_value,

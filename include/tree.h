@@ -12,6 +12,7 @@ typedef struct tree_node {
 } __attribute__((packed)) tree_node_t;
 
 tree_node_t *tree_node_create(void *value);
+void tree_node_insert_child_node(tree_node_t *parent, tree_node_t *node);
 tree_node_t *tree_node_insert_child(tree_node_t *parent, void *value);
 void tree_remove_reparent_root(tree_node_t *node);
 tree_node_t *tree_find(tree_node_t *node, void *search_value,
