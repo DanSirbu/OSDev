@@ -39,7 +39,6 @@ tss_flush:
 load_idt:
 	mov edx, [esp + 4]
 	lidt [edx]
-	sti 				;turn on interrupts
 	ret
 
 KERN_BASE equ 0xC0000000
