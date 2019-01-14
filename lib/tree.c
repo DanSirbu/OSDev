@@ -32,12 +32,20 @@ tree_node_t *tree_node_insert_child(tree_node_t *parent, void *value)
 	return child;
 }
 /* Removes node and moves all its children to the parent */
+/* Note: does not free the value, you must do it yourself */
 void tree_remove_reparent_root(tree_node_t *child)
 {
 	tree_node_t *parent = child->parent;
 	assert(parent != NULL);
 
-	list_remove(parent->children, list_find(parent->children, (vptr_t)child));
+	list_remove(parent->children,
+		    list_find(parent->children, (vptr_t)child));
+
+	foreach_list(child->children, list_node)
+	{
+		tree_node_t *child = (tree_node_t *)list_node->value;
+		child->parent = parent;
+	}
 
 	list_merge(parent->children, child->children);
 
