@@ -53,7 +53,7 @@ pptr_t alloc_frame()
 			}
 		}
 	}
-	kpanic_fmt("No more free frames\n");
+	debug_print("No more free frames\n");
 	return 0xFFFFFFFF;
 }
 void frame_set_used(pptr_t frame, uint8_t reuse_ok)
@@ -64,7 +64,7 @@ void frame_set_used(pptr_t frame, uint8_t reuse_ok)
 	if ((frames[frame_index] & frame_shift) == 0) {
 		frames[frame_index] |= frame_shift;
 	} else if (!reuse_ok) {
-		kpanic_fmt("Error: frame already used 0x%x\n", frame);
+		debug_print("Error: frame already used 0x%x\n", frame);
 	}
 }
 void free_frame(pptr_t frame)
@@ -75,7 +75,7 @@ void free_frame(pptr_t frame)
 	if (frames[frame_index] & frame_shift) {
 		frames[frame_index] &= ~frame_shift;
 	} else {
-		kpanic_fmt("Error: double free frame 0x%x\n", frame);
+		debug_print("Error: double free frame 0x%x\n", frame);
 	}
 }
 void free_frame_range(pptr_t first_frame, uint32_t len)

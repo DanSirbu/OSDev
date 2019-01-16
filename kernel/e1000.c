@@ -83,15 +83,15 @@ void ethernet_main()
 	/*for(int i = 0; i < 10; i++) {
       uint16_t vendor1 = pciCheckVendor(0, i);
   }*/
-	kpanic_fmt("detectEEProm %x\n", detectEEProm());
+	debug_print("detectEEProm %x\n", detectEEProm());
 	readMacAddress();
 
-	kpanic_fmt("Mac: 0x%x", (uint32_t)mac[0]);
-	kpanic_fmt(" 0x%x", (uint32_t)mac[1]);
-	kpanic_fmt(" 0x%x", (uint32_t)mac[2]);
-	kpanic_fmt(" 0x%x", (uint32_t)mac[3]);
-	kpanic_fmt(" 0x%x", (uint32_t)mac[4]);
-	kpanic_fmt(" 0x%x\n", (uint32_t)mac[5]);
+	debug_print("Mac: 0x%x", (uint32_t)mac[0]);
+	debug_print(" 0x%x", (uint32_t)mac[1]);
+	debug_print(" 0x%x", (uint32_t)mac[2]);
+	debug_print(" 0x%x", (uint32_t)mac[3]);
+	debug_print(" 0x%x", (uint32_t)mac[4]);
+	debug_print(" 0x%x\n", (uint32_t)mac[5]);
 
 	// Set link up
 	uint32_t rctl_val = readCommand(REG_CTRL);
@@ -107,7 +107,7 @@ void ethernet_main()
 	}
 	uint32_t RAL = readCommand(0x5400);
 	uint32_t RAH = readCommand(0x5404);
-	kpanic_fmt("RAL: 0x%x\n", RAL);
+	debug_print("RAL: 0x%x\n", RAL);
 
 	// Enable interrupts
 	// TODO??? what is this
@@ -117,11 +117,11 @@ void ethernet_main()
 		0xff & ~4); // TODO WHY SET IT AGAIN to enable different interrupts?
 	uint32_t cause =
 		readCommand(0xc0); // Page 293, Interrupt Cause Read register
-	// kpanic_fmt("E1000, interrupts init: 0x%x\n", cause);
+	// debug_print("E1000, interrupts init: 0x%x\n", cause);
 	rxinit();
 	txinit();
 
-	kpanic_fmt("E1000 card initialized\n");
+	debug_print("E1000 card initialized\n");
 
 	uint32_t rctrl_flags = readCommand(REG_RCTRL);
 	writeCommand(REG_RCTRL, rctrl_flags | RCTL_EN); // Enable receive
@@ -232,7 +232,7 @@ void E1000_Interrupt()
 	// rx();
 	// 0x2 = Transmit Queue Empty
 
-	kpanic_fmt("E1000 interrupt cause 0x%x\n", interrupt_cause);
+	debug_print("E1000 interrupt cause 0x%x\n", interrupt_cause);
 }
 void rx()
 {

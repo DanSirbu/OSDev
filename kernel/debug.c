@@ -41,7 +41,7 @@ extern uint32_t* get_ebp();
 void dump_stack_trace() {
     uint32_t *ebp = get_ebp();
 
-    kpanic_fmt("Backtrace:\n");
+    debug_print("Backtrace:\n");
 
     for(uint32_t x = 0; x < 15; x++) {
         uint32_t retIP = *(ebp + 1);
@@ -57,7 +57,7 @@ void dump_stack_trace() {
 
         get_func_info(func_addr, &func_name, &func_file);
 
-        kpanic_fmt("%d: %s in %s\n", x, func_name, func_file);   
+        debug_print("%d: %s in %s\n", x, func_name, func_file);   
 
         ebp = (uint32_t*) *ebp; //Move up
     }

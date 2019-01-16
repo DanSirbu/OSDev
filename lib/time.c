@@ -34,7 +34,7 @@ void print_time()
   0x0B      Status Register B
   */
 	uint8_t value = read_cmos(0);
-	kpanic_fmt("%d\n", value); // Default promotion takes care of casting
+	debug_print("%d\n", value); // Default promotion takes care of casting
 }
 #define PIT_BASE_FREQUENCY 1193180
 #define PIT_CMD 0x43

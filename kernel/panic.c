@@ -18,6 +18,6 @@ void abort() {
 
 void assert_failed(char *statement, char *file, uint32_t line, const char *func)
 {
-	kpanic_fmt(ANSI_COLOR_RED "%s:%d: error in %s: %s" ANSI_COLOR_RESET "\n", file, line, func, statement);
+	debug_print(ANSI_COLOR_RED "%s:%d: error in %s: %s" ANSI_COLOR_RESET "\n", file, line, func, statement);
     abort();
 }

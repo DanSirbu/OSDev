@@ -6,9 +6,9 @@ void acpi_init()
 {
 	RSDPDescriptor20_t *rsdp = (RSDPDescriptor20_t *)RSDP_BASE;
 	if (rsdp->firstPart.Revision == 0) { // ACPI 1.0
-		kpanic_fmt("Using ACPI 1.0\n");
+		debug_print("Using ACPI 1.0\n");
 	} else {
-		kpanic_fmt("Using ACPI 2.0\n");
+		debug_print("Using ACPI 2.0\n");
 	}
 
 	// Check if ACPI 1.0 is valid
@@ -21,7 +21,7 @@ void acpi_init()
 		total += *rsdp_checksum;
 	}
 	if ((total & 0xFF) != 0) {
-		kpanic_fmt("ACPI 1.0 invalid, total is 0x%x\n", total);
+		debug_print("ACPI 1.0 invalid, total is 0x%x\n", total);
 		return;
 	}
 
@@ -36,20 +36,20 @@ void acpi_init()
 			total += *rsdp_checksum1;
 		}
 		if ((total & 0xFF) != 0) {
-			kpanic_fmt("ACPI 2.0 invalid, total is 0x%x\n", total);
+			debug_print("ACPI 2.0 invalid, total is 0x%x\n", total);
 			return;
 		}
 	}
 	if (rsdp->firstPart.Revision == 0) {
 		acpi_10_init((RSDPDescriptor_t *)rsdp);
 	} else {
-		kpanic_fmt("TODO: Initialize ACPI 2.0\n");
+		debug_print("TODO: Initialize ACPI 2.0\n");
 	}
 }
 
 void acpi_10_init(RSDPDescriptor_t *rsdp_10)
 {
-	kpanic_fmt("RSDT addr: 0x%x\n", rsdp_10->RsdtAddress);
+	debug_print("RSDT addr: 0x%x\n", rsdp_10->RsdtAddress);
 	RSDT_t *rsdt_table_header =
 		(RSDT_t *)(rsdp_10->RsdtAddress +
 			   KERN_BASE); // convert to virtual address
@@ -65,6 +65,6 @@ void acpi_10_init(RSDPDescriptor_t *rsdp_10)
 
 		char temp[5];
 		//strcpy_max_len(sdt_ptr->Signature, temp, 4);
-		kpanic_fmt("ACPI Sig: %s\n", temp);
+		debug_print("ACPI Sig: %s\n", temp);
 	}
 }

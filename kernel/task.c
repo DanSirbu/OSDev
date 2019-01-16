@@ -23,7 +23,7 @@ uint32_t last_process = 0;
 
 void exit_task()
 {
-	kpanic_fmt("TASK RETURN");
+	debug_print("TASK RETURN");
 	while (1)
 		;
 }

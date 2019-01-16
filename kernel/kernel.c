@@ -51,7 +51,7 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 		// clang-format on
 
 		memory_map_t *mmap_cur = (memory_map_t *)mmap;
-		kpanic_fmt("Address: %8p-%8p, type %x\n",
+		debug_print("Address: %8p-%8p, type %x\n",
 			   mmap_cur->base_addr_low,
 			   (mmap_cur->base_addr_low + mmap_cur->length_low - 1),
 			   mmap_cur->type);
@@ -104,10 +104,10 @@ void kmain(multiboot_info_t *multiboot_info)
 	module_t *modules = (module_t*) (multiboot_info->mods_addr + KERN_BASE);
 	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
 	
-	kpanic_fmt("Module start: 0x%x\n", modules[0].mod_start);
-	kpanic_fmt("Module end: 0x%x\n", modules[0].mod_end);
+	debug_print("Module start: 0x%x\n", modules[0].mod_start);
+	debug_print("Module end: 0x%x\n", modules[0].mod_end);
 
-	kpanic_fmt("Kernel ends at 0x%x\n", &_kernel_end);
+	debug_print("Kernel ends at 0x%x\n", &_kernel_end);
 
 	assert(modules[multiboot_info->mods_count - 1].mod_end < (vptr_t)&_kernel_end); //Future me will deal with this
 	
@@ -127,16 +127,16 @@ void kmain(multiboot_info_t *multiboot_info)
 	kb_init();
 
 	init_serial();
-	kpanic_fmt("Serial initialized\n");
+	debug_print("Serial initialized\n");
 
 	//test1();
 
 	//We are guaranteed to have a 4MB heap (large page) at this point
 	kinit_malloc((vptr_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
 	//Switch to 2-level paging (2 level)
-	kpanic_fmt("Paging init\n");
+	debug_print("Paging init\n");
 	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
-	kpanic_fmt("Paging init finished\n");
+	debug_print("Paging init finished\n");
 	//Malloc can now use the full heap
 	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
 
@@ -154,8 +154,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
 	memcpy(&file2, ram_root->readdir(ram_root, 1), sizeof(dirent_t));
 
-	kpanic_fmt("File1: %s\n", file1.name);
-	kpanic_fmt("File2: %s\n", file2.name);
+	debug_print("File1: %s\n", file1.name);
+	debug_print("File2: %s\n", file2.name);
 
 	//mmap(0x90000000, 0x4000);
 	//initrd_init(0x90000000, 0x4000);

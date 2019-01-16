@@ -64,12 +64,12 @@ void register_handler(int interrupt_no, void *handler)
 void interrupt_handler(int_regs_t regs)
 {
 	if (regs.interrupt_no < 32) {
-		kpanic_fmt("Exception %d (%s) at 0x%x, error %d\n",
+		debug_print("Exception %d (%s) at 0x%x, error %d\n",
 			   regs.interrupt_no,
 			   exceptions_string[regs.interrupt_no], regs.eip,
 			   regs.error_code);
 	} else if (regs.interrupt_no != 32) {
-		kpanic_fmt("Interrupt %d (%s) at 0x%x, error %d\n",
+		debug_print("Interrupt %d (%s) at 0x%x, error %d\n",
 			   regs.interrupt_no - 32,
 			   interrupts_string[regs.interrupt_no - 32], regs.eip,
 			   regs.error_code);

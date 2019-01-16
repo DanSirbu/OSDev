@@ -55,7 +55,7 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 	// space
 
 	if (alignment < 8) {
-		kpanic_fmt(
+		debug_print(
 			"KMALLOC_ALIGNED NOT IMPLEMENTED WITH smaller than 8");
 	}
 	// TODO make this code thread safe
@@ -104,7 +104,7 @@ void *kmalloc(size_t size)
 		return NULL;
 	}
 	if (!heap_start) {
-		kpanic_fmt(
+		debug_print(
 			"ERROR: Trying to malloc before the heap is initialized.");
 		return NULL;
 	}
@@ -159,7 +159,7 @@ void kfree(void *ptr)
 		return;
 	}
 	if (ptr < (void *)heap_start) {
-		kpanic_fmt(
+		debug_print(
 			"Trying to free %p, which is before the heap_start (%p)\n",
 			(void *)ptr, (void *)heap_start);
 		return;

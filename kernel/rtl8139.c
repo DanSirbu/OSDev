@@ -24,7 +24,7 @@ void RTL8139_Interrupt()
 	     0x1); // Aknowledge the interrupt, NOTE: reading
 		// isn't enough, the documentation is wrong
 
-	kpanic_fmt("Status %x\n", status);
+	debug_print("Status %x\n", status);
 }
 
 size_t *rx_buffer;

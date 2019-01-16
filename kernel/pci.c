@@ -42,7 +42,7 @@ void pci_write_field(uint32_t dev, uint8_t field, uint8_t size,
 	tempValue |= (value_to_write & bit_masks[size - 1])
 		     << (bytes_offset * 8); // Set the bytes
 
-	// kpanic_fmt("Writing 0x%x at 0x%x\n", tempValue,
+	// debug_print("Writing 0x%x at 0x%x\n", tempValue,
 	// aligned_addr_to_read_write);
 	outl(PCI_DATA, tempValue); // Write out the data
 }
@@ -58,7 +58,7 @@ uint32_t pci_read_field(uint32_t dev, uint8_t field, uint8_t size)
 	uint32_t value = inl(PCI_DATA);
 
 	if (bytes_offset > (size - 1)) {
-		kpanic_fmt("Error, pci read size bigger than the offset\n");
+		debug_print("Error, pci read size bigger than the offset\n");
 	}
 
 	// Size can be 1, 2, 3, 4 bytes
@@ -76,7 +76,7 @@ uint32_t getPCIAddress(uint32_t dev)
 		}
 	}
 	if (dev_address == 0xFFFFFFFF) {
-		kpanic_fmt("ERROR device %x pci address not found\n", dev);
+		debug_print("ERROR device %x pci address not found\n", dev);
 	}
 	return dev_address;
 }
