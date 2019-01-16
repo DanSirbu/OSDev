@@ -40,6 +40,15 @@ void write_char_serial(char a)
 
 	outb(PORT, a);
 }
+static void serial_print_string(char *message)
+{
+	int i = 0;
+	while (message[i] != '\0') {
+		write_char_serial(message[i]);
+		i++;
+	}
+}
+
 void kpanic_fmt(char *message, ...)
 {
 	va_list args;
@@ -84,27 +93,19 @@ void kpanic_fmt1(char *message, va_list args)
 				}
 
 				if (message[i] == 'p') {
-					kpanic(HEX_PREFIX);
+					serial_print_string(HEX_PREFIX);
 				}
-				kpanic(buf);
+				serial_print_string(buf);
 			} else if (message[i] == 'd') {
 				char buf[256];
 				itoa(va_arg(args, uint32_t), buf, 10);
-				kpanic(buf);
+				serial_print_string(buf);
 			} else if (message[i] == 's') {
-				kpanic(va_arg(args, char *));
+				serial_print_string(va_arg(args, char *));
 			}
 		} else {
 			write_char_serial(message[i]);
 		}
-		i++;
-	}
-}
-void kpanic(char *message)
-{
-	int i = 0;
-	while (message[i] != '\0') {
-		write_char_serial(message[i]);
 		i++;
 	}
 }

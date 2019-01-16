@@ -7,7 +7,6 @@
 void init_serial();
 void kpanic_fmt(char *message, ...);
 void kpanic_fmt1(char *message, va_list args);
-void kpanic(char *message);
 
 #define fail(reason) assert(0 && (reason))
 
