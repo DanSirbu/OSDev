@@ -1,8 +1,10 @@
 #include "device.h"
-#include "vfs.h"
 #include "serial.h"
 
 #define MAX_DEVICES 10
+
+typedef int (*block_read_func) (void *buf, uint32_t block);
+typedef int (*block_write_func) (void *buf, uint32_t block);
 
 typedef struct block_device {
 	dev_t dev;
