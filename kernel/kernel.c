@@ -20,6 +20,7 @@
 #include "task.h"
 
 #include "test.h"
+#include "ramfs.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -93,12 +94,26 @@ void test1()
 {
 	test2();
 }
+extern char _kernel_end;
+extern fs_node_t *ram_root;
+
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
+	assert(multiboot_info->mods_count == 1);
+	module_t *modules = (module_t*) (multiboot_info->mods_addr + KERN_BASE);
+	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
+	
+	kpanic_fmt("Module start: 0x%x\n", modules[0].mod_start);
+	kpanic_fmt("Module end: 0x%x\n", modules[0].mod_end);
 
+	kpanic_fmt("Kernel ends at 0x%x\n", &_kernel_end);
+
+	assert(modules[multiboot_info->mods_count - 1].mod_end < (vptr_t)&_kernel_end); //Future me will deal with this
+	
 	memory_map_handler(multiboot_info->mmap_addr,
 			   multiboot_info->mmap_length);
+	
 	const char *str = "my first kernel with keyboard support";
 	clear_screen();
 	kprint(str);
@@ -131,6 +146,16 @@ void kmain(multiboot_info_t *multiboot_info)
 	*test2 = 0x1234;
 	kfree(test2);
 	kfree(test);
+
+	initramfs(ramfs_location);
+
+	dirent_t file1;
+	dirent_t file2;
+	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
+	memcpy(&file2, ram_root->readdir(ram_root, 1), sizeof(dirent_t));
+
+	kpanic_fmt("File1: %s\n", file1.name);
+	kpanic_fmt("File2: %s\n", file2.name);
 
 	//mmap(0x90000000, 0x4000);
 	//initrd_init(0x90000000, 0x4000);

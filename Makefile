@@ -26,6 +26,7 @@ QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=
 #QEMU-NETWORK-ARGS = -netdev tap,helper=/usr/lib/qemu/qemu-bridge-helper,id=thor_net0 -device e1000,netdev=thor_net0,id=thor_nic0 -object filter-dump,id=f1,netdev=thor_net0,file=dump.pcap
 #QEMU-NETWORK-ARGS = -net nic -net bridge,br=br0,id=netdevice -object filter-dump,id=f1,netdev=netdevice,file=dump.pcap
 
+QEMU-RAMFS = -initrd "ramfs.img"
 # Old style qemu network arguments
 PORT7 = 5555
 PORT80 = 5556
@@ -36,11 +37,11 @@ PORT80 = 5556
 
 #-monitor telnet:127.0.0.1:1235,server,nowait
 run: $(OBJDIR)/kernel.elf
-	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS)
+	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS) $(QEMU-RAMFS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 
 run-debug: $(OBJDIR)/kernel.elf
-	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS)
+	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS) $(QEMU-RAMFS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 	
 debug-r2: $(OBJDIR)/kernel.elf
