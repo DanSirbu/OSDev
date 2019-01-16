@@ -11,7 +11,6 @@ void debug_print(char *message, ...) {
 }
 
 void abort() {
-    debug_print("Aborting! 0x%x\n", 0x123, 1);
     cli();
     asm("hlt");
     while(1);
