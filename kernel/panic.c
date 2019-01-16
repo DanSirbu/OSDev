@@ -6,7 +6,7 @@
 void debug_print(char *message, ...) {
     va_list args;
 	va_start(args, message);
-    kpanic_fmt1(message, args);
+    serial_print(message, args);
     va_end(args);
 }
 

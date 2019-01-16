@@ -49,7 +49,7 @@ static void serial_print_string(char *message)
 	}
 }
 
-void kpanic_fmt1(char *message, va_list args)
+void serial_print(char *message, va_list args)
 {
 	int i = 0;
 	uint8_t minSize = 0;
