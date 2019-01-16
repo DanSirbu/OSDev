@@ -64,7 +64,7 @@ void acpi_10_init(RSDPDescriptor_t *rsdp_10)
 					    KERN_BASE);
 
 		char temp[5];
-		strcpy_max_len(sdt_ptr->Signature, temp, 4);
+		//strcpy_max_len(sdt_ptr->Signature, temp, 4);
 		kpanic_fmt("ACPI Sig: %s\n", temp);
 	}
 }
