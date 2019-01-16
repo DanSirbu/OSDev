@@ -20,7 +20,7 @@ int serial_received()
 	return inb(PORT + 5) & 1;
 }
 
-char read_serial()
+char read_char_serial()
 {
 	while (serial_received() == 0)
 		;
@@ -33,7 +33,7 @@ int is_transmit_empty()
 	return inb(PORT + 5) & 0x20;
 }
 
-void write_serial(char a)
+void write_char_serial(char a)
 {
 	while (is_transmit_empty() == 0)
 		;
@@ -64,7 +64,7 @@ void kpanic_fmt1(char *message, va_list args)
 			}
 
 			if (message[i] == '%') {
-				write_serial('%');
+				write_char_serial('%');
 			} else if (message[i] == 'x' || message[i] == 'p') {
 				char buf[256];
 				itoa(va_arg(args, size_t), buf, 16);
@@ -95,7 +95,7 @@ void kpanic_fmt1(char *message, va_list args)
 				kpanic(va_arg(args, char *));
 			}
 		} else {
-			write_serial(message[i]);
+			write_char_serial(message[i]);
 		}
 		i++;
 	}
@@ -104,7 +104,7 @@ void kpanic(char *message)
 {
 	int i = 0;
 	while (message[i] != '\0') {
-		write_serial(message[i]);
+		write_char_serial(message[i]);
 		i++;
 	}
 }
