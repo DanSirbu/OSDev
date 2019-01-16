@@ -3,6 +3,7 @@
 #include "string.h"
 
 #define PORT 0x3f8 /* COM1 */
+#define HEX_PREFIX "0x"
 
 void init_serial()
 {

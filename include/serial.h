@@ -3,7 +3,6 @@
 #include "string.h"
 #include <stdarg.h>
 
-#define HEX_PREFIX "0x"
 void init_serial();
 void serial_print(char *message, va_list args);
 
