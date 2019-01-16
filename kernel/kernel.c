@@ -43,7 +43,7 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 	void *mmap = (void *)mmap_addr + KERN_BASE;
 	void *mmap_end = mmap + mmap_len;
 
-	kpanic("Memory Map\n");
+	debug_print("Memory Map\n");
 
 	// clang-format off
 	// unsigned long = sizeof(memory_map_t->size)
@@ -67,7 +67,7 @@ void test_process1(vptr_t args)
 {
 	while (1) {
 		cli();
-		kpanic("a");
+		debug_print("a");
 		sti();
 		//schedule();
 		//exec(NULL, (vptr_t)err);
@@ -77,7 +77,7 @@ void test_process1(vptr_t args)
 void test_process2(vptr_t args)
 {
 	while (1) {
-		kpanic("b");
+		debug_print("b");
 		schedule();
 	}
 }
@@ -180,11 +180,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	int x = 0;
 	spinlock_acquire(&x);
 
-	kpanic("Lock acquired\n");
-
+	debug_print("Lock acquired\n");
 	spinlock_release(&x);
-
-	kpanic("Lock released\n");
+	debug_print("Lock released\n");
 
 	//Processes
 	//copy_process(test_process1);
@@ -201,9 +199,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	make_task_ready(task1);
 	make_task_ready(task2);
 	
-	kpanic("Starting Tests\n");
+	debug_print("Starting Tests\n");
 	run_tests();
-	kpanic("Tests complete!\n");
+	debug_print("Tests complete!\n");
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;

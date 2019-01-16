@@ -26,3 +26,5 @@ extern void assert_failed_msg(char *file, uint32_t line, char *statement,
 	fail_stmt(why, stmt);                                                  \
 	while (1)                                                              \
 		;
+
+void debug_print(char *message, ...);
