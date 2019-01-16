@@ -103,7 +103,7 @@ typedef struct module {
 	unsigned long mod_end;
 	unsigned long string;
 	unsigned long reserved;
-} module_t;
+} __attribute__((packed)) module_t;
 
 /* The memory map. Be careful that the offset 0 is base_addr_low
   but no size. */
