@@ -1,6 +1,6 @@
 #include "string.h"
 
-u32 strlen(char *str)
+uint32_t strlen(char *str)
 {
 	int i = 0;
 	while (str[i] != '\0') {
@@ -65,4 +65,28 @@ void strcpy_max_len(char *src, char *dest, uint32_t maxLen)
 		dest[x] = src[x];
 	}
 	dest[x] = '\0';
+}
+void strcpy(char *dst, char *src)
+{
+	uint32_t len = strlen(src);
+	uint32_t x;
+	for (x = 0; x < len; x++) {
+		dst[x] = src[x];
+	}
+	dst[x] = '\0';
+}
+int strcmp(char *str1, char *str2) {
+	uint32_t str1_len = strlen(str1);
+	uint32_t str2_len = strlen(str2);
+
+	if(str1_len != str2_len) {
+		return 0;
+	}
+	for(uint32_t x = 0; x < str1_len; x++) {
+		if(str1[x] != str2[x]) {
+			return 0;
+		}
+	}
+
+	return 1;
 }
