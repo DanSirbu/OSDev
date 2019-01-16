@@ -26,7 +26,7 @@ void spinlock_acquire(int *lock)
 void spinlock_release(int *lock)
 {
 	if (!*lock) {
-		fail_stop("Lock already released");
+		fail("Lock already released");
 	}
 	while (!xchg(lock, 0))
 		;

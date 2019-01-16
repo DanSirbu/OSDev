@@ -9,20 +9,14 @@ void kpanic_fmt(char *message, ...);
 void kpanic_fmt1(char *message, va_list args);
 void kpanic(char *message);
 
-#define assert(statement)                                                      \
-	(statement) ? (void)0 : assert_failed(__FILE__, __LINE__, #statement)
+#define fail(reason) assert(0 && (reason))
 
-#define assert1(statement, why) \
-	(statement) ? (void) 0 : assert_failed_msg(__FILE__, __LINE__, why, 0)
+#define assert(expr)                                                      \
+	(expr) ? (void)0 : assert_failed(#expr, __FILE__, __LINE__, __FUNCTION__)
 
-#define fail_stop(why)                                                         \
-	do {                                                                   \
-		fail((why));                                                   \
-		while (1)                                                      \
-			;                                                      \
-	} while (0)
-
-#define fail(why) assert_failed(__FILE__, __LINE__, (why))
+extern void assert_failed(char *statement, char *file, uint32_t line, const char *func);
+extern void assert_failed_msg(char *file, uint32_t line, char *statement,
+				     ...);
 
 #define EXPAND_ARGS(...) __VA_ARGS__
 #define fail_stmt(why, stmt)                                                   \
@@ -32,25 +26,3 @@ void kpanic(char *message);
 	fail_stmt(why, stmt);                                                  \
 	while (1)                                                              \
 		;
-
-#define ANSI_COLOR_RED "\x1b[31m"
-#define ANSI_COLOR_RESET "\x1b[0m"
-
-static inline void assert_failed(char *file, uint32_t line,
-				 const char *statement)
-{
-	kpanic_fmt("Error in %s:%d: " ANSI_COLOR_RED "%s" ANSI_COLOR_RESET "\n",
-		   file, line, statement);
-}
-static inline void assert_failed_msg(char *file, uint32_t line, char *statement,
-				     ...)
-{
-	kpanic_fmt("Error in %s:%d: \n", file, line);
-
-	va_list args;
-	va_start(args, statement);
-	kpanic("\t");
-	kpanic_fmt1(statement, args);
-	kpanic("\n");
-	va_end(args);
-}

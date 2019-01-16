@@ -44,58 +44,7 @@ void kpanic_fmt(char *message, ...)
 {
 	va_list args;
 	va_start(args, message);
-
-	int i = 0;
-	uint8_t minSize = 0;
-	while (message[i] != '\0') {
-		if (message[i] == '%') {
-			i++;
-
-			minSize = 0;
-			if ((message[i] - ASCII_NUMBER_CONST) > 0 &&
-			    (message[i] - ASCII_NUMBER_CONST) <
-				    10) { // Its a number
-				minSize = message[i] - ASCII_NUMBER_CONST;
-				i++;
-			}
-
-			if (message[i] == '%') {
-				write_serial('%');
-			} else if (message[i] == 'x' || message[i] == 'p') {
-				char buf[256];
-				itoa(va_arg(args, size_t), buf, 16);
-
-				uint8_t bufLen = strlen(buf);
-				int padding_needed = minSize - bufLen;
-				if (padding_needed > 0) {
-					for (int x = bufLen - 1; x >= 0; x--) {
-						buf[x + padding_needed] =
-							buf[x];
-					}
-					for (int x = 0; x < padding_needed;
-					     x++) {
-						buf[x] = '0';
-					}
-					buf[bufLen + padding_needed] = '\0';
-				}
-
-				if (message[i] == 'p') {
-					kpanic(HEX_PREFIX);
-				}
-				kpanic(buf);
-			} else if (message[i] == 'd') {
-				char buf[256];
-				itoa(va_arg(args, uint32_t), buf, 10);
-				kpanic(buf);
-			} else if (message[i] == 's') {
-				kpanic(va_arg(args, char *));
-			}
-		} else {
-			write_serial(message[i]);
-		}
-		i++;
-	}
-
+	kpanic_fmt1(message, args);
 	va_end(args);
 }
 void kpanic_fmt1(char *message, va_list args)
