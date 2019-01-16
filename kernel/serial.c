@@ -49,13 +49,6 @@ static void serial_print_string(char *message)
 	}
 }
 
-void kpanic_fmt(char *message, ...)
-{
-	va_list args;
-	va_start(args, message);
-	kpanic_fmt1(message, args);
-	va_end(args);
-}
 void kpanic_fmt1(char *message, va_list args)
 {
 	int i = 0;

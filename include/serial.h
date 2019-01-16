@@ -5,7 +5,6 @@
 
 #define HEX_PREFIX "0x"
 void init_serial();
-void kpanic_fmt(char *message, ...);
 void kpanic_fmt1(char *message, va_list args);
 
 #define fail(reason) assert(0 && (reason))
