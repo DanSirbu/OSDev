@@ -22,16 +22,3 @@ void assert_failed(char *statement, char *file, uint32_t line, const char *func)
 	kpanic_fmt(ANSI_COLOR_RED "%s:%d: error in %s: %s" ANSI_COLOR_RESET "\n", file, line, func, statement);
     abort();
 }
-
-void assert_failed_msg(char *file, uint32_t line, char *statement,
-				     ...)
-{
-	kpanic_fmt("Error in %s:%d: \n", file, line);
-
-	va_list args;
-	va_start(args, statement);
-	kpanic("\t");
-	kpanic_fmt1(statement, args);
-	kpanic("\n");
-	va_end(args);
-}

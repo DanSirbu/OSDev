@@ -80,7 +80,7 @@ void interrupt_handler(int_regs_t regs)
 		void (*func)(uint32_t) = interrupt_handlers[regs.interrupt_no];
 		(*func)(regs.error_code);
 	} else {
-		fail_stmt("No handler for interrupt %d\n", regs.interrupt_no);
+		debug_print("No handler for interrupt %d\n", regs.interrupt_no);
 	}
 
 	if (regs.interrupt_no >= 32) {
