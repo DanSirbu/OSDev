@@ -38,10 +38,9 @@ common_interrupt_handler:
 
     iretd
 
-global enter_userspace
-; eip, cs, eflags, useresp, ss pushed by cpu
+global enter_userspace ; (stack, entry_point)
 enter_userspace:
-    mov esp, ebp
+    mov ebp, esp
 
     mov ax,0x23
     mov ds,ax
@@ -49,12 +48,13 @@ enter_userspace:
     mov fs,ax
     mov gs,ax
 
-    push 0x23
-    push DWORD [ebp+8]
-    pushf
-    push 0x1B ; User code segment with bottom 2 bits
-    push DWORD [ebp+4]
-    iret
+    ; eip, cs, eflags, useresp, ss
+    push DWORD 0x23 ; ss
+    push DWORD [ebp+4] ; useresp
+    pushfd ; flags
+    push DWORD 0x1B ; cs
+    push DWORD [ebp+8] ; eip 
+    iretd
 
 align 0x10
 no_error 0
