@@ -20,6 +20,7 @@ ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 512M
 
+GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common
 
 # -d int shows interrupts
 QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=udp::5555-:22 -device rtl8139,netdev=network0 -object filter-dump,id=f1,netdev=network0,file=dump.pcap
@@ -51,6 +52,12 @@ debug: $(OBJDIR)/kernel.elf
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
 	@$(CROSS-COMPILER) ${ARGS} -T link.ld $^ -o $@
+
+hello.elf: hello.c stubstart.o
+	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} $^ -o $@
+
+stubstart.o: stubstart.S
+	@nasm -f elf32 -g $< -o $@
 
 #-include $(OBJS:.o=.d)
 
