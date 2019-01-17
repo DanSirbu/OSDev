@@ -16,9 +16,10 @@
 
 //Also defined in p_allocator.h
 #define PGSIZE 4096
+#define PGMASK 0xFFF
 #define LPGSIZE 0x400000 //Large page size = 4MB
 
-#define PG_ROUND_DOWN(addr) (addr & ~(PGSIZE - 1))
+#define PG_ROUND_DOWN(addr) (addr & ~(PGMASK))
 #define PG_ROUND_UP(addr) PG_ROUND_DOWN((addr + (PGSIZE - 1)))
 
 #define FRAME_TO_ADDR(frame) ((pptr_t)((frame) << POFFSHIFT))
@@ -84,7 +85,12 @@ typedef struct {
 	page_table_t *tables[1024]; //pointer to virtual address of the tables
 } page_directory_t;
 
-void mmap(size_t base, size_t len);
+static inline void invlpg(vptr_t addr)
+{
+	asm volatile("invlpg (%0)" ::"r"(addr) : "memory");
+}
+
+void mmap(size_t base, size_t len, int user);
 void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, uint8_t flags);
 void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user);
 void paging_init(size_t memory_map_base, size_t memory_map_full_len);
