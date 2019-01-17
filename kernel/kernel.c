@@ -62,7 +62,7 @@ void err()
 {
 	asm("cli");
 }
-extern void exec(task_t *task, vptr_t fn);
+extern void exec(fs_node_t *file);
 void test_process1(vptr_t args)
 {
 	while (1) {
@@ -96,7 +96,7 @@ void test1()
 }
 extern char _kernel_end;
 extern fs_node_t *ram_root;
-
+extern fs_node_t *dirent_to_node(dirent_t *dirent);
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
@@ -157,6 +157,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("File1: %s\n", file1.name);
 	debug_print("File2: %s\n", file2.name);
 
+	fs_node_t *hello = dirent_to_node(&file1);
+
 	//mmap(0x90000000, 0x4000);
 	//initrd_init(0x90000000, 0x4000);
 	//char *abc = "AAAAAAABBBBBCCCCC";
@@ -202,6 +204,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("Starting Tests\n");
 	run_tests();
 	debug_print("Tests complete!\n");
+
+
+	exec(hello);
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;

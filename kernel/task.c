@@ -4,6 +4,7 @@
 #include "serial.h"
 #include "list.h"
 #include "mmu.h"
+#include "elf.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
@@ -77,11 +78,43 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 
 	return new_task;
 }
+#include "fs.h"
 extern void enter_userspace(vptr_t fn, vptr_t stack);
-void exec(task_t *task, vptr_t fn)
+void exec(fs_node_t *file)
 {
-	vptr_t stack = (vptr_t)kmalloc(0x1000);
-	enter_userspace(stack, fn);
+	//Load ELF file
+	Elf32_Ehdr header;
+
+	file->read(file, 0, sizeof(header), (uint8_t*) &header);
+
+	for(int x = 0; x < header.e_phnum; x++) {
+		vptr_t ph_offset = x * header.e_phentsize + header.e_phoff;
+		Elf32_Phdr ph;
+
+		file->read(file, ph_offset, sizeof(ph), (uint8_t*)&ph);
+		//0x80d96a0+0x3990=0x80DD030 = 0x9000-0xE000
+		//0x80dd000
+		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
+		size_t section_size = section_end - PG_ROUND_DOWN(ph.p_vaddr);
+
+		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, 1);
+		invlpg(PG_ROUND_DOWN(ph.p_vaddr));
+
+		file->read(file, ph.p_offset, ph.p_filesz, (uint8_t*)ph.p_vaddr);
+
+		//Set the rest of memory to zero
+		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;
+		memset((void*)program_header_end, 0, ph.p_memsz - ph.p_filesz);
+	}
+
+	mmap(0xB0000000, 0x1000, 1);
+	vptr_t stack = 0xB0000000 + 0x1000;
+	invlpg(0xB0000000);
+
+	PUSH(stack, vptr_t, 0); //argv
+	PUSH(stack, size_t, 0); //argc
+
+	enter_userspace(stack, header.e_entry);
 }
 void make_task_ready(task_t *task)
 {
