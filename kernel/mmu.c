@@ -34,15 +34,29 @@ void switch_page_directory(page_directory_t *new_pg_dir) {
 	current_directory = new_pg_dir;
 	LoadNewPageDirectory(pgdir_phy);
 }
+int is_mapped(page_directory_t *pg, vptr_t addr) {
+	size_t pdx = PDX(addr);
+	size_t ptx = PTX(addr);
+
+	if (pg->actual_tables[pdx].present) {
+		return pg->tables[pdx]->pages[ptx].present;
+	}
+
+	return false;
+}
 //Just map it, we don't care where
-void mmap(size_t base, size_t len)
+void mmap(size_t base, size_t len, int user)
 {
-	assert((base & PGSIZE) == 0); //Has to be 4k aligned
+	assert((base & PGMASK) == 0); //Has to be 4k aligned
 	//len = PG_ROUND_UP(len);
 	for (size_t x = 0; x < len / PGSIZE; x++) {
 		vptr_t vaddr = base + x * PGSIZE;
+		if(is_mapped(current_directory, vaddr)) {
+			debug_print("Already mapped: 0x%x\n", base);
+			continue;
+		}
 		pptr_t phyaddr = alloc_frame();
-		setPTE(current_directory, vaddr, phyaddr, 0);
+		setPTE(current_directory, vaddr, phyaddr, 1);
 	}
 }
 
@@ -50,8 +64,13 @@ void mmap(size_t base, size_t len)
 void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 	       uint8_t flags)
 {
-	assert((vaddr_start & 0xFFF) == 0); //Has to be 4k aligned
-	assert((phyaddr_start & 0xFFF) == 0); //Has to be 4k aligned
+	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
+	assert((phyaddr_start & PGMASK) == 0); //Has to be 4k aligned
+
+	if(is_mapped(current_directory, vaddr_start)) {
+			debug_print("Already mapped, exiting: 0x%x", vaddr_start);
+			return;
+	}
 
 	size_t vaddr_pdx = PDX(vaddr_start);
 	size_t vaddr_ptx = PTX(vaddr_start);
@@ -91,8 +110,10 @@ void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user)
 		pptr_t frame_addr = virtual_to_physical(pgdir, page);
 
 		page_dir_entry_t *pde = &pgdir->actual_tables[pdx];
-
-		pde->user = user;
+		if(pdx < KERN_BASE_PAGE_NO) {
+			pde->user = 1;
+		}
+		pde->rw = 1;
 		pde->frame = frame_addr >> POFFSHIFT;
 		pde->present = 1;
 	}
@@ -100,6 +121,7 @@ void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user)
 
 	assert(!page_entry->present); //Entry not already mapped
 
+	page_entry->rw = 1;
 	page_entry->frame = PTE_ADDR(phyaddr); //Set the frame address
 	page_entry->user = user;
 	page_entry->present = 1;
@@ -129,12 +151,17 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	//First 4MB of heap are mapped already by the boot_page_directory
 	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, 0x400000, FLAG_IGNORE_PHY_REUSE);
 	//Map the rest of it
-	mmap(KERN_HEAP_START + 0x400000, KERN_HEAP_END - KERN_HEAP_START - 0x400000);
+	mmap(KERN_HEAP_START + 0x400000, KERN_HEAP_END - KERN_HEAP_START - 0x400000, 0);
 
 	switch_page_directory(current_directory); //Load the new page directory
 	DisablePSE(); //Disable 4 MiB pages
 
 	PAGING_INIT = 1;
+}
+static inline uint32_t read_cr2() {
+	uint32_t ret;
+	asm("movl %%cr2, %0" : "=r"(ret));
+	return ret;
 }
 void page_fault_handler(int error_no)
 {
@@ -148,9 +175,9 @@ void page_fault_handler(int error_no)
 		"User process tried to write to a non-present page entry",
 		"User process tried to write a page and caused a protection fault"
 	};
-
-	debug_print("Page Fault Error: %s\n", page_fault_msgs[error_no]);
-	assert(0 && "Page Fault");
+	uint32_t cr2 = read_cr2();
+	debug_print("Page Fault Error: %s at 0x%x\n", page_fault_msgs[error_no], cr2);
+	abort();
 }
 void alloc_page(pte_t *page, int is_user, int is_writable)
 {
@@ -219,10 +246,6 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 	return new_pg_directory; //TODO*/
 	return NULL;
 }
-static inline void invlpg(vptr_t addr)
-{
-	asm volatile("invlpg (%0)" ::"r"(addr) : "memory");
-}
 
 void memcpy_frame_contents(pptr_t dst, pptr_t src)
 {
@@ -265,7 +288,7 @@ void memcpy_frame_contents(pptr_t dst, pptr_t src)
                         |                              | RW/--
         KERNBASE ----->  +------------------------------+ 0xc0000000
                         |       Empty Memory           | R-/R-  PTSIZE
-        UPAGES    ---->  +------------------------------+ 0xef000000
+        UPAGES    ---->  +------------------------------+ 0xB0000000
                         |           RO ENVS            | R-/R-  PTSIZE
     UTOP,UENVS ------>  +------------------------------+ 0xeec00000
     UXSTACKTOP -/       |     User Exception Stack     | RW/RW  PGSIZE
