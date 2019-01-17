@@ -14,6 +14,7 @@ uint32_t numfiles;
 dirent_t dirent;
 
 dirent_t *initrd_readdir(fs_node_t *node, uint32_t index);
+uint32_t ramfs_read(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buf);
 
 void initramfs(vptr_t location) {
     ram_root = kcalloc(sizeof(fs_node_t));
@@ -32,7 +33,20 @@ void initramfs(vptr_t location) {
         headers[x].start += location; //Transform to virtual
     }
 }
+//Temporary
+fs_node_t *dirent_to_node(dirent_t *dirent) {
+    fs_node_t *tmpNode = kcalloc(sizeof(fs_node_t));
+    tmpNode->readdir = initrd_readdir;
+    strcpy(tmpNode->name, dirent->name);
+    tmpNode->flags = FS_FILE;
+    tmpNode->read = ramfs_read;
+    tmpNode->write = 0;
+    tmpNode->open = 0;
+    tmpNode->close = 0;
+    tmpNode->ino = dirent->ino;
 
+    return tmpNode;
+}
 dirent_t *initrd_readdir(fs_node_t *node, uint32_t index) {
     assert(node == ram_root);
     if(index > numfiles - 1) {

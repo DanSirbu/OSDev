@@ -20,8 +20,8 @@ typedef struct {
 } dirent_t;
 
 
-typedef uint32_t (*read_type_t)(struct fs_node *, uint32_t, uint32_t,
-				uint8_t *);
+typedef uint32_t (*read_type_t)(struct fs_node *, uint32_t offset, uint32_t size,
+				uint8_t *buf);
 typedef uint32_t (*write_type_t)(struct fs_node *, uint32_t, uint32_t,
 				 uint8_t *);
 typedef void (*open_type_t)(struct fs_node *);
