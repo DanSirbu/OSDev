@@ -9,8 +9,14 @@ SRCFILES = $(wildcard boot/*.asm) $(wildcard kernel/*.c) $(wildcard lib/*.c) $(w
 SRCFILES1 = $(patsubst %.c, $(OBJDIR)/%.o, $(SRCFILES))
 OBJFILES = $(patsubst %.asm, $(OBJDIR)/%.o, $(SRCFILES1))
 
+APPS-SRC = $(wildcard apps/*.c)
+APPS-OBJ = $(patsubst %.c, $(OBJDIR)/%, $(APPS-SRC))
+
 OBJDIRS:=$(dir $(OBJFILES))
 OBJDIRS:=$(shell echo $(OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
+
+APPS-OBJDIRS:=$(dir $(APPS-OBJ))
+APPS-OBJDIRS:=$(shell echo $(APPS-OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
 
 
 CROSS-COMPILER:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
@@ -27,7 +33,7 @@ QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=
 #QEMU-NETWORK-ARGS = -netdev tap,helper=/usr/lib/qemu/qemu-bridge-helper,id=thor_net0 -device e1000,netdev=thor_net0,id=thor_nic0 -object filter-dump,id=f1,netdev=thor_net0,file=dump.pcap
 #QEMU-NETWORK-ARGS = -net nic -net bridge,br=br0,id=netdevice -object filter-dump,id=f1,netdev=netdevice,file=dump.pcap
 
-QEMU-RAMFS = -initrd "ramfs.img"
+QEMU-RAMFS = -initrd "obj/ramfs.img"
 # Old style qemu network arguments
 PORT7 = 5555
 PORT80 = 5556
@@ -37,7 +43,7 @@ PORT80 = 5556
 # Virtual Router has 10.0.2.2
 
 #-monitor telnet:127.0.0.1:1235,server,nowait
-run: $(OBJDIR)/kernel.elf
+run: $(OBJDIR)/kernel.elf obj/ramfs.img
 	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS) $(QEMU-RAMFS)
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 
@@ -53,8 +59,8 @@ debug: $(OBJDIR)/kernel.elf
 $(OBJDIR)/kernel.elf: ${OBJFILES}
 	@$(CROSS-COMPILER) ${ARGS} -T link.ld $^ -o $@
 
-hello.elf: hello.c stubstart.o
-	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} $^ -o $@
+obj/ramfs.img: ${APPS-OBJ}
+	@./ramfs_gen $@ $^
 
 stubstart.o: stubstart.S
 	@nasm -f elf32 -g $< -o $@
@@ -68,8 +74,11 @@ $(OBJDIR)/%.o: %.c mkdirectories
 $(OBJDIR)/%.o: %.asm mkdirectories
 	@nasm -f elf32 -g $< -o $@
 
+$(OBJDIR)/%: %.c mkdirectories
+	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} $< stubstart.o -o $@
+
 mkdirectories:
-	@mkdir -p $(OBJDIRS)
+	@mkdir -p $(OBJDIRS) $(APPS-OBJDIRS)
 	
 clean:
 	rm -rf obj/
