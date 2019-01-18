@@ -34,7 +34,7 @@ size_t *rx_buffer;
 void RTL8139_Init()
 {
 	//Register Interrupt Handler
-	register_handler(32 + 11, RTL8139_Interrupt);
+	register_isr_handler(32 + 11, RTL8139_Interrupt);
 
 	// Enable PCI Bus Mastering
 	uint32_t pci_command_reg =

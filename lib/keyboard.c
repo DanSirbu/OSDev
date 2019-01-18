@@ -9,7 +9,7 @@ void keyboard_handler_main(void);
 
 void kb_init(void)
 {
-	//register_handler(TRAP_KEYBOARD, keyboard_handler_main);
+	//register_isr_handler(TRAP_KEYBOARD, keyboard_handler_main);
 	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
 	// outb(0x21 , 0xFD);
 }

@@ -15,6 +15,6 @@ typedef struct {
 	uint32_t eip, cs, eflags, useresp, ss; //Pushed by CPU
 } int_regs_t;
 
-void register_handler(int interrupt_no, void *handler);
+void register_isr_handler(int interrupt_no, void *handler);
 
 void interrupt_handler(int_regs_t regs);

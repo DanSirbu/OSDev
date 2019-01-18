@@ -53,7 +53,7 @@ void timer_init(uint32_t frequency)
 	outb(PIT_CMD, 0x36);
 	outb(PIT0_DATA, BYTE0(div));
 	outb(PIT0_DATA, BYTE1(div));
-	register_handler(TRAP_TIMER, timer_interrupt);
+	register_isr_handler(TRAP_TIMER, timer_interrupt);
 }
 extern void sendEOI(uint32_t interrupt_no);
 uint32_t ticks = 0; //Since frequency is 1000, this is a millisecond
