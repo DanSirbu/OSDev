@@ -54,7 +54,7 @@ run-debug: $(OBJDIR)/kernel.elf
 debug-r2: $(OBJDIR)/kernel.elf
 	r2 -e bin.baddr=0x001000000 -e dbg.exe.path=$< -d -b 32 -c v! gdb://127.0.0.1:1234
 debug: $(OBJDIR)/kernel.elf
-	gdb ./obj/kernel.elf
+	gdb $<
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
 	@$(CROSS-COMPILER) ${ARGS} -T link.ld $^ -o $@
@@ -65,11 +65,8 @@ obj/ramfs.img: ${APPS-OBJ}
 stubstart.o: stubstart.S
 	@nasm -f elf32 -g $< -o $@
 
-#-include $(OBJS:.o=.d)
-
 $(OBJDIR)/%.o: %.c mkdirectories
 	@$(CROSS-COMPILER) ${ARGS} $< -c -o $@ -I include/ -I tests/
-	@#gcc -MM ${ARGS} $< > $*.d
 
 $(OBJDIR)/%.o: %.asm mkdirectories
 	@nasm -f elf32 -g $< -o $@
