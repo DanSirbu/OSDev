@@ -4,6 +4,7 @@
 #include "serial.h"
 
 #define TRAP_PAGE_FAULT 14
+#define SYSCALL_NO 0x80
 
 #define TRAP_TIMER 32
 #define TRAP_KEYBOARD (32 + 1)
@@ -15,6 +16,8 @@ typedef struct {
 	uint32_t eip, cs, eflags, useresp, ss; //Pushed by CPU
 } int_regs_t;
 
-void register_isr_handler(int interrupt_no, void *handler);
+typedef void (*isr_handler_t)(int_regs_t *);
+
+void register_isr_handler(int interrupt_no, isr_handler_t handler);
 
 void interrupt_handler(int_regs_t regs);

@@ -2,7 +2,7 @@
 
 extern void sendEOI(uint32_t interrupt_no);
 
-static void *interrupt_handlers[256];
+static isr_handler_t interrupt_handlers[256];
 
 static char *exceptions_string[32] = {
 	"Divide-by-zero",
@@ -56,7 +56,7 @@ static char *interrupts_string[32] = { "Programmable Interrupt Timer",
 				       "Primary ATA Hard Disk",
 				       "Secondary ATA Hard Disk" };
 
-void register_isr_handler(int interrupt_no, void *handler)
+void register_isr_handler(int interrupt_no, isr_handler_t handler)
 {
 	interrupt_handlers[interrupt_no] = handler;
 }
@@ -77,8 +77,9 @@ void interrupt_handler(int_regs_t regs)
 
 	//Send the interrupt if there is a handler
 	if (interrupt_handlers[regs.interrupt_no] != NULL) {
-		void (*func)(uint32_t) = interrupt_handlers[regs.interrupt_no];
-		(*func)(regs.error_code);
+		void (*func)(int_regs_t *) =
+			interrupt_handlers[regs.interrupt_no];
+		(*func)(&regs);
 	} else {
 		debug_print("No handler for interrupt %d\n", regs.interrupt_no);
 	}

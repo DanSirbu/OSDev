@@ -7,7 +7,7 @@
 
 extern char _kernel_end;
 
-void page_fault_handler(int error_no);
+void page_fault_handler(int_regs_t *regs);
 
 extern page_directory_t *boot_page_directory;
 page_directory_t *current_directory;
@@ -173,7 +173,7 @@ static inline uint32_t read_cr2()
 	asm("movl %%cr2, %0" : "=r"(ret));
 	return ret;
 }
-void page_fault_handler(int error_no)
+void page_fault_handler(int_regs_t *regs)
 {
 	static char *page_fault_msgs[] = {
 		"Supervisory process tried to read a non-present page entry",
@@ -186,8 +186,8 @@ void page_fault_handler(int error_no)
 		"User process tried to write a page and caused a protection fault"
 	};
 	uint32_t cr2 = read_cr2();
-	debug_print("Page Fault Error: %s at 0x%x\n", page_fault_msgs[error_no],
-		    cr2);
+	debug_print("Page Fault Error: %s at 0x%x\n",
+		    page_fault_msgs[regs->error_code], cr2);
 	abort();
 }
 void alloc_page(pte_t *page, int is_user, int is_writable)
