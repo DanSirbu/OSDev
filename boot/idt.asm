@@ -22,8 +22,15 @@ common_interrupt_handler:
     push fs
     push gs
 
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
     call interrupt_handler
 
+interrupt_return:
     ; Restore segment registers
     pop gs
     pop fs
@@ -38,6 +45,7 @@ common_interrupt_handler:
 
     iretd
 
+global interrupt_return
 global enter_userspace ; (stack, entry_point)
 enter_userspace:
     mov ebp, esp
