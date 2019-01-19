@@ -127,7 +127,7 @@ void make_task_ready(task_t *task)
 	if (task == kernel_idle_task || task->state == STATE_FINISHED) {
 		return;
 	}
-	
+
 	task->state = STATE_READY;
 	list_append_item(ready_queue, (vptr_t)task);
 }
@@ -150,7 +150,12 @@ task_t *pick_next_task()
 	return task;
 }
 
-void task_exit(int exitcode) {
+uint32_t fork()
+{
+	return 0; //TODO
+}
+void task_exit(int exitcode)
+{
 	current->state = STATE_FINISHED;
 
 	//TODO, cleanup
