@@ -18,6 +18,7 @@
 #include "time.h"
 #include "spinlock.h"
 #include "task.h"
+#include "syscalls.h"
 
 #include "test.h"
 #include "ramfs.h"
@@ -193,6 +194,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	//clone(test_process1, kmalloc(0x1000) + 0x1000);
 	//clone(test_process2, kmalloc(0x1000) + 0x1000);
 
+	syscalls_install();
 	tasking_install();
 	//sti();
 	

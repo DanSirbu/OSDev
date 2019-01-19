@@ -16,7 +16,7 @@ struct cpu {
 	context_t *scheduler_ctx;
 };
 
-enum STATES { STATE_READY = 1, STATE_RUNNING = 2, STATE_FINISHED = 0 };
+enum STATES { STATE_INIT = 0, STATE_READY = 1, STATE_RUNNING = 2, STATE_FINISHED = 3 };
 
 //https://github.com/s-matyukevich/raspberry-pi-os/blob/master/docs/lesson04/rpi-os.md
 //The counter allows preemption
@@ -74,6 +74,7 @@ edi
 */
 void tasking_install();
 void switch_context(context_t *cur_context, context_t *new_context);
+void task_exit(int exitcode);
 void schedule();
 void make_task_ready(task_t *task);
 task_t *copy_task(vptr_t fn, vptr_t args);

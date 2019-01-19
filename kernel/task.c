@@ -118,7 +118,7 @@ void exec(fs_node_t *file)
 }
 void make_task_ready(task_t *task)
 {
-	if(task == kernel_idle_task) {
+	if(task == kernel_idle_task || task->state == STATE_FINISHED) {
 		return;
 	}
 	
@@ -137,7 +137,19 @@ task_t *pick_next_task()
 
 	list_remove(ready_queue, task_node);
 
+	if(task->state != STATE_READY) {
+		return pick_next_task();
+	}
+
 	return task;
+}
+
+void task_exit(int exitcode) {
+	current->state = STATE_FINISHED;
+
+	//TODO, cleanup
+
+	schedule();
 }
 void schedule()
 {
