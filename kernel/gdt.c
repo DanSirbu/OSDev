@@ -103,6 +103,8 @@ void initialize_tss()
 		((uint32_t)&kernel_stack_lowest_address + KERNEL_STACK_SIZE) -
 		4;
 
+	tss.cs = 0x0b;
+	tss.ss = tss.ds = tss.es = tss.fs = tss.gs = 0x13;
 	tss_flush();
 }
 
