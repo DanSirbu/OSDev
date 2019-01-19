@@ -8,18 +8,29 @@ extern uint8_t PIC2_INT;
 
 #define IDT_SIZE 256
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
-#define INTERRUPT_GATE 0x8e
+
+#define TASK_GATE_32 0x5
+#define INTERRUPT_GATE_16 0x6
+#define TRAP_GATE_16 0x7
+#define INTERRUPT_GATE_32 0xE
+#define TRAP_GATE_32 0xF
 
 struct idt_description_structure_t {
 	u16 size; // in bytes
 	u32 offset;
 } __attribute__((packed)) idt_description_structure;
+
 struct IDT_entry {
-	unsigned short int offset_lowerbits;
-	unsigned short int selector;
+	uint16_t offset_lowerbits;
+	uint16_t selector;
 	unsigned char zero;
-	unsigned char type_attr;
-	unsigned short int offset_higherbits;
+	struct {
+		uint8_t gatetype: 4;
+		uint8_t storage_segment: 1;
+		uint8_t dpl : 2;
+		uint8_t present : 1;
+	} type;
+	uint16_t offset_higherbits;
 };
 
 struct IDT_entry IDT[IDT_SIZE];
@@ -45,13 +56,18 @@ void idt_init(void)
 		idt_address =
 			idt_0_address + (x * 0x10); // each handler is 16 bytes
 		// aligned
-		IDT[x].offset_lowerbits = idt_address & 0xffff;
+		IDT[x].offset_lowerbits = idt_address & 0xFFFF;
+		IDT[x].offset_higherbits = idt_address >> 16;
+
 		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
 		IDT[x].zero = 0;
-		IDT[x].type_attr = INTERRUPT_GATE;
-		IDT[x].offset_higherbits = (idt_address & 0xffff0000) >> 16;
+		
+		IDT[x].type.gatetype = INTERRUPT_GATE_32;
+		IDT[x].type.storage_segment = 0;
+		IDT[x].type.dpl = 0;
+		IDT[x].type.present = 1;
 	}
-
+	IDT[0x80].type.dpl = 3;
 	/*     Ports
    *	 PIC1	PIC2
    *Command 0x20	0xA0
