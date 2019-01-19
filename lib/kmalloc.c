@@ -51,13 +51,8 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 	if (size == 0) {
 		return NULL;
 	}
-	// For now to keep it simple, just allocate new space, don't use previous
-	// space
+	assert(alignment >= 8);
 
-	if (alignment < 8) {
-		debug_print(
-			"KMALLOC_ALIGNED NOT IMPLEMENTED WITH smaller than 8");
-	}
 	// TODO make this code thread safe
 	uint32_t curAlignment = (uint32_t)sbrk(0);
 	uint32_t wantedAlignment = curAlignment; // 8 bits aligned
@@ -159,9 +154,7 @@ void kfree(void *ptr)
 		return;
 	}
 	if (ptr < (void *)heap_start) {
-		debug_print(
-			"Trying to free %p, which is before the heap_start (%p)\n",
-			(void *)ptr, (void *)heap_start);
+		debug_print("Trying to free %p, which is before the heap_start (%p)\n", ptr, (void*)heap_start);
 		return;
 	}
 
@@ -171,12 +164,10 @@ void kfree(void *ptr)
 	// free_list
 	if ((ptr + cur_block->size) == (void *)heap_top) {
 		sbrk(-(sizeof(block_t) + cur_block->size));
-		return;
+	} else { //Append to free list
+		cur_block->next_free = free_list;
+		free_list = cur_block;
 	}
-
-	//Else append to free list
-	cur_block->next_free = free_list;
-	free_list = cur_block;
 }
 
 /*
