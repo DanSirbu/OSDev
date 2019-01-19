@@ -28,27 +28,32 @@ void exit_task()
 	while (1)
 		;
 }
-void idle_task() {
-	while(1) {
+void idle_task()
+{
+	while (1) {
 		schedule();
 	}
 }
 extern page_directory_t *current_directory;
-task_t *spawn_init() {
+task_t *spawn_init()
+{
 	task_t *init_task = kcalloc(sizeof(task_t));
 
 	init_task->state = STATE_RUNNING;
 
-	init_task->stack = (vptr_t)kmalloc(STACK_SIZE); //TODO, reuse kernel stack?
+	init_task->stack =
+		(vptr_t)kmalloc(STACK_SIZE); //TODO, reuse kernel stack?
 	init_task->page_directory = current_directory;
 
 	return init_task;
 }
 
-task_t *spawn_idle() {
+task_t *spawn_idle()
+{
 	return copy_task((vptr_t)idle_task, NULL);
 }
-void tasking_install() {
+void tasking_install()
+{
 	ready_queue = list_create();
 	current = spawn_init();
 	kernel_idle_task = spawn_idle();
@@ -85,13 +90,13 @@ void exec(fs_node_t *file)
 	//Load ELF file
 	Elf32_Ehdr header;
 
-	file->read(file, 0, sizeof(header), (uint8_t*) &header);
+	file->read(file, 0, sizeof(header), (uint8_t *)&header);
 
-	for(int x = 0; x < header.e_phnum; x++) {
+	for (int x = 0; x < header.e_phnum; x++) {
 		vptr_t ph_offset = x * header.e_phentsize + header.e_phoff;
 		Elf32_Phdr ph;
 
-		file->read(file, ph_offset, sizeof(ph), (uint8_t*)&ph);
+		file->read(file, ph_offset, sizeof(ph), (uint8_t *)&ph);
 		//0x80d96a0+0x3990=0x80DD030 = 0x9000-0xE000
 		//0x80dd000
 		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
@@ -100,11 +105,12 @@ void exec(fs_node_t *file)
 		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, 1);
 		invlpg(PG_ROUND_DOWN(ph.p_vaddr));
 
-		file->read(file, ph.p_offset, ph.p_filesz, (uint8_t*)ph.p_vaddr);
+		file->read(file, ph.p_offset, ph.p_filesz,
+			   (uint8_t *)ph.p_vaddr);
 
 		//Set the rest of memory to zero
 		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;
-		memset((void*)program_header_end, 0, ph.p_memsz - ph.p_filesz);
+		memset((void *)program_header_end, 0, ph.p_memsz - ph.p_filesz);
 	}
 
 	mmap(0xB0000000, 0x1000, 1);
@@ -118,7 +124,7 @@ void exec(fs_node_t *file)
 }
 void make_task_ready(task_t *task)
 {
-	if(task == kernel_idle_task || task->state == STATE_FINISHED) {
+	if (task == kernel_idle_task || task->state == STATE_FINISHED) {
 		return;
 	}
 	
@@ -128,16 +134,16 @@ void make_task_ready(task_t *task)
 
 task_t *pick_next_task()
 {
-	if(ready_queue->len == 0) {
+	if (ready_queue->len == 0) {
 		return kernel_idle_task;
 	}
 
 	node_t *task_node = list_index(ready_queue, 0);
-	task_t *task = (task_t*) task_node->value;
+	task_t *task = (task_t *)task_node->value;
 
 	list_remove(ready_queue, task_node);
 
-	if(task->state != STATE_READY) {
+	if (task->state != STATE_READY) {
 		return pick_next_task();
 	}
 
