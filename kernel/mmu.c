@@ -211,6 +211,9 @@ page_table_t *clone_table(page_table_t *src)
 
 	for (int x = 0; x < 1024; x++) {
 		pte_t pg = src->pages[x];
+		if(pg.present == 0) {
+			continue;
+		}
 
 		pptr_t oldFrame = FRAME_TO_ADDR(pg.frame);
 		pptr_t newFrame = alloc_frame();
@@ -257,12 +260,22 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 		}
 	}
 
-	return new_pg_directory; //TODO*/
-	return NULL;
+	return new_pg_directory;
 }
-
+void clear_pte(vptr_t addr)
+{
+	uint32_t pdx = PDX(addr);
+	uint32_t ptx = PTX(addr);
+	if (current_directory->tables[pdx] != NULL) {
+		current_directory->tables[pdx]->pages[ptx].present = 0;
+	}
+}
 void memcpy_frame_contents(pptr_t dst, pptr_t src)
 {
+	//Unmap pages
+	clear_pte(COPY_PAGE_SOURCE);
+	clear_pte(COPY_PAGE_DEST);
+
 	//Map these two pages
 	setPTE(current_directory, COPY_PAGE_SOURCE, src,
 	       0); //TODO PAGE_R | PAGE_KERNEL
