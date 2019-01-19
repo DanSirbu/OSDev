@@ -11,7 +11,8 @@
 
 extern void set_kernel_stack(size_t);
 
-task_t task_list[NO_TASKS];
+list_t *task_list;
+
 task_t *current = NULL;
 list_t *ready_queue = NULL;
 task_t *kernel_idle_task = NULL;
@@ -54,6 +55,7 @@ task_t *spawn_idle()
 }
 void tasking_install()
 {
+	task_list = list_create();
 	ready_queue = list_create();
 	current = spawn_init();
 	kernel_idle_task = spawn_idle();
@@ -64,10 +66,8 @@ void tasking_install()
 //Does not start it yet
 task_t *copy_task(vptr_t fn, vptr_t args)
 {
-	task_t *new_task = &task_list[++last_process];
-
-	//Clear the old data
-	memset((void *)new_task, 0, sizeof(task_t));
+	task_t *new_task = kcalloc(sizeof(new_task));
+	list_append_item(task_list, (vptr_t)new_task);
 
 	vptr_t stack = (vptr_t)(kmalloc(STACK_SIZE) + STACK_SIZE);
 	new_task->stack = stack;
