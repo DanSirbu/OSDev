@@ -32,7 +32,7 @@ int main(int argc1, char const *argv1[])
 		file_start += fileInfos[x].len;
 	}
 
-	FILE *outFile = fopen(argv[1], "w");
+	FILE *outFile = fopen(argv1[1], "w");
 	uint32_t numFiles = argc;
 
 	//Write num files
