@@ -9,7 +9,7 @@ void syscall(int_regs_t *regs)
 		task_exit(regs->ebx);
 		break;
 	case 1:
-		regs->eax = fork();
+		regs->eax = fork(regs);
 		break;
 	default:
 		debug_print("Unhandled syscall\n");

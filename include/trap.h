@@ -14,7 +14,7 @@ typedef struct {
 	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; //pushad
 	uint32_t interrupt_no, error_code; //Pushed by assembly code
 	uint32_t eip, cs, eflags, useresp, ss; //Pushed by CPU
-} int_regs_t;
+} __attribute__((packed)) int_regs_t;
 
 typedef void (*isr_handler_t)(int_regs_t *);
 

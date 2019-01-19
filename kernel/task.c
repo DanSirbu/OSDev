@@ -5,6 +5,7 @@
 #include "list.h"
 #include "mmu.h"
 #include "elf.h"
+#include "trap.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
@@ -42,8 +43,8 @@ task_t *spawn_init()
 
 	init_task->state = STATE_RUNNING;
 
-	init_task->stack =
-		(vptr_t)kmalloc(STACK_SIZE); //TODO, reuse kernel stack?
+	//TODO, reuse kernel stack?
+	init_task->stack = (vptr_t)kmalloc(STACK_SIZE);
 	init_task->page_directory = current_directory;
 
 	return init_task;
@@ -69,8 +70,8 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 	task_t *new_task = kcalloc(sizeof(new_task));
 	list_append_item(task_list, (vptr_t)new_task);
 
-	vptr_t stack = (vptr_t)(kmalloc(STACK_SIZE) + STACK_SIZE);
-	new_task->stack = stack;
+	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+	vptr_t stack = new_task->stack + STACK_SIZE;
 
 	PUSH(stack, vptr_t, args);
 	//Where fn returns to
@@ -85,6 +86,7 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 }
 #include "fs.h"
 extern void enter_userspace(vptr_t fn, vptr_t stack);
+extern void interrupt_return();
 void exec(fs_node_t *file)
 {
 	//Load ELF file
@@ -150,9 +152,31 @@ task_t *pick_next_task()
 	return task;
 }
 
-uint32_t fork()
+uint32_t fork(int_regs_t *regs)
 {
-	return 0; //TODO
+	assert(current != NULL && "Current process does not exist, can't fork");
+
+	task_t *new_task = kcalloc(sizeof(task_t));
+	list_append_item(task_list, (vptr_t)new_task);
+
+	//Spawn_process
+	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+
+	int_regs_t new_regs;
+	memcpy(&new_regs, regs, sizeof(int_regs_t));
+	new_regs.eax = 0;
+
+	vptr_t stack = new_task->stack + STACK_SIZE;
+	PUSH(stack, int_regs_t, new_regs);
+
+	new_task->context.eip = (vptr_t)&interrupt_return;
+	new_task->context.esp = stack;
+
+	new_task->page_directory = clone_directory(current->page_directory);
+
+	make_task_ready(new_task);
+
+	return 999; //TODO
 }
 void task_exit(int exitcode)
 {
@@ -174,7 +198,7 @@ void schedule()
 
 	//Set up everything for the new process
 	current = next_task;
-	set_kernel_stack(current->stack);
+	set_kernel_stack(current->stack + STACK_SIZE);
 
 	switch_page_directory(current->page_directory);
 
