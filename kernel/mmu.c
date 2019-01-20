@@ -211,7 +211,7 @@ page_table_t *clone_table(page_table_t *src)
 
 	for (int x = 0; x < 1024; x++) {
 		pte_t pg = src->pages[x];
-		if(pg.present == 0) {
+		if (pg.present == 0) {
 			continue;
 		}
 
@@ -250,9 +250,10 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 
 		if (entry_bits.bits != 0) {
 			page_table_t *dst_tbl = clone_table(src_tbl);
-
-			entry_bits.frame = virtual_to_physical(
+			pptr_t dst_tbl_phy = virtual_to_physical(
 				current_directory, (vptr_t)dst_tbl);
+
+			entry_bits.frame = ADDR_TO_FRAME(dst_tbl_phy);
 
 			//Set the entry for the cloned table
 			new_pg_directory->actual_tables[x] = entry_bits;
