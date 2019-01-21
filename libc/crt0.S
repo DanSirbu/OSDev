@@ -1,7 +1,7 @@
 global _start
 extern main
-extern syscall_exit
+extern exit
 _start:
     call main
 
-    jmp syscall_exit
+    jmp exit
