@@ -12,12 +12,12 @@ OBJFILES = $(patsubst %.asm, $(OBJDIR)/%.o, $(SRCFILES1))
 APPS-SRC = $(wildcard apps/*.c)
 APPS-OBJ = $(patsubst %.c, $(OBJDIR)/%, $(APPS-SRC))
 
-OBJDIRS:=$(dir $(OBJFILES))
+LIBC-SRC = $(wildcard libc/*.c) $(wildcard libc/*.S)
+LIBC-SRC1 = $(patsubst %.c, $(OBJDIR)/%.o, $(LIBC-SRC))
+LIBC-OBJ = $(patsubst %.S, $(OBJDIR)/%.o, $(LIBC-SRC1))
+
+OBJDIRS:=$(dir $(OBJFILES)) $(dir $(APPS-OBJ)) $(dir $(LIBC-OBJ))
 OBJDIRS:=$(shell echo $(OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
-
-APPS-OBJDIRS:=$(dir $(APPS-OBJ))
-APPS-OBJDIRS:=$(shell echo $(APPS-OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
-
 
 CROSS-COMPILER:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
@@ -26,7 +26,7 @@ ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
 ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 512M
 
-GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common
+GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -I./libc/
 
 # -d int shows interrupts
 QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=udp::5555-:22 -device rtl8139,netdev=network0 -object filter-dump,id=f1,netdev=network0,file=dump.pcap
@@ -62,20 +62,20 @@ $(OBJDIR)/kernel.elf: ${OBJFILES}
 obj/ramfs.img: ${APPS-OBJ}
 	@./ramfs_gen $@ $^
 
-stubstart.o: stubstart.S
-	@nasm -f elf32 -g $< -o $@
-
 $(OBJDIR)/%.o: %.c mkdirectories
 	@$(CROSS-COMPILER) ${ARGS} $< -c -o $@ -I include/ -I tests/
 
 $(OBJDIR)/%.o: %.asm mkdirectories
 	@nasm -f elf32 -g $< -o $@
 
-$(OBJDIR)/%: %.c mkdirectories
-	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} $< stubstart.o -o $@
+$(OBJDIR)/%.o: %.S mkdirectories
+	@nasm -f elf32 -g $< -o $@
+
+$(OBJDIR)/%: %.c mkdirectories ${LIBC-OBJ}
+	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} ${LIBC-OBJ} $< -o $@
 
 mkdirectories:
-	@mkdir -p $(OBJDIRS) $(APPS-OBJDIRS)
+	@mkdir -p $(OBJDIRS)
 	
 clean:
 	rm -rf obj/
