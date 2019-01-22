@@ -45,7 +45,7 @@ task_t *spawn_init()
 
 	//TODO, reuse kernel stack?
 	init_task->stack = (vptr_t)kmalloc(STACK_SIZE);
-	init_task->page_directory = current_directory;
+	init_task->page_directory = clone_directory(current_directory);
 
 	return init_task;
 }
@@ -60,6 +60,10 @@ void tasking_install()
 	ready_queue = list_create();
 	current = spawn_init();
 	kernel_idle_task = spawn_idle();
+
+	//We are currently the init task
+	switch_page_directory(current->page_directory);
+	set_kernel_stack(current->stack+STACK_SIZE);
 }
 
 //Creates a new "thread" that runs the function fn
