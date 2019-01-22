@@ -12,7 +12,7 @@ void syscall(int_regs_t *regs)
 	debug_print("Syscall 0x%x\n", regs->eax);
 	switch (regs->eax) {
 	case 0:
-		task_exit(regs->ebx);
+		task_exit((int)regs->ebx);
 		break;
 	case 1:
 		regs->eax = fork(regs);

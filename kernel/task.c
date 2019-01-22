@@ -180,6 +180,7 @@ uint32_t fork(int_regs_t *regs)
 }
 void task_exit(int exitcode)
 {
+	debug_print("Exitcode %x\n", exitcode);
 	current->state = STATE_FINISHED;
 
 	//TODO, cleanup

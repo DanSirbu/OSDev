@@ -1,7 +1,7 @@
 #include "syscalls.h"
 #include "main.h"
 
-void main()
+int main()
 {
 	unsigned int y = fork();
 	if (y == 0) {
@@ -9,4 +9,6 @@ void main()
 	} else {
 		printf("I'm a parent process! Child pid: %d\n", y);
 	}
+
+	return 0;
 }

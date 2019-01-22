@@ -4,4 +4,5 @@ extern exit
 _start:
     call main
 
-    jmp exit
+    push DWORD eax ; exit code
+    call exit
