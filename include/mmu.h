@@ -90,6 +90,8 @@ static inline void invlpg(vptr_t addr)
 	asm volatile("invlpg (%0)" ::"r"(addr) : "memory");
 }
 
+extern page_directory_t *kernel_page_directory;
+
 void mmap(size_t base, size_t len, int user);
 void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, uint8_t flags);
 void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user);
@@ -97,4 +99,6 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len);
 pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
 void switch_page_directory(page_directory_t *new_pg_dir);
 page_directory_t *clone_directory(page_directory_t *pgdir);
+void free_user_mappings(page_directory_t *src_pg_dir);
+void free_page_directory(page_directory_t *src_pg_dir);
 void memcpy_frame_contents(pptr_t dst, pptr_t src);

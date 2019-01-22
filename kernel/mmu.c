@@ -11,6 +11,7 @@ void page_fault_handler(int_regs_t *regs);
 
 extern page_directory_t *boot_page_directory;
 page_directory_t *current_directory;
+page_directory_t *kernel_page_directory;
 
 int PAGING_INIT = 0;
 /*
@@ -34,7 +35,7 @@ pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
 void switch_page_directory(page_directory_t *new_pg_dir)
 {
 	pptr_t pgdir_phy =
-		virtual_to_physical(current_directory, (vptr_t)new_pg_dir);
+		virtual_to_physical(kernel_page_directory, (vptr_t)new_pg_dir);
 	current_directory = new_pg_dir;
 	LoadNewPageDirectory(pgdir_phy);
 }
@@ -152,6 +153,8 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	current_directory =
 		(page_directory_t *)kvmalloc(sizeof(page_directory_t));
 
+	kernel_page_directory = current_directory;
+
 	//Map kernel code
 	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, FLAG_IGNORE_PHY_REUSE);
 
@@ -263,6 +266,30 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 
 	return new_pg_directory;
 }
+void free_table(page_table_t *src_tbl, pptr_t table_frame) {
+	for(int x = 0; x < 1024; x++) {
+		if(src_tbl->pages[x].frame != 0) {
+			free_frame(FRAME_TO_ADDR(src_tbl->pages[x].frame));
+		}
+	}
+	kfree(src_tbl);
+}
+void free_user_mappings(page_directory_t *src_pg_dir) {
+	for(uint32_t x = 0; x < 1024; x++) {
+		page_dir_entry_t entry_bits = src_pg_dir->actual_tables[x];
+		page_table_t *src_tbl = src_pg_dir->tables[x];
+
+		if(entry_bits.bits != 0 && x < KERN_BASE_PAGE_NO) {
+			free_table(src_tbl, FRAME_TO_ADDR(entry_bits.frame));
+			entry_bits.bits = 0;
+		}
+	}
+}
+void free_page_directory(page_directory_t *src_pg_dir) {
+	free_user_mappings(src_pg_dir);
+	kfree(src_pg_dir);
+}
+
 void clear_pte(vptr_t addr)
 {
 	uint32_t pdx = PDX(addr);

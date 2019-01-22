@@ -4,7 +4,7 @@
 
 //Use a bitmap like the james malloy tutorial. TODO, change to how xv6 does it
 //Because this is inefficient, especially at initialization
-#define PGSIZE 4096
+
 //Use 1 bit to show freed frame
 //32 bits of memory / PGSIZE = 0xFFFFF000
 //0xFFFFF / uint32 (32) = 0xFFFE0 = 1048544 entries (1 mb)

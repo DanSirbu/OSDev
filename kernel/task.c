@@ -26,9 +26,7 @@ uint32_t last_process = 0;
 
 void exit_task()
 {
-	debug_print("TASK RETURN");
-	while (1)
-		;
+	task_exit(0);
 }
 void idle_task()
 {
@@ -93,6 +91,10 @@ extern void enter_userspace(vptr_t fn, vptr_t stack);
 extern void interrupt_return();
 void exec(fs_node_t *file)
 {
+	free_user_mappings(current->page_directory);
+
+	//TODO zero the BSS
+
 	//Load ELF file
 	Elf32_Ehdr header;
 
@@ -186,8 +188,11 @@ void task_exit(int exitcode)
 {
 	debug_print("Exitcode %x\n", exitcode);
 	current->state = STATE_FINISHED;
+	
+	//TODO cleanup of state struct
 
-	//TODO, cleanup
+	switch_page_directory(kernel_page_directory);
+	free_page_directory(current->page_directory);
 
 	schedule();
 }
