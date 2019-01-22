@@ -200,8 +200,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	
 	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
 	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
-	make_task_ready(task1);
-	make_task_ready(task2);
+	//make_task_ready(task1);
+	//make_task_ready(task2);
 	
 	debug_print("Starting Tests\n");
 	run_tests();
