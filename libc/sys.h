@@ -44,7 +44,7 @@ static inline int syscall(int num, int p1, int p2, int p3, int p4, int p5)
     movl %5, %%esi; \
     movl %6, %%edi; \
     int $0x80; \
-    movl %[retval], %%eax; \
+    movl %%eax, %[retval]; \
     pop %%edi; pop %%esi; pop %%ebx"
 	    : [retval] "=r"(ret)
 	    : "0"(num), "g"(p1), "g"(p2), "g"(p3), "g"(p4), "g"(p5)
