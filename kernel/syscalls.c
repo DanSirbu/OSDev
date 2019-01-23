@@ -1,9 +1,10 @@
 #include "trap.h"
 #include "task.h"
+#include "syscalls.h"
 
-int write(int_regs_t *regs)
+int sys_write(int fd, char *buf, int size)
 {
-	debug_print((char *)regs->ecx);
+	debug_print(buf);
 	return 1;
 }
 
@@ -11,15 +12,11 @@ void syscall(int_regs_t *regs)
 {
 	debug_print("Syscall 0x%x\n", regs->eax);
 	switch (regs->eax) {
-	case 0:
-		task_exit((int)regs->ebx);
-		break;
+		DEF_SYSCALL1(0, exit, int, exitcode)
 	case 1:
-		regs->eax = fork(regs);
+		regs->eax = sys_fork(regs); //Special case
 		break;
-	case 2:
-		regs->eax = write(regs);
-		break;
+		DEF_SYSCALL3(2, write, int, fd, char *, buf, int, size)
 	default:
 		debug_print("Unhandled syscall\n");
 	}

@@ -6,7 +6,7 @@
 typedef struct context {
 	size_t eip;
 	size_t esp;
-	
+
 	size_t ebp;
 	size_t ebx;
 	size_t esi;
@@ -80,8 +80,8 @@ edi
 */
 void tasking_install();
 void switch_context(context_t *cur_context, context_t *new_context);
-void task_exit(int exitcode);
-uint32_t fork(int_regs_t *regs);
+uint32_t sys_exit(int exitcode);
+uint32_t sys_fork(int_regs_t *regs);
 void schedule();
 void make_task_ready(task_t *task);
 task_t *copy_task(vptr_t fn, vptr_t args);

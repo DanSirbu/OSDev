@@ -26,7 +26,7 @@ uint32_t last_process = 0;
 
 void exit_task()
 {
-	task_exit(0);
+	sys_exit(0);
 }
 void idle_task()
 {
@@ -61,7 +61,7 @@ void tasking_install()
 
 	//We are currently the init task
 	switch_page_directory(current->page_directory);
-	set_kernel_stack(current->stack+STACK_SIZE);
+	set_kernel_stack(current->stack + STACK_SIZE);
 }
 
 //Creates a new "thread" that runs the function fn
@@ -158,7 +158,7 @@ task_t *pick_next_task()
 	return task;
 }
 
-uint32_t fork(int_regs_t *regs)
+uint32_t sys_fork(int_regs_t *regs)
 {
 	assert(current != NULL && "Current process does not exist, can't fork");
 
@@ -184,17 +184,19 @@ uint32_t fork(int_regs_t *regs)
 
 	return 999; //TODO
 }
-void task_exit(int exitcode)
+uint32_t sys_exit(int exitcode)
 {
 	debug_print("Exitcode %x\n", exitcode);
 	current->state = STATE_FINISHED;
-	
+
 	//TODO cleanup of state struct
 
 	switch_page_directory(kernel_page_directory);
 	free_page_directory(current->page_directory);
 
 	schedule();
+
+	return 0; //Never happens but must do it because of macro setup
 }
 void schedule()
 {
