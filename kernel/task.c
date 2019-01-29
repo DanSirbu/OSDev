@@ -89,7 +89,7 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 #include "fs.h"
 extern void enter_userspace(vptr_t fn, vptr_t stack);
 extern void interrupt_return();
-void exec(fs_node_t *file)
+void exec(file_t *file)
 {
 	free_user_mappings(current->page_directory);
 
@@ -98,13 +98,14 @@ void exec(fs_node_t *file)
 	//Load ELF file
 	Elf32_Ehdr header;
 
-	file->read(file, 0, sizeof(header), (uint8_t *)&header);
+	vfs_read(file, (uint8_t *)&header, sizeof(header), 0);
 
 	for (int x = 0; x < header.e_phnum; x++) {
 		vptr_t ph_offset = x * header.e_phentsize + header.e_phoff;
 		Elf32_Phdr ph;
 
-		file->read(file, ph_offset, sizeof(ph), (uint8_t *)&ph);
+		vfs_read(file, (uint8_t *)&ph, sizeof(ph),
+			 (uint32_t *)ph_offset);
 		//0x80d96a0+0x3990=0x80DD030 = 0x9000-0xE000
 		//0x80dd000
 		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
@@ -113,8 +114,8 @@ void exec(fs_node_t *file)
 		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, 1);
 		invlpg(PG_ROUND_DOWN(ph.p_vaddr));
 
-		file->read(file, ph.p_offset, ph.p_filesz,
-			   (uint8_t *)ph.p_vaddr);
+		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_filesz,
+			 (uint32_t *)ph.p_offset);
 
 		//Set the rest of memory to zero
 		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;

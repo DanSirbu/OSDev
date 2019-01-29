@@ -52,10 +52,10 @@ void memory_map_handler(u32 mmap_addr, u32 mmap_len)
 		// clang-format on
 
 		memory_map_t *mmap_cur = (memory_map_t *)mmap;
-		debug_print("Address: %8p-%8p, type %x\n",
-			   mmap_cur->base_addr_low,
-			   (mmap_cur->base_addr_low + mmap_cur->length_low - 1),
-			   mmap_cur->type);
+		debug_print(
+			"Address: %8p-%8p, type %x\n", mmap_cur->base_addr_low,
+			(mmap_cur->base_addr_low + mmap_cur->length_low - 1),
+			mmap_cur->type);
 	}
 }
 
@@ -63,7 +63,7 @@ void err()
 {
 	asm("cli");
 }
-extern void exec(fs_node_t *file);
+extern void exec(file_t *file);
 void test_process1(vptr_t args)
 {
 	while (1) {
@@ -96,25 +96,24 @@ void test1()
 	test2();
 }
 extern char _kernel_end;
-extern fs_node_t *ram_root;
-extern fs_node_t *dirent_to_node(dirent_t *dirent);
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
 	assert(multiboot_info->mods_count == 1);
-	module_t *modules = (module_t*) (multiboot_info->mods_addr + KERN_BASE);
+	module_t *modules = (module_t *)(multiboot_info->mods_addr + KERN_BASE);
 	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
-	
+
 	debug_print("Module start: 0x%x\n", modules[0].mod_start);
 	debug_print("Module end: 0x%x\n", modules[0].mod_end);
 
 	debug_print("Kernel ends at 0x%x\n", &_kernel_end);
 
-	assert(modules[multiboot_info->mods_count - 1].mod_end < (vptr_t)&_kernel_end); //Future me will deal with this
-	
+	assert(modules[multiboot_info->mods_count - 1].mod_end <
+	       (vptr_t)&_kernel_end); //Future me will deal with this
+
 	memory_map_handler(multiboot_info->mmap_addr,
 			   multiboot_info->mmap_length);
-	
+
 	const char *str = "my first kernel with keyboard support";
 	clear_screen();
 	kprint(str);
@@ -150,7 +149,7 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	initramfs(ramfs_location);
 
-	dirent_t file1;
+	/*dirent_t file1;
 	dirent_t file2;
 	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
 	memcpy(&file2, ram_root->readdir(ram_root, 1), sizeof(dirent_t));
@@ -158,7 +157,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("File1: %s\n", file1.name);
 	debug_print("File2: %s\n", file2.name);
 
-	fs_node_t *hello = dirent_to_node(&file1);
+	fs_node_t *hello = dirent_to_node(&file1);*/
 
 	//mmap(0x90000000, 0x4000);
 	//initrd_init(0x90000000, 0x4000);
@@ -197,18 +196,17 @@ void kmain(multiboot_info_t *multiboot_info)
 	syscalls_install();
 	tasking_install();
 	//sti();
-	
+
 	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
 	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
 	//make_task_ready(task1);
 	//make_task_ready(task2);
-	
+
 	debug_print("Starting Tests\n");
 	run_tests();
 	debug_print("Tests complete!\n");
 
-
-	exec(hello);
+	//exec(hello);
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
