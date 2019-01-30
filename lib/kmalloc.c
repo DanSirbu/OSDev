@@ -154,7 +154,9 @@ void kfree(void *ptr)
 		return;
 	}
 	if (ptr < (void *)heap_start) {
-		debug_print("Trying to free %p, which is before the heap_start (%p)\n", ptr, (void*)heap_start);
+		debug_print(
+			"Trying to free %p, which is before the heap_start (%p)\n",
+			ptr, (void *)heap_start);
 		return;
 	}
 
@@ -168,6 +170,17 @@ void kfree(void *ptr)
 		cur_block->next_free = free_list;
 		free_list = cur_block;
 	}
+}
+void kfree_arr(char **ptr1)
+{
+	char **ptr = (char **)ptr1;
+
+	while (*ptr != NULL) {
+		kfree(*ptr);
+		ptr += 1;
+	}
+
+	kfree(ptr);
 }
 
 /*
