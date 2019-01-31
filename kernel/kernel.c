@@ -204,7 +204,7 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	debug_print("Starting Tests\n");
 	run_tests();
-	debug_print("Tests complete!\n");
+	debug_print("\nTests complete!\n");
 
 	//exec(hello);
 

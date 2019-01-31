@@ -27,7 +27,31 @@ void test_tokenize()
 	kfree_arr(tokens1);
 }
 
+inode_t *dummy_find_child(inode_t *cur, char *name)
+{
+	return NULL;
+}
+void test_mount()
+{
+	inode_t *dummy_ino = kcalloc(sizeof(inode_t));
+	dummy_ino->i_op = kcalloc(sizeof(inode_operations_t));
+	dummy_ino->ino = 1;
+	dummy_ino->i_op->find_child = dummy_find_child;
+
+	assert(mount("/", dummy_ino) == 0);
+	assert(mount("/test", dummy_ino) == 0);
+	assert(mount("/test/hello", dummy_ino) == 0);
+	assert(mount("/root/test", dummy_ino) < 0);
+
+	assert(umount("/test") == 0);
+
+	assert(mount("/test/hello2", dummy_ino) < 0);
+}
+
 void test_vfs()
 {
+	debug_print(" vfs:tokenize ");
 	test_tokenize();
+	debug_print(" vfs:mount ");
+	test_mount();
 }

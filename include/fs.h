@@ -70,7 +70,9 @@ typedef struct super_operations {
 } super_operations_t;
 
 typedef struct inode_operations {
-	struct dentry *(*lookup)(struct inode *, struct dentry *, unsigned int);
+	//struct dentry *(*lookup)(struct inode *, struct dentry *, unsigned int);
+	struct inode *(*find_child)(struct inode *parent, char *name);
+
 	/*const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
 	int (*permission) (struct inode *, int);
 	struct posix_acl * (*get_acl)(struct inode *, int);
@@ -118,9 +120,22 @@ typedef struct {
 	superblock_t *mnt_sb;
 } vfs_mount_t;
 
+typedef struct vfs_node {
+	char name[64];
+
+	struct vfs_node *parent;
+
+	struct vfs_node *children;
+	struct vfs_node *next;
+
+	uint8_t type;
+
+	inode_t *inode;
+} vfs_node_t;
+
 typedef struct dentry {
-	inode_t *d_inode; //Directory inode
 	char d_name[64]; //Directory name
+	inode_t *d_inode; //Directory inode
 } dentry_t; //Live in ram and never saved to disc
 
 typedef struct {
