@@ -75,31 +75,33 @@ void strcpy(char *dst, char *src)
 	}
 	dst[x] = '\0';
 }
-int strncmp(char *str1, char *str2, size_t max_len) {
+int strncmp(char *str1, char *str2, size_t max_len)
+{
 	int n = max_len;
-	char *p;
-	char *q;
+	char *p = str1;
+	char *q = str2;
 
-	while(n > 0 && *p && *p == *q) {
+	while (n > 0 && *p && *p == *q) {
 		n--;
 		p++;
 		q++;
 	}
-	if(n == 0) {
+	if (n == 0) {
 		return 0;
 	}
-	return (int) (*p - *q);
+	return (int)(*p - *q);
 }
 
-int strcmp(char *str1, char *str2) {
+int strcmp(char *str1, char *str2)
+{
 	uint32_t str1_len = strlen(str1);
 	uint32_t str2_len = strlen(str2);
 
-	if(str1_len != str2_len) {
+	if (str1_len != str2_len) {
 		return 0;
 	}
-	for(uint32_t x = 0; x < str1_len; x++) {
-		if(str1[x] != str2[x]) {
+	for (uint32_t x = 0; x < str1_len; x++) {
+		if (str1[x] != str2[x]) {
 			return 0;
 		}
 	}
