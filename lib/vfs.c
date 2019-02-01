@@ -61,7 +61,7 @@ char **tokenize(char *path)
 vfs_node_t *vfs_find_child_in_tree(vfs_node_t *parent, char *name)
 {
 	for (vfs_node_t *cur = parent->children; cur != NULL; cur = cur->next) {
-		if (strncmp(cur->name, name, FS_NAME_MAX_LEN)) {
+		if (strncmp(cur->name, name, FS_NAME_MAX_LEN) == 0) {
 			return cur;
 		}
 	}
