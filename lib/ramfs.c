@@ -1,33 +1,82 @@
 #include "fs.h"
 #include "mmu.h"
 #include "assert.h"
+#include "ramfs.h"
 
 typedef struct file_info {
-	char name[64];
-	void *start;
+	uint32_t ino;
+	uint8_t type;
+	uint32_t start;
 	uint32_t len;
-} __attribute__((packed)) file_info_t;
+} __attribute__((packed)) file_info_t; //Inodes
 
 file_info_t *headers;
-uint32_t numfiles;
+uint32_t numInodes;
+
+inode_operations_t *ramfs_ops;
+
+inode_t *ramfs_find_child(struct inode *parent, char *name);
+inode_t *getInode(uint32_t ino);
 
 void initramfs(vptr_t location)
 {
-	/*ram_root = kcalloc(sizeof(fs_node_t));
-	ram_root->readdir = initrd_readdir;
-	ram_root->flags = FS_DIRECTORY;
-	ram_root->read = 0;
-	ram_root->write = 0;
-	ram_root->open = 0;
-	ram_root->close = 0;
+	ramfs_ops = kcalloc(sizeof(inode_operations_t));
+	ramfs_ops->find_child = ramfs_find_child;
 
 	headers = (void *)location + sizeof(uint32_t);
-	numfiles = *((uint32_t *)location);
+	numInodes = *((uint32_t *)location);
 
-	for (uint32_t x = 0; x < numfiles; x++) {
+	for (uint32_t x = 0; x < numInodes; x++) {
 		headers[x].start += location; //Transform to virtual
-	}*/
+	}
 }
+inode_t *ramfs_getRoot()
+{
+	return getInode(0);
+}
+typedef struct {
+	uint32_t ino;
+	char name[64];
+} __attribute__((packed)) ramfs_dirent_t;
+
+typedef struct {
+	uint32_t numDir;
+	ramfs_dirent_t dirents[6];
+} __attribute__((packed)) ramfs_dir_t;
+
+inode_t *getInode(uint32_t ino)
+{
+	inode_t *inode = kcalloc(sizeof(inode_t));
+	inode->ino = ino;
+	inode->size = headers[ino].len;
+	inode->type = headers[ino].type;
+	inode->i_op = ramfs_ops;
+
+	return inode;
+}
+
+inode_t *ramfs_find_child(struct inode *parent, char *name)
+{
+	if (headers[parent->ino].type != FS_DIRECTORY) {
+		return NULL;
+	}
+
+	ramfs_dir_t *dir = (ramfs_dir_t *)headers[parent->ino].start;
+
+	for (uint32_t x = 0; x < dir->numDir; x++) {
+		if (strncmp(dir->dirents[x].name, name, 64) == 0) {
+			return getInode(dir->dirents[x].ino);
+		}
+	}
+
+	return NULL;
+}
+
+/*int (*close)(struct inode);
+int (*read)(struct inode, void *, uint32_t offset, uint32_t size);
+int (*write)(struct inode, void *, uint32_t offset, uint32_t size);
+*/
+
 /*dirent_t *initrd_readdir(fs_node_t *node, uint32_t index)
 {
 	assert(node == ram_root);
