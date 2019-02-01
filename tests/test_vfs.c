@@ -10,9 +10,9 @@ void test_tokenize()
 
 	char **tokens = tokenize(path);
 
-	assert(strcmp("var", tokens[0]));
-	assert(strcmp("test", tokens[1]));
-	assert(strcmp("test2", tokens[2]));
+	assert(strcmp("var", tokens[0]) == 0);
+	assert(strcmp("test", tokens[1]) == 0);
+	assert(strcmp("test2", tokens[2]) == 0);
 	assert(tokens[3] == NULL);
 	kfree_arr(tokens);
 
@@ -20,9 +20,9 @@ void test_tokenize()
 
 	char **tokens1 = tokenize(path);
 
-	assert(strcmp("var", tokens1[0]));
-	assert(strcmp("test", tokens1[1]));
-	assert(strcmp("test2", tokens1[2]));
+	assert(strcmp("var", tokens1[0]) == 0);
+	assert(strcmp("test", tokens1[1]) == 0);
+	assert(strcmp("test2", tokens1[2]) == 0);
 	assert(tokens1[3] == NULL);
 	kfree_arr(tokens1);
 }

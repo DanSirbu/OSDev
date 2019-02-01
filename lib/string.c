@@ -94,17 +94,12 @@ int strncmp(char *str1, char *str2, size_t max_len)
 
 int strcmp(char *str1, char *str2)
 {
-	uint32_t str1_len = strlen(str1);
-	uint32_t str2_len = strlen(str2);
+	char *p = str1;
+	char *q = str2;
 
-	if (str1_len != str2_len) {
-		return 0;
+	while (*p && *p == *q) {
+		p++;
+		q++;
 	}
-	for (uint32_t x = 0; x < str1_len; x++) {
-		if (str1[x] != str2[x]) {
-			return 0;
-		}
-	}
-
-	return 1;
+	return (int)(*p - *q);
 }
