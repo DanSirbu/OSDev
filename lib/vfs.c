@@ -128,6 +128,8 @@ vfs_node_t *vfs_find_child(vfs_node_t *parent, char *name)
 			node->type = node->inode->type;
 
 			vfs_append_child(parent, node);
+
+			found_child = node;
 		}
 	}
 
@@ -138,7 +140,7 @@ int mount_root(inode_t *ino)
 	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
 	strcpy(newNode->name, "/");
 	newNode->parent = newNode;
-	newNode->type = VFS_MOUNT;
+	newNode->type = FS_MOUNTPOINT;
 	newNode->inode = ino;
 
 	fs_root = newNode;
@@ -171,7 +173,7 @@ int mount(char *path, inode_t *ino)
 	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
 	strcpy(newNode->name, tokens[i]);
 	newNode->parent = cur;
-	newNode->type = VFS_MOUNT;
+	newNode->type = FS_MOUNTPOINT;
 	newNode->inode = ino;
 
 	vfs_append_child(cur, newNode);

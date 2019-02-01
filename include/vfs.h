@@ -1,4 +1,4 @@
-#define VFS_MOUNT 1
+#pragma once
 
 char **tokenize(char *path);
 int mount(char *path, inode_t *ino);

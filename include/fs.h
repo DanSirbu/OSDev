@@ -72,6 +72,10 @@ typedef struct super_operations {
 typedef struct inode_operations {
 	//struct dentry *(*lookup)(struct inode *, struct dentry *, unsigned int);
 	struct inode *(*find_child)(struct inode *parent, char *name);
+	int (*open)(struct inode, uint32_t);
+	int (*close)(struct inode);
+	int (*read)(struct inode, void *, uint32_t offset, uint32_t size);
+	int (*write)(struct inode, void *, uint32_t offset, uint32_t size);
 
 	/*const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
 	int (*permission) (struct inode *, int);
