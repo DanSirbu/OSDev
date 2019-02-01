@@ -22,6 +22,8 @@
 
 #include "test.h"
 #include "ramfs.h"
+#include "fs.h"
+#include "vfs.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -96,6 +98,7 @@ void test1()
 	test2();
 }
 extern char _kernel_end;
+extern inode_t *(*dummy_find_child)();
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
@@ -148,7 +151,14 @@ void kmain(multiboot_info_t *multiboot_info)
 	kfree(test);
 
 	initramfs(ramfs_location);
+	inode_t *fs_root_inode = ramfs_getRoot();
+	mount("/", fs_root_inode);
 
+	inode_t *dummy_ino = kcalloc(sizeof(inode_t));
+	dummy_ino->i_op = kcalloc(sizeof(inode_operations_t));
+	dummy_ino->ino = 1;
+	dummy_ino->i_op->find_child = dummy_find_child;
+	assert(mount("/init/testa", dummy_ino) == 0);
 	/*dirent_t file1;
 	dirent_t file2;
 	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
