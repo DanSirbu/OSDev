@@ -137,6 +137,8 @@ vfs_node_t *vfs_find_child(vfs_node_t *parent, char *name)
 }
 int mount_root(inode_t *ino)
 {
+	assert(fs_root == NULL);
+
 	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
 	strcpy(newNode->name, "/");
 	newNode->parent = newNode;
@@ -168,6 +170,10 @@ int mount(char *path, inode_t *ino)
 		}
 
 		i++;
+	}
+	vfs_node_t *existingNode = vfs_find_child(cur, tokens[i]);
+	if (existingNode != NULL) { //Already exists
+		return -1;
 	}
 
 	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
