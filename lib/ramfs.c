@@ -36,7 +36,7 @@ inode_t *ramfs_getRoot()
 }
 typedef struct {
 	uint32_t ino;
-	char name[64];
+	char name[FS_NAME_MAX_LEN];
 } __attribute__((packed)) ramfs_dirent_t;
 
 typedef struct {
@@ -64,7 +64,7 @@ inode_t *ramfs_find_child(struct inode *parent, char *name)
 	ramfs_dir_t *dir = (ramfs_dir_t *)headers[parent->ino].start;
 
 	for (uint32_t x = 0; x < dir->numDir; x++) {
-		if (strncmp(dir->dirents[x].name, name, 64) == 0) {
+		if (strncmp(dir->dirents[x].name, name, FS_NAME_MAX_LEN) == 0) {
 			return getInode(dir->dirents[x].ino);
 		}
 	}

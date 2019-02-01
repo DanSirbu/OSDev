@@ -125,7 +125,7 @@ typedef struct {
 } vfs_mount_t;
 
 typedef struct vfs_node {
-	char name[64];
+	char name[FS_NAME_MAX_LEN];
 
 	struct vfs_node *parent;
 
@@ -138,7 +138,7 @@ typedef struct vfs_node {
 } vfs_node_t;
 
 typedef struct dentry {
-	char d_name[64]; //Directory name
+	char d_name[FS_NAME_MAX_LEN]; //Directory name
 	inode_t *d_inode; //Directory inode
 } dentry_t; //Live in ram and never saved to disc
 
