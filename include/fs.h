@@ -72,10 +72,12 @@ typedef struct super_operations {
 typedef struct inode_operations {
 	//struct dentry *(*lookup)(struct inode *, struct dentry *, unsigned int);
 	struct inode *(*find_child)(struct inode *parent, char *name);
+	struct inode *(*get_child)(struct inode *parent, uint32_t index);
+
 	int (*open)(struct inode, uint32_t);
 	int (*close)(struct inode);
-	int (*read)(struct inode, void *, uint32_t offset, uint32_t size);
-	int (*write)(struct inode, void *, uint32_t offset, uint32_t size);
+	int (*read)(struct inode *, void *buf, uint32_t offset, uint32_t size);
+	int (*write)(struct inode *, void *buf, uint32_t offset, uint32_t size);
 
 	/*const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
 	int (*permission) (struct inode *, int);
@@ -144,13 +146,12 @@ typedef struct dentry {
 
 typedef struct {
 	vfs_mount_t *mnt;
-	dentry_t *dentry;
+	vfs_node_t *dentry;
 } path_t;
 
 typedef struct file {
-	path_t *path;
+	//path_t *path;
 	inode_t *f_inode;
-	file_op_t *f_op;
 } file_t;
 
 int vfs_read(file_t *file, uint8_t *buf, size_t count, size_t *offset);

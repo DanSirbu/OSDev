@@ -159,6 +159,19 @@ void kmain(multiboot_info_t *multiboot_info)
 	dummy_ino->ino = 1;
 	dummy_ino->i_op->find_child = dummy_find_child;
 	assert(mount("/init/testa", dummy_ino) == 0);
+	assert(umount("/init/testa") == 0);
+
+	inode_t *curInode = vfs_namei("/");
+	inode_t *cur = NULL;
+	uint32_t index = 0;
+	do {
+		cur = curInode->i_op->get_child(curInode, index);
+		if (cur) {
+			debug_print("Ino: %d\n", cur->ino);
+		}
+		index++;
+	} while (cur != NULL);
+
 	/*dirent_t file1;
 	dirent_t file2;
 	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));

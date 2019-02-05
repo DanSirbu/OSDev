@@ -84,6 +84,7 @@ void vfs_delete_node(vfs_node_t *node)
 		}
 	}
 	//Actually free the node
+	vfs_unlink_child(node->parent, node);
 	node->parent = NULL;
 	//TODO release inode
 	node->inode = NULL;
@@ -108,6 +109,22 @@ void vfs_append_child(vfs_node_t *parent, vfs_node_t *child)
 
 	cur->next = child;
 	child->parent = parent;
+}
+void vfs_unlink_child(vfs_node_t *parent, vfs_node_t *child)
+{
+	assert(parent != NULL);
+	assert(child != NULL);
+	assert(parent->children != NULL);
+
+	if (parent->children == child) {
+		parent->children = NULL;
+		return;
+	}
+
+	vfs_node_t *cur;
+	for (cur = parent->children; cur->next != child; cur = cur->next) {
+		cur->next = child->next;
+	}
 }
 
 vfs_node_t *vfs_find_child(vfs_node_t *parent, char *name)
@@ -212,31 +229,57 @@ int umount(char *path)
 	return 0;
 }
 
-inode_t *dirlookup(inode_t *directory, char *name)
+file_t *vfs_open(char *path)
 {
-	/*assert(directory->type | FS_DIRECTORY && "Is not a directory");
+	char **tokens = tokenize(path);
 
-	for (uint32_t offset = 0; offset < directory->size;
-	     offset += BLOCK_SIZE) {
-		dirent_t *dirents =
-			bread(directory->dev, directory->ino, offset);
+	vfs_node_t *cur = fs_root;
 
-		for (uint32_t x = 0; x < (BLOCK_SIZE / sizeof(dirent_t)); x++) {
-			if (strncmp(dirents[x].name, name, FS_NAME_MAX_LEN) ==
-			    0) { //They are the same
-				return iget(dirents[x].ino);
-			}
+	int i = 0;
+	while (tokens[i] != NULL) {
+		char *child_name = tokens[i];
+
+		cur = vfs_find_child(cur, child_name);
+		if (cur == NULL) {
+			return NULL;
 		}
-		brelease(dirents);
+
+		i++;
 	}
-	*/
-	return NULL;
+
+	file_t *file = kmalloc(sizeof(file_t));
+	file->f_inode = cur->inode;
+	//file->path = cur;
+
+	return file;
 }
+
 int vfs_read(file_t *file, uint8_t *buf, size_t count, size_t *offset)
 {
-	if (file->f_op->read) {
-		return file->f_op->read(file, buf, count, offset);
+	if (file->f_inode->i_op->read) {
+		return file->f_inode->i_op->read(file->f_inode, buf,
+						 (uint32_t)offset, count);
 	} else {
 		return -1;
 	}
+}
+inode_t *vfs_namei(char *path)
+{
+	char **tokens = tokenize(path);
+
+	vfs_node_t *cur = fs_root;
+
+	int i = 0;
+	while (tokens[i] != NULL) {
+		char *child_name = tokens[i];
+
+		cur = vfs_find_child(cur, child_name);
+		if (cur == NULL) {
+			return NULL;
+		}
+
+		i++;
+	}
+
+	return cur->inode;
 }

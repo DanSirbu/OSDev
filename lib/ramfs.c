@@ -17,11 +17,15 @@ inode_operations_t *ramfs_ops;
 
 inode_t *ramfs_find_child(struct inode *parent, char *name);
 inode_t *getInode(uint32_t ino);
+int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size);
+inode_t *ramfs_get_child(struct inode *parent, uint32_t index);
 
 void initramfs(vptr_t location)
 {
 	ramfs_ops = kcalloc(sizeof(inode_operations_t));
 	ramfs_ops->find_child = ramfs_find_child;
+	ramfs_ops->read = ramfs_read;
+	ramfs_ops->get_child = ramfs_get_child;
 
 	headers = (void *)location + sizeof(uint32_t);
 	numInodes = *((uint32_t *)location);
@@ -71,6 +75,19 @@ inode_t *ramfs_find_child(struct inode *parent, char *name)
 
 	return NULL;
 }
+inode_t *ramfs_get_child(struct inode *parent, uint32_t index)
+{
+	if (headers[parent->ino].type != FS_DIRECTORY) {
+		return NULL;
+	}
+
+	ramfs_dir_t *dir = (ramfs_dir_t *)headers[parent->ino].start;
+	if (index >= dir->numDir) {
+		return NULL;
+	}
+
+	return getInode(dir->dirents[index].ino);
+}
 
 /*int (*close)(struct inode);
 int (*read)(struct inode, void *, uint32_t offset, uint32_t size);
@@ -88,20 +105,22 @@ int (*write)(struct inode, void *, uint32_t offset, uint32_t size);
 	dirent.ino = index;
 
 	return &dirent;
-}
+}*/
 
-uint32_t ramfs_read(file_t *node, uint8_t *buf, uint32_t size, uint32_t *offset)
+int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size)
 {
-	void *file_start = headers[node->ino].start;
+	uint32_t file_start = headers[node->ino].start;
+	if (node->ino >= numInodes) {
+		return -1;
+	}
 
+	//Restrict to file length
+	if (offset + size > headers[node->ino].len) {
+		size = headers[node->ino].len - offset;
+	}
+	file_start += offset;
 
-    if(offset + size > headers[node->ino].len) {
-        size = headers[node->ino].len - offset;
-    }
-    file_start += offset;
+	memcpy(buf, (void *)file_start, size);
 
-    memcpy(buf, file_start, size);
-
-	return -1;
+	return 0;
 }
-*/
