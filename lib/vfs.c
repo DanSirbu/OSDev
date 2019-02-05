@@ -4,7 +4,7 @@
 #include "kmalloc.h"
 #include "assert.h"
 
-vfs_node_t *fs_root;
+inode_t *fs_root;
 
 /*
  * Input: an absolute path
@@ -58,111 +58,32 @@ char **tokenize(char *path)
 	return tokens;
 }
 
-vfs_node_t *vfs_find_child_in_tree(vfs_node_t *parent, char *name)
+inode_t *vfs_find_child(inode_t *parent, char *name)
 {
-	for (vfs_node_t *cur = parent->children; cur != NULL; cur = cur->next) {
-		if (strncmp(cur->name, name, FS_NAME_MAX_LEN) == 0) {
-			return cur;
-		}
+	if (parent->type != FS_DIRECTORY) {
+		return NULL;
+	}
+	if (parent->mount != NULL) {
+		parent = parent->mount;
 	}
 
-	return NULL;
+	return parent->i_op->find_child(parent, name);
+}
+inode_t *vfs_get_child(inode_t *inode, int index)
+{
+	if (inode->mount != NULL) {
+		inode = inode->mount;
+	}
+
+	return inode->i_op->get_child(inode, index);
 }
 
-void vfs_delete_node(vfs_node_t *node)
-{
-	if (node == NULL)
-		return;
-
-	if (node->children) {
-		vfs_node_t *cur = node->children;
-
-		while (cur != NULL) {
-			vfs_node_t *next_child = cur->next;
-			vfs_delete_node(cur);
-			cur = next_child;
-		}
-	}
-	//Actually free the node
-	vfs_unlink_child(node->parent, node);
-	node->parent = NULL;
-	//TODO release inode
-	node->inode = NULL;
-	node->type = NULL;
-	strcpy(node->name, "[deleted]");
-	kfree(node);
-}
-
-void vfs_append_child(vfs_node_t *parent, vfs_node_t *child)
-{
-	assert(parent != NULL);
-	assert(child != NULL);
-
-	if (parent->children == NULL) {
-		parent->children = child;
-		child->parent = parent;
-		return;
-	}
-	vfs_node_t *cur;
-	for (cur = parent->children; cur->next != NULL; cur = cur->next)
-		;
-
-	cur->next = child;
-	child->parent = parent;
-}
-void vfs_unlink_child(vfs_node_t *parent, vfs_node_t *child)
-{
-	assert(parent != NULL);
-	assert(child != NULL);
-	assert(parent->children != NULL);
-
-	if (parent->children == child) {
-		parent->children = NULL;
-		return;
-	}
-
-	vfs_node_t *cur;
-	for (cur = parent->children; cur->next != child; cur = cur->next) {
-		cur->next = child->next;
-	}
-}
-
-vfs_node_t *vfs_find_child(vfs_node_t *parent, char *name)
-{
-	vfs_node_t *found_child = vfs_find_child_in_tree(parent, name);
-	if (found_child == NULL) { //Try to ask inode
-		if (parent->inode->type == FS_DIRECTORY) {
-			inode_t *child = parent->inode->i_op->find_child(
-				parent->inode, name);
-			if (child == NULL) {
-				return NULL;
-			}
-			//Create child in tree
-			vfs_node_t *node = kmalloc(sizeof(node));
-			node->inode = child;
-			strcpy(node->name, name);
-			node->parent = parent;
-			node->type = node->inode->type;
-
-			vfs_append_child(parent, node);
-
-			found_child = node;
-		}
-	}
-
-	return found_child;
-}
 int mount_root(inode_t *ino)
 {
 	assert(fs_root == NULL);
+	assert(ino != NULL);
 
-	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
-	strcpy(newNode->name, "/");
-	newNode->parent = newNode;
-	newNode->type = FS_MOUNTPOINT;
-	newNode->inode = ino;
-
-	fs_root = newNode;
+	fs_root = ino;
 
 	return 0;
 }
@@ -172,36 +93,14 @@ int mount(char *path, inode_t *ino)
 		return mount_root(ino);
 	}
 
-	//Ex. path = /home/media/test
-	char **tokens = tokenize(path);
-
-	vfs_node_t *cur = fs_root;
-
-	int i = 0;
-	while (tokens[i + 1] != NULL) {
-		char *child_name = tokens[i];
-
-		cur = vfs_find_child(cur, child_name);
-		if (cur == NULL) {
-			return -2;
-		}
-
-		i++;
-	}
-	vfs_node_t *existingNode = vfs_find_child(cur, tokens[i]);
-	if (existingNode != NULL) { //Already exists
+	inode_t *parent = vfs_namei(path);
+	if (parent == NULL) {
+		return -1;
+	} else if (parent->mount != NULL) {
 		return -1;
 	}
 
-	vfs_node_t *newNode = kcalloc(sizeof(vfs_node_t));
-	strcpy(newNode->name, tokens[i]);
-	newNode->parent = cur;
-	newNode->type = FS_MOUNTPOINT;
-	newNode->inode = ino;
-
-	vfs_append_child(cur, newNode);
-	kfree_arr(tokens);
-
+	parent->mount = ino;
 	return 0;
 }
 int umount(char *path)
@@ -209,7 +108,7 @@ int umount(char *path)
 	//Ex. path = /home/media/test
 	char **tokens = tokenize(path);
 
-	vfs_node_t *cur = fs_root;
+	inode_t *cur = fs_root;
 
 	int i = 0;
 	while (tokens[i] != NULL) {
@@ -217,38 +116,29 @@ int umount(char *path)
 
 		cur = vfs_find_child(cur, child_name);
 		if (cur == NULL) {
-			return -2;
+			return -1;
 		}
-
 		i++;
 	}
+	if (!cur->mount) {
+		return -2;
+	}
+	cur->mount = NULL;
 
-	//Delete children recursively and all this node
-	vfs_delete_node(cur);
-
+	kfree_arr(tokens);
 	return 0;
 }
 
 file_t *vfs_open(char *path)
 {
-	char **tokens = tokenize(path);
+	inode_t *inode = vfs_namei(path);
 
-	vfs_node_t *cur = fs_root;
-
-	int i = 0;
-	while (tokens[i] != NULL) {
-		char *child_name = tokens[i];
-
-		cur = vfs_find_child(cur, child_name);
-		if (cur == NULL) {
-			return NULL;
-		}
-
-		i++;
+	if (inode == NULL) {
+		return NULL;
 	}
 
 	file_t *file = kmalloc(sizeof(file_t));
-	file->f_inode = cur->inode;
+	file->f_inode = inode;
 	//file->path = cur;
 
 	return file;
@@ -267,7 +157,7 @@ inode_t *vfs_namei(char *path)
 {
 	char **tokens = tokenize(path);
 
-	vfs_node_t *cur = fs_root;
+	inode_t *cur = fs_root;
 
 	int i = 0;
 	while (tokens[i] != NULL) {
@@ -280,6 +170,6 @@ inode_t *vfs_namei(char *path)
 
 		i++;
 	}
-
-	return cur->inode;
+	kfree_arr(tokens);
+	return cur;
 }

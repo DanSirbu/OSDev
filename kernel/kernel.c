@@ -154,13 +154,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	inode_t *fs_root_inode = ramfs_getRoot();
 	mount("/", fs_root_inode);
 
-	inode_t *dummy_ino = kcalloc(sizeof(inode_t));
-	dummy_ino->i_op = kcalloc(sizeof(inode_operations_t));
-	dummy_ino->ino = 1;
-	dummy_ino->i_op->find_child = dummy_find_child;
-	assert(mount("/init/testa", dummy_ino) == 0);
-	assert(umount("/init/testa") == 0);
-
 	inode_t *curInode = vfs_namei("/");
 	inode_t *cur = NULL;
 	uint32_t index = 0;

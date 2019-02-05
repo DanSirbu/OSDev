@@ -119,25 +119,14 @@ typedef struct inode {
 	size_t size;
 
 	inode_operations_t *i_op;
+
+	struct inode *mount;
 } inode_t;
 
 typedef struct {
 	struct dentry *mnt_root;
 	superblock_t *mnt_sb;
 } vfs_mount_t;
-
-typedef struct vfs_node {
-	char name[FS_NAME_MAX_LEN];
-
-	struct vfs_node *parent;
-
-	struct vfs_node *children;
-	struct vfs_node *next;
-
-	uint8_t type;
-
-	inode_t *inode;
-} vfs_node_t;
 
 typedef struct dentry {
 	char d_name[FS_NAME_MAX_LEN]; //Directory name
@@ -146,7 +135,7 @@ typedef struct dentry {
 
 typedef struct {
 	vfs_mount_t *mnt;
-	vfs_node_t *dentry;
+	//vfs_node_t *dentry;
 } path_t;
 
 typedef struct file {
