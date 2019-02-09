@@ -144,11 +144,11 @@ file_t *vfs_open(char *path)
 	return file;
 }
 
-int vfs_read(file_t *file, uint8_t *buf, size_t count, size_t *offset)
+int vfs_read(file_t *file, void *buf, size_t count, size_t offset)
 {
 	if (file->f_inode->i_op->read) {
-		return file->f_inode->i_op->read(file->f_inode, buf,
-						 (uint32_t)offset, count);
+		return file->f_inode->i_op->read(file->f_inode, buf, offset,
+						 count);
 	} else {
 		return -1;
 	}

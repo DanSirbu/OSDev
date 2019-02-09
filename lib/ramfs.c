@@ -38,15 +38,6 @@ inode_t *ramfs_getRoot()
 {
 	return getInode(0);
 }
-typedef struct {
-	uint32_t ino;
-	char name[FS_NAME_MAX_LEN];
-} __attribute__((packed)) ramfs_dirent_t;
-
-typedef struct {
-	uint32_t numDir;
-	ramfs_dirent_t dirents[6];
-} __attribute__((packed)) ramfs_dir_t;
 
 inode_t *getInode(uint32_t ino)
 {

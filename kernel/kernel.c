@@ -165,6 +165,16 @@ void kmain(multiboot_info_t *multiboot_info)
 		index++;
 	} while (cur != NULL);
 
+	ramfs_dir_t dirs;
+	file_t *file = vfs_open("/");
+	int ret = vfs_read(file, &dirs, sizeof(dirs), 0);
+	if (ret < 0) {
+		debug_print("Read error\n");
+	}
+	for (uint32_t x = 0; x < dirs.numDir; x++) {
+		debug_print("File: %s\n", dirs.dirents[x].name);
+	}
+
 	/*dirent_t file1;
 	dirent_t file2;
 	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
