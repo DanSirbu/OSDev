@@ -128,10 +128,15 @@ typedef struct {
 	superblock_t *mnt_sb;
 } vfs_mount_t;
 
-typedef struct dentry {
-	char d_name[FS_NAME_MAX_LEN]; //Directory name
-	inode_t *d_inode; //Directory inode
-} dentry_t; //Live in ram and never saved to disc
+typedef struct {
+	uint32_t ino;
+	char name[FS_NAME_MAX_LEN];
+} __attribute__((packed)) ramfs_dirent_t;
+
+typedef struct {
+	uint32_t numDir;
+	ramfs_dirent_t dirents[6];
+} __attribute__((packed)) ramfs_dir_t;
 
 typedef struct {
 	vfs_mount_t *mnt;
@@ -143,4 +148,4 @@ typedef struct file {
 	inode_t *f_inode;
 } file_t;
 
-int vfs_read(file_t *file, uint8_t *buf, size_t count, size_t *offset);
+int vfs_read(file_t *file, void *buf, size_t count, size_t offset);
