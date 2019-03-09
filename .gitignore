@@ -9,3 +9,7 @@ dump.pcap
 
 # Other
 .vscode/
+
+isofiles/boot/kernel.elf
+isofiles/boot/ramfs.img
+os.iso
