@@ -86,3 +86,8 @@ net-test:
 	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 PHONY:
 	$(info $$OBJFILES is [${OBJFILES}])
+
+prod: $(OBJDIR)/kernel.elf obj/ramfs.img
+	cp obj/kernel.elf isofiles/boot/kernel.elf
+	grub-mkrescue -o os.iso isofiles
+	qemu-system-i386 -cdrom os.iso -m 2G

@@ -105,8 +105,7 @@ void exec(file_t *file)
 		Elf32_Phdr ph;
 
 		vfs_read(file, &ph, sizeof(ph), ph_offset);
-		//0x80d96a0+0x3990=0x80DD030 = 0x9000-0xE000
-		//0x80dd000
+		
 		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
 		size_t section_size = section_end - PG_ROUND_DOWN(ph.p_vaddr);
 

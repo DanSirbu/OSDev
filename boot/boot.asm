@@ -1,7 +1,7 @@
 ; Copyright (C) 2014  Arjun Sreedharan
 ; License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
 ; When debugging this file, don't forget to substract 0xC0000000 from the address since it's linked there
-FLAGS EQU 0x0a ; 0x8 for modules + 0x2
+FLAGS EQU 0x2 ; 0x2 = pass memory info
 bits 32
 section .text
         ;multiboot spec

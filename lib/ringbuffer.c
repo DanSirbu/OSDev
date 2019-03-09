@@ -23,10 +23,8 @@ void read_ring_buffer(ring_buffer_t *ring_buffer, size_t size, uint8_t *buf)
 {
 	uint32_t pos = ring_buffer->read_ptr;
 
-	if (pos + size >= ring_buffer->write_ptr) {
-		//sleep();
-	} else {
-		memcpy(buf, &ring_buffer->buffer[pos], size);
+	if (get_read_amount(ring_buffer) < size) {
+		return;
 	}
 }
 

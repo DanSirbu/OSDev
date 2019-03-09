@@ -232,7 +232,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	run_tests();
 	debug_print("\nTests complete!\n");
 
-	//exec(hello);
+	exec(vfs_open("/init"));
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;
