@@ -14,4 +14,4 @@ void serial_print(char *message, va_list args);
 extern void assert_failed(char *statement, char *file, uint32_t line, const char *func);
 
 void debug_print(char *message, ...);
-void abort();
+void halt();

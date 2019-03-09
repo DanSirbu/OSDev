@@ -191,7 +191,7 @@ void page_fault_handler(int_regs_t *regs)
 	uint32_t cr2 = read_cr2();
 	debug_print("Page Fault Error: %s at 0x%x\n",
 		    page_fault_msgs[regs->error_code], cr2);
-	abort();
+	halt();
 }
 void alloc_page(pte_t *page, int is_user, int is_writable)
 {
