@@ -6,17 +6,19 @@
 //Because this is inefficient, especially at initialization
 
 //Use 1 bit to show freed frame
-//32 bits of memory / PGSIZE = 0xFFFFF000
-//0xFFFFF / uint32 (32) = 0xFFFE0 = 1048544 entries (1 mb)
-#define BIT_FRAME_SIZE (PGSIZE * 32)
-#define NUM_BIT_FRAMES 0xFFFE0
+//32 bits of memory 2^32 / PGSIZE 2^12 = 2^20 = 0x100000
+//2^20 / unsigned int (32 bits) 2^5 = 2^15 = 0x8000
+#define BIT_FRAME_SIZE 0x20000
+#define NUM_BIT_FRAMES 0x8000
 
 uint32_t frames[NUM_BIT_FRAMES] __attribute__((aligned(32)));
+bool FRAME_MAP_INITIALIZED = 0;
 
 void frame_init(size_t memory_map_base, size_t memory_map_len)
 {
+	//debug_print("Num: %x\n", (uint32_t)NUM_BIT_FRAMES);
 	//Set all used, then free the ones that are actually usable
-	memset((void *)frames, 0xFF,
+	memset(frames, 0xFF,
 	       NUM_BIT_FRAMES * 4); //* 4 since 32 bits = 4 bytes
 
 	void *memory_map = (void *)memory_map_base + KERN_BASE;
@@ -26,9 +28,9 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	     memory_map +=
 	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
 		memory_map_t *mmap_cur = (memory_map_t *)memory_map;
-		
+
 		//Physical allocator only for non-io areas
-		if(mmap_cur->type != 1) {
+		if (mmap_cur->type != 1) {
 			continue;
 		}
 
@@ -37,6 +39,7 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 
 		free_frame_range(base_addr, base_len);
 	}
+	FRAME_MAP_INITIALIZED = 1;
 }
 
 pptr_t alloc_frame()
@@ -74,12 +77,15 @@ void free_frame(pptr_t frame)
 
 	if (frames[frame_index] & frame_shift) {
 		frames[frame_index] &= ~frame_shift;
-	} else {
+	} else if (FRAME_MAP_INITIALIZED) { //TODO fix this hack, properly sort and merge memory map and remove FRAME_MAP_INITIALIZED variable
 		debug_print("Error: double free frame 0x%x\n", frame);
+		halt();
 	}
 }
 void free_frame_range(pptr_t first_frame, uint32_t len)
 {
+	debug_print("Freeing frame ranges: base: %x len: %x\n", first_frame,
+		    len);
 	for (uint32_t x = 0; x < len / PGSIZE; x++) {
 		free_frame(first_frame + x * PGSIZE);
 	}
