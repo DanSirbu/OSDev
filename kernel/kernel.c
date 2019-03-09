@@ -40,7 +40,7 @@ extern void kprint_newline();
 uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
-void memory_map_handler(u32 mmap_addr, u32 mmap_len)
+void print_memory_map(uint32_t mmap_addr, uint32_t mmap_len)
 {
 	// Must add KERN_BASE because mmap is a physical address
 	void *mmap = (void *)mmap_addr + KERN_BASE;
@@ -114,15 +114,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	assert(modules[multiboot_info->mods_count - 1].mod_end <
 	       (vptr_t)&_kernel_end); //Future me will deal with this
 
-	memory_map_handler(multiboot_info->mmap_addr,
-			   multiboot_info->mmap_length);
-
-	const char *str = "my first kernel with keyboard support";
-	clear_screen();
-	kprint(str);
-	kprint_newline();
-	kprint_newline();
-
 	initialize_gdt();
 	initialize_tss();
 
@@ -131,6 +122,8 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	init_serial();
 	debug_print("Serial initialized\n");
+	print_memory_map(multiboot_info->mmap_addr,
+			 multiboot_info->mmap_length);
 
 	//test1();
 
