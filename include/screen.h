@@ -12,3 +12,4 @@ static char *vidptr = (char *)0x000b8000 + KERN_BASE;
 void kprint_newline(void);
 void clear_screen(void);
 void kprint(const char *str);
+void kprint_char(char a);

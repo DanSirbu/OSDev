@@ -1,6 +1,7 @@
 // Taken from https://wiki.osdev.org/Serial_Ports
 #include "serial.h"
 #include "string.h"
+#include "screen.h"
 
 #define PORT 0x3f8 /* COM1 */
 #define HEX_PREFIX "0x"
@@ -33,9 +34,17 @@ int is_transmit_empty()
 {
 	return inb(PORT + 5) & 0x20;
 }
-
+#define PRINT_TO_SCREEN
 void write_char_serial(char a)
 {
+#ifdef PRINT_TO_SCREEN
+	if (a == '\n') {
+		kprint_newline();
+	} else {
+		kprint_char(a);
+	}
+	return;
+#endif
 	while (is_transmit_empty() == 0)
 		;
 
