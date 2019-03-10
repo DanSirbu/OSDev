@@ -89,5 +89,7 @@ PHONY:
 
 prod: $(OBJDIR)/kernel.elf obj/ramfs.img
 	cp obj/kernel.elf isofiles/boot/kernel.elf
+	cp obj/ramfs.img isofiles/boot/ramfs.img
 	grub-mkrescue -o os.iso isofiles
-	qemu-system-i386 -cdrom os.iso -m 2G
+	#qemu-system-i386 -cdrom os.iso -m 2G
+	#sudo dd if=os.iso of=/dev/sda
