@@ -119,6 +119,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	kb_init();
 
 	init_serial();
+	screen_init();
 	debug_print("Serial initialized\n");
 	print_memory_map(multiboot_info->mmap_addr,
 			 multiboot_info->mmap_length);

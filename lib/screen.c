@@ -1,10 +1,16 @@
 #include "screen.h"
+#include "io.h"
 
 static char *vidptr = (char *)0x000b8000 + KERN_BASE;
 
 /* current cursor location */
 unsigned int current_loc = 0;
 
+void disable_cursor()
+{
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+}
 void kprint_newline(void)
 {
 	unsigned int line_size = BYTES_FOR_EACH_ELEMENT * COLUMNS_IN_LINE;
@@ -42,4 +48,10 @@ void kprint_char(char a)
 {
 	vidptr[current_loc++] = a;
 	vidptr[current_loc++] = 0x07;
+}
+
+void screen_init()
+{
+	disable_cursor();
+	clear_screen();
 }
