@@ -19,6 +19,7 @@ uint32_t lastBlockIndex = 0;
 void device_register(uint8_t dev_type, dev_t dev, void *read_func,
 		     void *write_func, void *ioctl)
 {
+	debug_print("ioctl: 0x%x\n", ioctl);
 	if (dev_type == FILE_DEVICE) {
 	} else if (dev_type == BLOCK_DEVICE) {
 		block_dev_t *block_dev = &block_devices[lastBlockIndex++];

@@ -63,7 +63,7 @@ void err()
 {
 	asm("cli");
 }
-extern void exec(file_t *file);
+/*
 void test_process1(vptr_t args)
 {
 	while (1) {
@@ -81,7 +81,7 @@ void test_process2(vptr_t args)
 		debug_print("b");
 		schedule();
 	}
-}
+}*/
 //extern process_t task[];
 //extern volatile process_t *current;
 extern void get_func_info(uint32_t addr, char **name, char **file);
@@ -214,8 +214,9 @@ void kmain(multiboot_info_t *multiboot_info)
 	tasking_install();
 	//sti();
 
-	task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
+	/*task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
 	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
+	*/
 	//make_task_ready(task1);
 	//make_task_ready(task2);
 

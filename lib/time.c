@@ -58,7 +58,7 @@ void timer_init(uint32_t frequency)
 extern void sendEOI(uint32_t interrupt_no);
 uint32_t ticks = 0; //Since frequency is 1000, this is a millisecond
 uint32_t unix_time = 0; //Seconds
-void timer_interrupt(int_regs_t *regs)
+void timer_interrupt(__attribute__((unused)) int_regs_t *regs)
 {
 	ticks++;
 	if (ticks % 1000 == 0) {

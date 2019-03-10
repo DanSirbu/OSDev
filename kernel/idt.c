@@ -45,7 +45,6 @@ struct IDT_entry IDT[IDT_SIZE];
 #define END_OF_INTERRUPT 0x20
 void idt_init(void)
 {
-	u32 keyboard_address;
 	u32 idt_address;
 	u32 idt_0_address;
 

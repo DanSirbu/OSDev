@@ -108,7 +108,6 @@ node_t *list_find(list_t *list, vptr_t value)
 }
 int list_index_of(list_t *list, vptr_t value)
 {
-	node_t *cur;
 	int index = 0;
 	foreach_list(list, cur)
 	{
@@ -126,7 +125,6 @@ node_t *list_index(list_t *list, int target_index)
 		return NULL;
 	}
 
-	node_t *cur;
 	int index = 0;
 	foreach_list(list, cur)
 	{
