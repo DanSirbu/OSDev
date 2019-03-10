@@ -19,14 +19,14 @@ LIBC-OBJ = $(patsubst %.S, $(OBJDIR)/%.o, $(LIBC-SRC1))
 OBJDIRS:=$(dir $(OBJFILES)) $(dir $(APPS-OBJ)) $(dir $(LIBC-OBJ))
 OBJDIRS:=$(shell echo $(OBJDIRS) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
 
-CROSS-COMPILER:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
+CROSS-COMPILER:=clang#$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
 ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
-ARGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Werror
+ARGS += -Wall -Wextra -Werror -Wno-int-to-pointer-cast -m32
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 512M
 
-GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -I./libc/
+GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -I./libc/ -m32
 
 # -d int shows interrupts
 QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=udp::5555-:22 -device rtl8139,netdev=network0 -object filter-dump,id=f1,netdev=network0,file=dump.pcap
