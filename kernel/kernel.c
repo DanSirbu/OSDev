@@ -2,8 +2,6 @@
  * Copyright (C) 2014  Arjun Sreedharan
  * License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
  */
-#include "acpi.h"
-#include "e1000.h"
 #include "keyboard_map.h"
 #include "kmalloc.h"
 #include "multiboot.h"
