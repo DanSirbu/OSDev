@@ -23,7 +23,7 @@ void list_append(list_t *list, node_t *node)
 }
 node_t *list_append_item(list_t *list, vptr_t item)
 {
-	node_t *node = malloc(sizeof(node_t));
+	node_t *node = calloc(sizeof(node_t));
 	node->value = item;
 	list_append(list, node);
 	return node;
