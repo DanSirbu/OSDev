@@ -105,11 +105,15 @@ void exec(file_t *file)
 		Elf32_Phdr ph;
 
 		vfs_read(file, &ph, sizeof(ph), ph_offset);
-		
+
 		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
 		size_t section_size = section_end - PG_ROUND_DOWN(ph.p_vaddr);
 
-		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, 1);
+		mmap_flags_t flags;
+		flags.bits = 0;
+		flags.IGNORE_PAGE_MAPPED =
+			1; //The elf file has overlapping sections
+		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, flags);
 		invlpg(PG_ROUND_DOWN(ph.p_vaddr));
 
 		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_filesz, ph.p_offset);
@@ -119,7 +123,10 @@ void exec(file_t *file)
 		memset((void *)program_header_end, 0, ph.p_memsz - ph.p_filesz);
 	}
 
-	mmap(0xB0000000, 0x1000, 1);
+	//Setup user stack
+	mmap_flags_t flags;
+	flags.bits = 0;
+	mmap(0xB0000000, 0x1000, flags);
 	vptr_t stack = 0xB0000000 + 0x1000;
 	invlpg(0xB0000000);
 

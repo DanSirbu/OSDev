@@ -59,21 +59,21 @@ typedef struct {
 } __attribute__((packed)) pte_t;
 
 typedef union {
-struct {
-	unsigned int present : 1;
-	unsigned int rw : 1;
-	unsigned int user : 1;
-	unsigned int writethrough : 1;
-	unsigned int cachedisable : 1;
-	unsigned int accessed : 1;
-	unsigned int zero : 1;
-	unsigned int page_4k : 1;
-	unsigned int global : 1;
-	unsigned int unused : 3;
-	unsigned int frame : 20;
-} __attribute__((packed));
-uint32_t bits;
- } page_dir_entry_t;
+	struct {
+		unsigned int present : 1;
+		unsigned int rw : 1;
+		unsigned int user : 1;
+		unsigned int writethrough : 1;
+		unsigned int cachedisable : 1;
+		unsigned int accessed : 1;
+		unsigned int zero : 1;
+		unsigned int page_4k : 1;
+		unsigned int global : 1;
+		unsigned int unused : 3;
+		unsigned int frame : 20;
+	} __attribute__((packed));
+	uint32_t bits;
+} page_dir_entry_t;
 
 typedef struct {
 	pte_t pages[1024];
@@ -90,11 +90,19 @@ static inline void invlpg(vptr_t addr)
 	asm volatile("invlpg (%0)" ::"r"(addr) : "memory");
 }
 
+typedef union {
+	struct {
+		uint8_t IGNORE_PAGE_MAPPED : 1;
+		uint8_t IGNORE_FRAME_REUSE : 1;
+	};
+	uint8_t bits;
+} mmap_flags_t;
+
 extern page_directory_t *kernel_page_directory;
 
-void mmap(size_t base, size_t len, int user);
-void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, uint8_t flags);
-void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user);
+void mmap(size_t base, size_t len, mmap_flags_t flags);
+void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, mmap_flags_t flags);
+void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr);
 void paging_init(size_t memory_map_base, size_t memory_map_full_len);
 pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
 void switch_page_directory(page_directory_t *new_pg_dir);

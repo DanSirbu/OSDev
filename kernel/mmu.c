@@ -50,58 +50,63 @@ int is_mapped(page_directory_t *pg, vptr_t addr)
 
 	return false;
 }
+
 //Just map it, we don't care where
-void mmap(size_t base, size_t len, int user)
+//if the virtual address < KERN_BASE_PAGE_NO == user page
+void mmap(size_t base, size_t len, mmap_flags_t flags)
 {
 	assert((base & PGMASK) == 0); //Has to be 4k aligned
 	//len = PG_ROUND_UP(len);
 	for (size_t x = 0; x < len / PGSIZE; x++) {
 		vptr_t vaddr = base + x * PGSIZE;
 		if (is_mapped(current_directory, vaddr)) {
-			debug_print("Already mapped: 0x%x\n", base);
+			if (!flags.IGNORE_PAGE_MAPPED) {
+				debug_print("MMAP: Already mapped: 0x%x\n",
+					    base);
+			}
 			continue;
 		}
 		pptr_t phyaddr = alloc_frame();
-		setPTE(current_directory, vaddr, phyaddr, 1);
+		setPTE(current_directory, vaddr, phyaddr);
 	}
 }
 
 //Map it to a specific address, ex. for the kernel code or MMIO
 void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
-	       uint8_t flags)
+	       mmap_flags_t flags)
 {
 	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
 	assert((phyaddr_start & PGMASK) == 0); //Has to be 4k aligned
 
 	if (is_mapped(current_directory, vaddr_start)) {
-		debug_print("Already mapped, exiting: 0x%x", vaddr_start);
+		if (!flags.IGNORE_PAGE_MAPPED) {
+			debug_print("MMAP_ADDR: Already mapped, exiting: 0x%x",
+				    vaddr_start);
+		}
 		return;
 	}
 
-	size_t vaddr_pdx = PDX(vaddr_start);
-	size_t vaddr_ptx = PTX(vaddr_start);
-
-	//Mark all the pages as used first and then actually create the entries
+	//Mark all the frames as used first and then actually create the entries
 	//This ensures the pages are contiguous
 	//Also, at boot time, it makes sure the kernel code is marked as used, then the
-	//page tables are allocated
+	//page table frames are allocated
 
 	//Mark pages used
 	for (size_t x = 0; x < len / PGSIZE; x++) {
 		pptr_t phyaddr = phyaddr_start + x * PGSIZE;
 
-		frame_set_used(phyaddr, flags & FLAG_IGNORE_PHY_REUSE);
+		frame_set_used(phyaddr, flags.IGNORE_FRAME_REUSE);
 	}
 
 	//Make the page entries
 	for (size_t x = 0; x < len / PGSIZE; x++) {
 		vptr_t vaddr = vaddr_start + x * PGSIZE;
 		pptr_t phyaddr = phyaddr_start + x * PGSIZE;
-		setPTE(current_directory, vaddr, phyaddr, 0);
+		setPTE(current_directory, vaddr, phyaddr);
 	}
 }
 
-void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user)
+void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr)
 {
 	uint32_t pdx = PDX(vaddr);
 	uint32_t ptx = PTX(vaddr);
@@ -129,7 +134,7 @@ void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr, int user)
 
 	page_entry->rw = 1;
 	page_entry->frame = PTE_ADDR(phyaddr); //Set the frame address
-	page_entry->user = user;
+	page_entry->user = pdx < KERN_BASE_PAGE_NO;
 	page_entry->present = 1;
 }
 
@@ -152,18 +157,23 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 
 	current_directory =
 		(page_directory_t *)kvmalloc(sizeof(page_directory_t));
+	memset(current_directory, 0, sizeof(page_directory_t));
 
 	kernel_page_directory = current_directory;
 
+	mmap_flags_t flags = { .IGNORE_FRAME_REUSE = 1 };
 	//Map kernel code
-	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, FLAG_IGNORE_PHY_REUSE);
+	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, flags);
 
 	//First 4MB of heap are mapped already by the boot_page_directory
-	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, 0x400000,
-		  FLAG_IGNORE_PHY_REUSE);
+	flags.bits = NULL;
+	flags.IGNORE_FRAME_REUSE = 1;
+	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, 0x400000, flags);
+
 	//Map the rest of it
+	flags.bits = NULL;
 	mmap(KERN_HEAP_START + 0x400000,
-	     KERN_HEAP_END - KERN_HEAP_START - 0x400000, 0);
+	     KERN_HEAP_END - KERN_HEAP_START - 0x400000, flags);
 
 	switch_page_directory(current_directory); //Load the new page directory
 	DisablePSE(); //Disable 4 MiB pages
@@ -266,21 +276,25 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 
 	return new_pg_directory;
 }
-void free_table(page_table_t *src_tbl, pptr_t table_frame) {
-	for(int x = 0; x < 1024; x++) {
-		if(src_tbl->pages[x].frame != 0) {
+void free_table(page_table_t *src_tbl)
+{
+	for (int x = 0; x < 1024; x++) {
+		if (src_tbl->pages[x].frame != 0) {
 			free_frame(FRAME_TO_ADDR(src_tbl->pages[x].frame));
+			src_tbl->pages[x].frame = NULL;
+			src_tbl->pages[x].present = FALSE;
 		}
 	}
 	kfree(src_tbl);
 }
-void free_user_mappings(page_directory_t *src_pg_dir) {
-	for(uint32_t x = 0; x < 1024; x++) {
+void free_user_mappings(page_directory_t *src_pg_dir)
+{
+	for (uint32_t x = 0; x < 1024; x++) {
 		page_dir_entry_t entry_bits = src_pg_dir->actual_tables[x];
 		page_table_t *src_tbl = src_pg_dir->tables[x];
 
-		if(entry_bits.bits != 0 && x < KERN_BASE_PAGE_NO) {
-			free_table(src_tbl, FRAME_TO_ADDR(entry_bits.frame));
+		if (entry_bits.bits != 0 && x < KERN_BASE_PAGE_NO) {
+			free_table(src_tbl);
 			entry_bits.bits = 0;
 		}
 	}
@@ -305,10 +319,10 @@ void memcpy_frame_contents(pptr_t dst, pptr_t src)
 	clear_pte(COPY_PAGE_DEST);
 
 	//Map these two pages
-	setPTE(current_directory, COPY_PAGE_SOURCE, src,
-	       0); //TODO PAGE_R | PAGE_KERNEL
-	setPTE(current_directory, COPY_PAGE_DEST, dst,
-	       0); //TODO PAGE_RW | PAGE_KERNEL
+	setPTE(current_directory, COPY_PAGE_SOURCE,
+	       src); //TODO PAGE_R | PAGE_KERNEL
+	setPTE(current_directory, COPY_PAGE_DEST,
+	       dst); //TODO PAGE_RW | PAGE_KERNEL
 
 	//invalidate entries
 	invlpg(COPY_PAGE_SOURCE);
