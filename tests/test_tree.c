@@ -3,6 +3,7 @@
 
 void test_tree()
 {
+	debug_print(" test_tree ");
 	void *val1 = (void *)"/";
 	void *val2 = (void *)"a";
 	void *val3 = (void *)"b";

@@ -18,7 +18,7 @@ void test_tokenize()
 
 	char *path1 = "/var/test/test2/";
 
-	char **tokens1 = tokenize(path);
+	char **tokens1 = tokenize(path1);
 
 	assert(strcmp("var", tokens1[0]) == 0);
 	assert(strcmp("test", tokens1[1]) == 0);
@@ -27,7 +27,8 @@ void test_tokenize()
 	kfree_arr(tokens1);
 }
 
-inode_t *dummy_find_child(inode_t *cur, char *name)
+inode_t *dummy_find_child(__attribute__((unused)) inode_t *cur,
+			  __attribute__((unused)) char *name)
 {
 	return NULL;
 }
