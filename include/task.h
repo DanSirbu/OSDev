@@ -2,6 +2,7 @@
 #include "types.h"
 #include "mmu.h"
 #include "trap.h"
+#include "fs.h"
 
 typedef struct context {
 	size_t eip;
@@ -86,3 +87,4 @@ void schedule();
 void make_task_ready(task_t *task);
 task_t *copy_task(vptr_t fn, vptr_t args);
 void clone(void (*func_addr)(void), void *new_stack);
+void exec(file_t *file);
