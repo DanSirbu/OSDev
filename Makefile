@@ -57,7 +57,7 @@ debug: $(OBJDIR)/kernel.elf
 	gdb $<
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
-	@$(CROSS-COMPILER) ${ARGS} -T link.ld $^ -o $@
+	@$(CROSS-LINKER) -T link.ld $^ -o $@
 
 obj/ramfs.img: ${APPS-OBJ}
 	@./ramfs_gen $@ $^
