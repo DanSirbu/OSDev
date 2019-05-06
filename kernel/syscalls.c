@@ -22,7 +22,7 @@ int sys_exec(char *filename)
 }
 void syscall(int_regs_t *regs)
 {
-	debug_print("Syscall 0x%x\n", regs->eax);
+	print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
 	switch (regs->eax) {
 		DEF_SYSCALL1(0, exit, int, exitcode)
 	case 1:
@@ -34,7 +34,7 @@ void syscall(int_regs_t *regs)
 		sys_clone(regs);
 		break;
 	default:
-		debug_print("Unhandled syscall\n");
+		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}
 }
 void syscalls_install()

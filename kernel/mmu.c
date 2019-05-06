@@ -61,8 +61,8 @@ void mmap(size_t base, size_t len, mmap_flags_t flags)
 		vptr_t vaddr = base + x * PGSIZE;
 		if (is_mapped(current_directory, vaddr)) {
 			if (!flags.IGNORE_PAGE_MAPPED) {
-				debug_print("MMAP: Already mapped: 0x%x\n",
-					    base);
+				print(LOG_WARNING,
+				      "MMAP: Already mapped: 0x%x\n", base);
 			}
 			continue;
 		}
