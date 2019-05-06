@@ -100,6 +100,8 @@ extern inode_t *(*dummy_find_child)();
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
+	init_serial();
+
 	assert(multiboot_info->mods_count == 1);
 	module_t *modules = (module_t *)(multiboot_info->mods_addr + KERN_BASE);
 	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
@@ -118,7 +120,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	idt_init();
 
 	screen_init();
-	debug_print("Serial initialized\n");
 	print_memory_map(multiboot_info->mmap_addr,
 			 multiboot_info->mmap_length);
 

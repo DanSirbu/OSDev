@@ -34,7 +34,7 @@ int is_transmit_empty()
 {
 	return inb(PORT + 5) & 0x20;
 }
-#define PRINT_TO_SCREEN
+//#define PRINT_TO_SCREEN
 void write_char_serial(char a)
 {
 #ifdef PRINT_TO_SCREEN
