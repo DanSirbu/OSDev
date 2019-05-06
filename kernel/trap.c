@@ -68,7 +68,11 @@ void interrupt_handler(int_regs_t regs)
 			    regs.interrupt_no,
 			    exceptions_string[regs.interrupt_no], regs.eip,
 			    regs.error_code);
-	} else if (regs.interrupt_no != 32 && (regs.interrupt_no - 32) < sizeof(interrupts_string) / sizeof(interrupts_string[0])) {
+	} else if (interrupt_handlers[regs.interrupt_no] == NULL &&
+		   regs.interrupt_no != 32 &&
+		   (regs.interrupt_no - 32) <
+			   sizeof(interrupts_string) /
+				   sizeof(interrupts_string[0])) {
 		debug_print("Interrupt %d (%s) at 0x%x, error 0x%x\n",
 			    regs.interrupt_no - 32,
 			    interrupts_string[regs.interrupt_no - 32], regs.eip,

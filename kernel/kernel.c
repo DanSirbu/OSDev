@@ -116,9 +116,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	initialize_tss();
 
 	idt_init();
-	kb_init();
 
-	init_serial();
 	screen_init();
 	debug_print("Serial initialized\n");
 	print_memory_map(multiboot_info->mmap_addr,
@@ -145,6 +143,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	initramfs(ramfs_location);
 	inode_t *fs_root_inode = ramfs_getRoot();
 	mount("/", fs_root_inode);
+
+	kb_init();
 
 	inode_t *curInode = vfs_namei("/");
 	inode_t *cur = NULL;
