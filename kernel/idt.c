@@ -1,5 +1,6 @@
 #include "types.h"
 #include "io.h"
+#include "trap.h"
 
 extern void load_idt(size_t *idt_ptr);
 extern void idt_0(void);
@@ -15,6 +16,9 @@ extern uint8_t PIC2_INT;
 #define INTERRUPT_GATE_32 0xE
 #define TRAP_GATE_32 0xF
 
+#define ICW4_8086 0x01 /* 8086/88 (MCS-80/85) mode */
+#define END_OF_INTERRUPT 0x20
+
 struct idt_description_structure_t {
 	u16 size; // in bytes
 	u32 offset;
@@ -25,8 +29,8 @@ struct IDT_entry {
 	uint16_t selector;
 	unsigned char zero;
 	struct {
-		uint8_t gatetype: 4;
-		uint8_t storage_segment: 1;
+		uint8_t gatetype : 4;
+		uint8_t storage_segment : 1;
 		uint8_t dpl : 2;
 		uint8_t present : 1;
 	} type;
@@ -35,14 +39,6 @@ struct IDT_entry {
 
 struct IDT_entry IDT[IDT_SIZE];
 
-#define PIC1_CMD 0x20
-#define PIC1_DATA 0x21
-
-#define PIC2_CMD 0xA0
-#define PIC2_DATA 0xA1
-
-#define ICW4_8086 0x01 /* 8086/88 (MCS-80/85) mode */
-#define END_OF_INTERRUPT 0x20
 void idt_init(void)
 {
 	u32 idt_address;
@@ -60,7 +56,7 @@ void idt_init(void)
 
 		IDT[x].selector = KERNEL_CODE_SEGMENT_OFFSET;
 		IDT[x].zero = 0;
-		
+
 		IDT[x].type.gatetype = INTERRUPT_GATE_32;
 		IDT[x].type.storage_segment = 0;
 		IDT[x].type.dpl = 0;
