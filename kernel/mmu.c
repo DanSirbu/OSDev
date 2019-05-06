@@ -68,6 +68,9 @@ void mmap(size_t base, size_t len, mmap_flags_t flags)
 		}
 		pptr_t phyaddr = alloc_frame();
 		setPTE(current_directory, vaddr, phyaddr);
+		if (flags.MAP_IMMEDIATELY) {
+			invlpg(vaddr);
+		}
 	}
 }
 
@@ -77,6 +80,12 @@ void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 {
 	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
 	assert((phyaddr_start & PGMASK) == 0); //Has to be 4k aligned
+	if (flags.MAP_IMMEDIATELY) { //TODO implement this
+		debug_print(
+			"Map immediately not implemented. vaddr: 0x%x phy: 0x%x",
+			vaddr_start, phyaddr_start);
+		halt();
+	}
 
 	if (is_mapped(current_directory, vaddr_start)) {
 		if (!flags.IGNORE_PAGE_MAPPED) {
@@ -299,7 +308,8 @@ void free_user_mappings(page_directory_t *src_pg_dir)
 		}
 	}
 }
-void free_page_directory(page_directory_t *src_pg_dir) {
+void free_page_directory(page_directory_t *src_pg_dir)
+{
 	free_user_mappings(src_pg_dir);
 	kfree(src_pg_dir);
 }
@@ -356,17 +366,21 @@ void memcpy_frame_contents(pptr_t dst, pptr_t src)
                         |                              | RW/--
                         |   Remapped Physical Memory   | RW/--
                         |                              | RW/--
-        KERNBASE ----->  +------------------------------+ 0xc0000000
+        KERNBASE -----> +------------------------------+ 0xc0000000
                         |       Empty Memory           | R-/R-  PTSIZE
-        UPAGES    ---->  +------------------------------+ 0xB0000000
+        UPAGES    ----> +------------------------------+ 
                         |           RO ENVS            | R-/R-  PTSIZE
-    UTOP,UENVS ------>  +------------------------------+ 0xeec00000
+     UTOP,UENVS ------> +------------------------------+ 
     UXSTACKTOP -/       |     User Exception Stack     | RW/RW  PGSIZE
-                        +------------------------------+ 0xeebff000
+                        +------------------------------+ 
                         |       Empty Memory           | --/--  PGSIZE
-        USTACKTOP  --->  +------------------------------+ 0xeebfe000
+        USTACKTOP  ---> +------------------------------+ 0xB0000000 
                         |      Normal User Stack       | RW/RW  PGSIZE
-                        +------------------------------+ 0xeebfd000
+						+------------------------------+
+						|       Empty Memory           |
+	   USTACKTOP2  ---> +------------------------------+ 0xAFFFE000 
+                        |      Thread 1 stack          | RW/RW  PGSIZE
+                        +------------------------------+
                         |                              |
                         |                              |
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

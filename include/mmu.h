@@ -14,6 +14,9 @@
 #define KERN_IO_BASE /*   */ 0xE0002000
 #define KERN_IO_END /*    */ 0xE0F00000
 
+#define USTACKTOP 0xB0000000
+#define USTACKTOP2 0xAFFFE000
+
 //Also defined in p_allocator.h
 #define PGSIZE 4096
 #define PGMASK 0xFFF
@@ -94,6 +97,7 @@ typedef union {
 	struct {
 		uint8_t IGNORE_PAGE_MAPPED : 1;
 		uint8_t IGNORE_FRAME_REUSE : 1;
+		uint8_t MAP_IMMEDIATELY : 1;
 	};
 	uint8_t bits;
 } mmap_flags_t;
