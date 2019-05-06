@@ -191,7 +191,7 @@ uint32_t sys_fork(int_regs_t *regs)
 }
 uint32_t sys_exit(int exitcode)
 {
-	debug_print("Exitcode %x\n", exitcode);
+	debug_print("Exitcode 0x%x\n", exitcode);
 	current->state = STATE_FINISHED;
 
 	//TODO cleanup of state struct
