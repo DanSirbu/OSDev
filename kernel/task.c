@@ -109,12 +109,11 @@ void exec(file_t *file)
 		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
 		size_t section_size = section_end - PG_ROUND_DOWN(ph.p_vaddr);
 
-		mmap_flags_t flags;
-		flags.bits = 0;
-		flags.IGNORE_PAGE_MAPPED =
-			1; //The elf file has overlapping sections
+		mmap_flags_t flags = { //The elf file has overlapping sections
+				       .IGNORE_PAGE_MAPPED = 1,
+				       .MAP_IMMEDIATELY = 1
+		};
 		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, flags);
-		invlpg(PG_ROUND_DOWN(ph.p_vaddr));
 
 		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_filesz, ph.p_offset);
 
@@ -124,11 +123,9 @@ void exec(file_t *file)
 	}
 
 	//Setup user stack
-	mmap_flags_t flags;
-	flags.bits = 0;
-	mmap(0xB0000000, 0x1000, flags);
-	vptr_t stack = 0xB0000000 + 0x1000;
-	invlpg(0xB0000000);
+	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
+	mmap(USTACKTOP - STACK_SIZE, STACK_SIZE, flags);
+	vptr_t stack = USTACKTOP;
 
 	PUSH(stack, vptr_t, 0); //argv
 	PUSH(stack, size_t, 0); //argc
@@ -162,6 +159,38 @@ task_t *pick_next_task()
 
 	return task;
 }
+uint32_t sys_clone(int_regs_t *regs)
+{
+	assert(current != NULL &&
+	       "Current process does not exist, can't clone");
+
+	task_t *new_task = kcalloc(sizeof(task_t));
+	list_append_item(task_list, (vptr_t)new_task);
+
+	//Spawn_process
+	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+
+	int_regs_t new_regs;
+	memcpy(&new_regs, regs, sizeof(int_regs_t));
+	new_regs.eax = 0;
+	new_regs.eip = new_regs.ebx;
+
+	vptr_t stack = new_task->stack + STACK_SIZE;
+	PUSH(stack, int_regs_t, new_regs);
+
+	new_task->context.eip = (vptr_t)&interrupt_return;
+	new_task->context.esp = stack;
+
+	//Page directory remains the same
+	new_task->page_directory = current->page_directory;
+	new_regs.esp = USTACKTOP2;
+	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
+	mmap(USTACKTOP2 - STACK_SIZE, STACK_SIZE, flags);
+
+	make_task_ready(new_task);
+
+	return 0;
+}
 
 uint32_t sys_fork(int_regs_t *regs)
 {
@@ -187,7 +216,7 @@ uint32_t sys_fork(int_regs_t *regs)
 
 	make_task_ready(new_task);
 
-	return 999; //TODO
+	return 999; //TODO return child PID
 }
 uint32_t sys_exit(int exitcode)
 {

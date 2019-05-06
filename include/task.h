@@ -88,3 +88,4 @@ void make_task_ready(task_t *task);
 task_t *copy_task(vptr_t fn, vptr_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 void exec(file_t *file);
+uint32_t sys_clone(int_regs_t *regs);

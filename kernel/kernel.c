@@ -226,6 +226,10 @@ void kmain(multiboot_info_t *multiboot_info)
 	run_tests();
 	debug_print("\nTests complete!\n");
 
+	debug_print("Enabling Interrupts\n");
+	sti();
+
+	debug_print("Starting Init\n");
 	exec(vfs_open("/init"));
 
 	/*task_t *proc1 = &task[1];

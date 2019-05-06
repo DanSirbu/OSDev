@@ -30,6 +30,9 @@ void syscall(int_regs_t *regs)
 		break;
 		DEF_SYSCALL3(2, write, int, fd, char *, buf, int, size)
 		DEF_SYSCALL1(3, exec, char *, filename);
+	case 4:
+		sys_clone(regs);
+		break;
 	default:
 		debug_print("Unhandled syscall\n");
 	}
