@@ -10,10 +10,10 @@ static inline int xchg(volatile int *lock_addr, int value)
 	return value;
 }
 
-//TODO, carefull that the same cpu doesn't acquire it twice since it will never get it
+//TODO, careful that the same cpu doesn't acquire it twice since it will never get it
 void spinlock_acquire(int *lock)
 {
-	//Wait for lock, when lock = 0, the swap occurs and the return value is 0
+	//Wait for lock, since xchg returns the old value of lock, it will return 0 when succeed
 	while (xchg(lock, 1))
 		;
 
