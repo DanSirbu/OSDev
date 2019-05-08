@@ -37,17 +37,28 @@ void idle_task()
 extern page_directory_t *current_directory;
 task_t *spawn_init()
 {
-	task_t *init_task = kcalloc(sizeof(task_t));
+	task_t *init_task = create_task(NULL);
 
 	init_task->state = STATE_RUNNING;
 
 	//TODO, reuse kernel stack?
 	init_task->stack = (vptr_t)kmalloc(STACK_SIZE);
-	init_task->page_directory = clone_directory(current_directory);
+	init_task->process->page_directory = clone_directory(current_directory);
 
 	return init_task;
 }
+task_t *create_task(process_t *process)
+{
+	if (process == NULL) {
+		process = kcalloc(sizeof(process_t));
+		process->threads = list_create();
+	}
+	task_t *new_task = kcalloc(sizeof(task_t));
+	new_task->process = process;
+	list_append_item(process->threads, (vptr_t)new_task);
 
+	return new_task;
+}
 task_t *spawn_idle()
 {
 	return copy_task((vptr_t)idle_task, NULL);
@@ -60,7 +71,7 @@ void tasking_install()
 	kernel_idle_task = spawn_idle();
 
 	//We are currently the init task
-	switch_page_directory(current->page_directory);
+	switch_page_directory(current->process->page_directory);
 	set_kernel_stack(current->stack + STACK_SIZE);
 }
 
@@ -69,7 +80,7 @@ void tasking_install()
 //Does not start it yet
 task_t *copy_task(vptr_t fn, vptr_t args)
 {
-	task_t *new_task = kcalloc(sizeof(new_task));
+	task_t *new_task = create_task(NULL);
 	list_append_item(task_list, (vptr_t)new_task);
 
 	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
@@ -82,16 +93,17 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 	new_task->context.eip = fn;
 	new_task->context.esp = stack;
 
-	new_task->page_directory = clone_directory(current->page_directory);
+	new_task->process->page_directory =
+		clone_directory(current->process->page_directory);
 
 	return new_task;
 }
 #include "fs.h"
-extern void enter_userspace(vptr_t fn, vptr_t stack);
+extern void enter_userspace(vptr_t fn, vptr_t user_stack);
 extern void interrupt_return();
 void exec(file_t *file)
 {
-	free_user_mappings(current->page_directory);
+	free_user_mappings(current->process->page_directory);
 
 	//TODO zero the BSS
 
@@ -130,7 +142,7 @@ void exec(file_t *file)
 	PUSH(stack, vptr_t, 0); //argv
 	PUSH(stack, size_t, 0); //argc
 
-	enter_userspace(stack, header.e_entry);
+	enter_userspace(header.e_entry, stack);
 }
 void make_task_ready(task_t *task)
 {
@@ -159,33 +171,40 @@ task_t *pick_next_task()
 
 	return task;
 }
+extern void *_start;
 uint32_t sys_clone(int_regs_t *regs)
 {
 	assert(current != NULL &&
 	       "Current process does not exist, can't clone");
 
-	task_t *new_task = kcalloc(sizeof(task_t));
+	vptr_t function_to_call = regs->ebx;
+	vptr_t target_fn = regs->ecx;
+
+	task_t *new_task = create_task(current->process);
 	list_append_item(task_list, (vptr_t)new_task);
 
-	//Spawn_process
 	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
 
 	int_regs_t new_regs;
 	memcpy(&new_regs, regs, sizeof(int_regs_t));
-	new_regs.eax = 0;
-	new_regs.eip = new_regs.ebx;
+	//clone(fn) -> ebx has function address
+	new_regs.eip = function_to_call;
 
-	vptr_t stack = new_task->stack + STACK_SIZE;
-	PUSH(stack, int_regs_t, new_regs);
+	vptr_t kernel_stack = new_task->stack + STACK_SIZE;
+	PUSH(kernel_stack, int_regs_t, new_regs);
 
 	new_task->context.eip = (vptr_t)&interrupt_return;
-	new_task->context.esp = stack;
+	new_task->context.esp = kernel_stack;
 
 	//Page directory remains the same
-	new_task->page_directory = current->page_directory;
-	new_regs.esp = USTACKTOP2;
+	new_task->process->page_directory = current->process->page_directory;
+
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
 	mmap(USTACKTOP2 - STACK_SIZE, STACK_SIZE, flags);
+
+	vptr_t user_stack = USTACKTOP2;
+	PUSH(user_stack, uint32_t, target_fn);
+	new_regs.esp = user_stack;
 
 	make_task_ready(new_task);
 
@@ -196,10 +215,9 @@ uint32_t sys_fork(int_regs_t *regs)
 {
 	assert(current != NULL && "Current process does not exist, can't fork");
 
-	task_t *new_task = kcalloc(sizeof(task_t));
+	task_t *new_task = create_task(NULL);
 	list_append_item(task_list, (vptr_t)new_task);
 
-	//Spawn_process
 	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
 
 	int_regs_t new_regs;
@@ -212,7 +230,8 @@ uint32_t sys_fork(int_regs_t *regs)
 	new_task->context.eip = (vptr_t)&interrupt_return;
 	new_task->context.esp = stack;
 
-	new_task->page_directory = clone_directory(current->page_directory);
+	new_task->process->page_directory =
+		clone_directory(current->process->page_directory);
 
 	make_task_ready(new_task);
 
@@ -223,18 +242,45 @@ uint32_t sys_exit(int exitcode)
 	debug_print("Exitcode 0x%x\n", exitcode);
 	current->state = STATE_FINISHED;
 
-	//TODO cleanup of state struct
-
-	switch_page_directory(kernel_page_directory);
-	free_page_directory(current->page_directory);
-
 	schedule();
 
 	return 0; //Never happens but must do it because of macro setup
 }
+void free_process(process_t *process)
+{
+	free_page_directory(process->page_directory);
+	assert(process->threads->len == 0);
+
+	list_free(process->threads);
+	kfree(process);
+}
+void free_task(task_t *task)
+{
+	process_t *process = task->process;
+	//Cleanup
+	list_remove_item(process->threads, (vptr_t)task);
+	kfree((void *)task->stack);
+	kfree(task);
+
+	//Last thread in the process, we can clean the process
+	if (process->threads->len == 0) {
+		free_process(process);
+	}
+}
 void schedule()
 {
 	task_t *next_task = pick_next_task();
+
+	//Clean up old task
+	while (next_task->state == STATE_FINISHED) {
+		free_task(next_task);
+		next_task = pick_next_task();
+	}
+
+	schedule_task(next_task);
+}
+void schedule_task(task_t *next_task)
+{
 	make_task_ready(current);
 	if (next_task == current) {
 		return;
@@ -246,7 +292,7 @@ void schedule()
 	current = next_task;
 	set_kernel_stack(current->stack + STACK_SIZE);
 
-	switch_page_directory(current->page_directory);
+	switch_page_directory(current->process->page_directory);
 
 	switch_context(old_context, &current->context);
 }

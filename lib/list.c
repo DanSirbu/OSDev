@@ -1,5 +1,6 @@
 #include "list.h"
 #include "kmalloc.h"
+#include "assert.h"
 
 #define malloc kmalloc
 #define free kfree
@@ -7,6 +8,9 @@
 
 void list_append(list_t *list, node_t *node)
 {
+	assert(list != NULL);
+	assert(node != NULL);
+
 	if (list->len == 0) {
 		list->head = node;
 		list->tail = node;
@@ -23,6 +27,8 @@ void list_append(list_t *list, node_t *node)
 }
 node_t *list_append_item(list_t *list, vptr_t item)
 {
+	assert(list != NULL);
+
 	node_t *node = calloc(sizeof(node_t));
 	node->value = item;
 	list_append(list, node);
@@ -32,13 +38,14 @@ list_t *list_create(void)
 {
 	return calloc(sizeof(list_t));
 }
-void list_merge(list_t *dst, list_t *src) {
-	if(src->len == 0) {
+void list_merge(list_t *dst, list_t *src)
+{
+	if (src->len == 0) {
 		list_free(src);
 		return;
 	}
 
-	if(dst->len == 0) {
+	if (dst->len == 0) {
 		list_free(dst);
 		dst = src;
 		return;
@@ -64,10 +71,10 @@ void list_remove(list_t *list, node_t *node)
 	node_t *prev = node->prev;
 	node_t *next = node->next;
 
-	if(prev) {
+	if (prev) {
 		prev->next = next;
 	}
-	if(next) {
+	if (next) {
 		next->prev = prev;
 	}
 
@@ -76,7 +83,15 @@ void list_remove(list_t *list, node_t *node)
 	free(node);
 	list->len--;
 }
-void list_free_contents(list_t *list) {
+void list_remove_item(list_t *list, vptr_t item)
+{
+	node_t *node_item = list_find(list, item);
+	assert(node_item !=
+	       NULL); //TODO list_remove_item returns error if item not found
+	list_remove(list, node_item);
+}
+void list_free_contents(list_t *list)
+{
 	node_t *n = list->head;
 	while (n) {
 		node_t *tmp = n->next;

@@ -3,6 +3,7 @@
 #include "mmu.h"
 #include "trap.h"
 #include "fs.h"
+#include "list.h"
 
 typedef struct context {
 	size_t eip;
@@ -40,14 +41,21 @@ fork(task) = copy everything = analogous to process
 */
 
 //Oh and idle task exists because there is no task left to run
+
 typedef struct {
+	page_directory_t *page_directory;
+
+	list_t *threads;
+} process_t;
+
+typedef struct {
+	process_t *process;
+
 	context_t context;
 	vptr_t stack;
 
 	enum STATES state;
-
-	page_directory_t *page_directory;
-} task_t;
+} task_t; //task = thread
 
 /*
 Note: when we switch a context, we basically do a thread switch
@@ -85,6 +93,9 @@ uint32_t sys_exit(int exitcode);
 uint32_t sys_fork(int_regs_t *regs);
 void schedule();
 void make_task_ready(task_t *task);
+task_t *create_task(process_t *process);
+void schedule_task(task_t *next_task);
+
 task_t *copy_task(vptr_t fn, vptr_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 void exec(file_t *file);

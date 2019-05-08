@@ -46,7 +46,7 @@ interrupt_return:
     iretd
 
 global interrupt_return
-global enter_userspace ; (stack, entry_point)
+global enter_userspace ; (entry_point, stack)
 enter_userspace:
     mov ebp, esp
 
@@ -58,10 +58,10 @@ enter_userspace:
 
     ; eip, cs, eflags, useresp, ss
     push DWORD 0x23 ; ss
-    push DWORD [ebp+4] ; useresp
+    push DWORD [ebp+8] ; useresp
     pushfd ; flags
     push DWORD 0x1B ; cs
-    push DWORD [ebp+8] ; eip 
+    push DWORD [ebp+4] ; eip 
     iretd
 
 align 0x10
