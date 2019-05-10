@@ -25,17 +25,18 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	void *memory_map_end = memory_map + memory_map_len;
 
 	for (; memory_map < memory_map_end;
-	     memory_map +=
-	     ((memory_map_t *)memory_map)->size + sizeof(unsigned long)) {
-		memory_map_t *mmap_cur = (memory_map_t *)memory_map;
+	     memory_map += ((multiboot_memory_map_t *)memory_map)->size +
+			   sizeof(unsigned long)) {
+		multiboot_memory_map_t *mmap_cur =
+			(multiboot_memory_map_t *)memory_map;
 
 		//Physical allocator only for non-io areas
 		if (mmap_cur->type != 1) {
 			continue;
 		}
 
-		size_t base_addr = PG_ROUND_UP(mmap_cur->base_addr_low);
-		size_t base_len = PG_ROUND_DOWN(mmap_cur->length_low);
+		size_t base_addr = PG_ROUND_UP(mmap_cur->addr);
+		size_t base_len = PG_ROUND_DOWN(mmap_cur->len);
 
 		free_frame_range(base_addr, base_len);
 	}

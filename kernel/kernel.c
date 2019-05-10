@@ -48,14 +48,14 @@ void print_memory_map(uint32_t mmap_addr, uint32_t mmap_len)
 
 	// clang-format off
 	// unsigned long = sizeof(memory_map_t->size)
-	for (; mmap < mmap_end; mmap += ((memory_map_t *)mmap)->size + sizeof(unsigned long)) {
+	for (; mmap < mmap_end; mmap += ((multiboot_memory_map_t *)mmap)->size + sizeof(unsigned long)) {
 		// clang-format on
 
-		memory_map_t *mmap_cur = (memory_map_t *)mmap;
-		debug_print(
-			"Address: %8p-%8p, type %x\n", mmap_cur->base_addr_low,
-			(mmap_cur->base_addr_low + mmap_cur->length_low - 1),
-			mmap_cur->type);
+		multiboot_memory_map_t *mmap_cur =
+			(multiboot_memory_map_t *)mmap;
+		debug_print("Address: %8p-%8p, type %x\n", (uint32_t)mmap_cur->addr,
+			    (uint32_t)(mmap_cur->addr + mmap_cur->len - 1),
+			    (uint32_t)mmap_cur->type);
 	}
 }
 
@@ -103,7 +103,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	init_serial();
 
 	assert(multiboot_info->mods_count == 1);
-	module_t *modules = (module_t *)(multiboot_info->mods_addr + KERN_BASE);
+	multiboot_module_t *modules =
+		(multiboot_module_t *)(multiboot_info->mods_addr + KERN_BASE);
 	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
 
 	debug_print("Module start: 0x%x\n", modules[0].mod_start);
