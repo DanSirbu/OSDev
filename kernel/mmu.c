@@ -80,17 +80,12 @@ void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 {
 	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
 	assert((phyaddr_start & PGMASK) == 0); //Has to be 4k aligned
-	if (flags.MAP_IMMEDIATELY) { //TODO implement this
-		debug_print(
-			"Map immediately not implemented. vaddr: 0x%x phy: 0x%x",
-			vaddr_start, phyaddr_start);
-		halt();
-	}
+	assert((len & PGMASK) == 0); //Len has to be multiples of PGSIZE
 
 	if (is_mapped(current_directory, vaddr_start)) {
 		if (!flags.IGNORE_PAGE_MAPPED) {
-			debug_print("MMAP_ADDR: Already mapped, exiting: 0x%x",
-				    vaddr_start);
+			print(LOG_ERROR, "MMAP_ADDR: Already mapped: 0x%x\n",
+			      vaddr_start);
 		}
 		return;
 	}
@@ -112,6 +107,9 @@ void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 		vptr_t vaddr = vaddr_start + x * PGSIZE;
 		pptr_t phyaddr = phyaddr_start + x * PGSIZE;
 		setPTE(current_directory, vaddr, phyaddr);
+		if (flags.MAP_IMMEDIATELY) {
+			invlpg(vaddr);
+		}
 	}
 }
 
