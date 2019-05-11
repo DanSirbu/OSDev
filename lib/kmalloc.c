@@ -82,16 +82,21 @@ void *kvmalloc(size_t size)
 
 	for (current = free_list; current != NULL;
 	     prev = current, current = current->next_free) {
-		if (current->size == 4096) {
+		if (current->size == 4096 &&
+		    ((size_t)B2P(current) & 0xFFF) == 0) {
 			mark_block_used(prev, current);
 			return B2P(current);
 		}
 	}
 
-	//TODO: allocate new page
 	//We want to first align it to 4096 - block_t header size to make sure there is enough space
+	//Note: VERY WASTEFUL, change this soon
 	sbrk_alignto(4096 - sizeof(block_t));
-	return kmalloc(size);
+
+	block_t *cur_block = (block_t *)sbrk(sizeof(block_t) + size);
+	cur_block->next_free = 0;
+	cur_block->size = size;
+	return B2P(cur_block);
 }
 void *kmalloc(size_t size)
 {
