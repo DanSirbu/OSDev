@@ -22,6 +22,7 @@
 #include "ramfs.h"
 #include "fs.h"
 #include "vfs.h"
+#include "vga.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -53,7 +54,8 @@ void print_memory_map(uint32_t mmap_addr, uint32_t mmap_len)
 
 		multiboot_memory_map_t *mmap_cur =
 			(multiboot_memory_map_t *)mmap;
-		debug_print("Address: %8p-%8p, type %x\n", (uint32_t)mmap_cur->addr,
+		debug_print("Address: %8p-%8p, type %x\n",
+			    (uint32_t)mmap_cur->addr,
 			    (uint32_t)(mmap_cur->addr + mmap_cur->len - 1),
 			    (uint32_t)mmap_cur->type);
 	}
@@ -101,6 +103,7 @@ void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
 	init_serial();
+	debug_print("Flags: 0x%x\n", multiboot_info->flags);
 
 	assert(multiboot_info->mods_count == 1);
 	multiboot_module_t *modules =
@@ -226,6 +229,36 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("Starting Tests\n");
 	run_tests();
 	debug_print("\nTests complete!\n");
+
+//struct ModeInfoBlock *vbe_mode =
+//	(struct ModeInfoBlock *)(multiboot_info->vbe_mode + KERN_BASE);
+
+//multiboot_info->framebuffer_height * multiboot_info->framebuffer_pitch;
+#define FLAG_FRAMEBUFFER_EXISTS (1 << 12)
+	assert(multiboot_info->flags & FLAG_FRAMEBUFFER_EXISTS);
+	mmap_flags_t map_flags = { .IGNORE_FRAME_REUSE = 1,
+				   .MAP_IMMEDIATELY = 1 };
+	mmap_addr(KERN_IO_BASE, (uint32_t)multiboot_info->framebuffer_addr,
+		  PG_ROUND_UP(multiboot_info->framebuffer_pitch *
+			      multiboot_info->framebuffer_height),
+		  map_flags);
+
+	uint32_t *vga_addr = (uint32_t *)KERN_IO_BASE;
+
+	uint32_t window_width = multiboot_info->framebuffer_width;
+	uint32_t window_height = multiboot_info->framebuffer_height;
+
+	for (uint32_t col = 0; col < 256; col += 1) {
+		vga_addr = (uint32_t *)KERN_IO_BASE;
+		for (uint32_t y = 0; y < window_height; y++) {
+			for (uint32_t x = 0;
+			     x < multiboot_info->framebuffer_width; x++) {
+				uint32_t *pixel = vga_addr + x;
+				*pixel = 0xFF0000 + col;
+			}
+			vga_addr += window_width;
+		}
+	}
 
 	debug_print("Enabling Interrupts\n");
 	sti();

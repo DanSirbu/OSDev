@@ -1,14 +1,21 @@
-; Copyright (C) 2014  Arjun Sreedharan
-; License: GPL version 2 or higher http://www.gnu.org/licenses/gpl.html
-; When debugging this file, don't forget to substract 0xC0000000 from the address since it's linked there
-FLAGS EQU 0x2 ; 0x2 = pass memory info
+ALIGN_MOD   EQU	1 << 0 ; align modules to page boundary
+MEMINFO 	  EQU 1 << 1 ; provide memory map
+VIDINFO 	  EQU 1 << 2 ; provide video info (ex. address of framebuffer)
+
+FLAGS EQU ALIGN_MOD | MEMINFO | VIDINFO
+
+
 bits 32
 section .text
         ;multiboot spec
         align 4
         dd 0x1BADB002              ;magic
         dd FLAGS                    ;flags
-        dd - (0x1BADB002 + FLAGS)   ;checksum. m+f+c should be zero
+        dd -(0x1BADB002 + FLAGS)   ;checksum. m+f+c should be zero
+				times 5 dd 0
+				dd 0 ; 0 = set graphics mode
+			  dd 1024, 768, 32 ; Width, height, depth
+
 
 global start
 global load_idt

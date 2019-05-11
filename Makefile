@@ -33,7 +33,6 @@ QEMU-NETWORK-ARGS = -netdev type=user,id=network0,hostfwd=tcp::5555-:22,hostfwd=
 #QEMU-NETWORK-ARGS = -netdev tap,helper=/usr/lib/qemu/qemu-bridge-helper,id=thor_net0 -device e1000,netdev=thor_net0,id=thor_nic0 -object filter-dump,id=f1,netdev=thor_net0,file=dump.pcap
 #QEMU-NETWORK-ARGS = -net nic -net bridge,br=br0,id=netdevice -object filter-dump,id=f1,netdev=netdevice,file=dump.pcap
 
-QEMU-RAMFS = -initrd "obj/ramfs.img"
 # Old style qemu network arguments
 PORT7 = 5555
 PORT80 = 5556
@@ -43,17 +42,17 @@ PORT80 = 5556
 # Virtual Router has 10.0.2.2
 
 #-monitor telnet:127.0.0.1:1235,server,nowait
-run: $(OBJDIR)/kernel.elf obj/ramfs.img
-	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS) $(QEMU-RAMFS)
-	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
+run: os.iso
+	$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -drive format=raw,file=$< -serial file:serial.log $(QEMU-NETWORK-ARGS) -vga std
+	#@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 
-run-debug: $(OBJDIR)/kernel.elf
-	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -kernel $< -serial file:serial.log $(QEMU-NETWORK-ARGS) $(QEMU-RAMFS)
-	@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
+run-debug: os.iso
+	@$(QEMU-DIR)qemu-system-i386 $(QEMU-ARGS) -S -drive format=raw,file=$< -serial file:serial.log $(QEMU-NETWORK-ARGS) -vga std
+	#@echo AAAAAAAAHello | ncat 127.0.0.1 5555 --send-only
 	
 debug-r2: $(OBJDIR)/kernel.elf
 	r2 -e bin.baddr=0x001000000 -e dbg.exe.path=$< -d -b 32 -c v! gdb://127.0.0.1:1234
-debug: $(OBJDIR)/kernel.elf
+debug: $(OBJDIR)/kernel.elf obj/ramfs.img
 	gdb $<
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
@@ -87,9 +86,7 @@ net-test:
 PHONY:
 	$(info $$OBJFILES is [${OBJFILES}])
 
-prod: $(OBJDIR)/kernel.elf obj/ramfs.img
+os.iso: $(OBJDIR)/kernel.elf obj/ramfs.img
 	cp obj/kernel.elf isofiles/boot/kernel.elf
 	cp obj/ramfs.img isofiles/boot/ramfs.img
 	grub-mkrescue -o os.iso isofiles
-	#qemu-system-i386 -cdrom os.iso -m 2G
-	#sudo dd if=os.iso of=/dev/sda
