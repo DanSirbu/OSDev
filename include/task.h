@@ -45,6 +45,8 @@ fork(task) = copy everything = analogous to process
 typedef struct {
 	page_directory_t *page_directory;
 
+	vptr_t heap;
+
 	list_t *threads;
 } process_t;
 
@@ -52,7 +54,7 @@ typedef struct {
 	process_t *process;
 
 	context_t context;
-	vptr_t stack;
+	vptr_t stack; //Kernel stack
 
 	enum STATES state;
 } task_t; //task = thread

@@ -1,6 +1,5 @@
-#include "syscalls.h"
-#include "types.h"
-#include "main.h"
+#include "include/syscalls.h"
+#include <stdint.h>
 #include "string.h"
 
 #define ASCII_NUMBER_CONST 0x30

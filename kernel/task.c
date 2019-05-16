@@ -112,27 +112,37 @@ void exec(file_t *file)
 
 	vfs_read(file, &header, sizeof(header), 0);
 
+	vptr_t heap_start = 0;
 	for (int x = 0; x < header.e_phnum; x++) {
 		vptr_t ph_offset = x * header.e_phentsize + header.e_phoff;
-		Elf32_Phdr ph;
 
+		Elf32_Phdr ph;
 		vfs_read(file, &ph, sizeof(ph), ph_offset);
 
-		vptr_t section_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
-		size_t section_size = section_end - PG_ROUND_DOWN(ph.p_vaddr);
+		vptr_t segment_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
+		size_t segment_size = segment_end - PG_ROUND_DOWN(ph.p_vaddr);
 
 		mmap_flags_t flags = { //The elf file has overlapping sections
 				       .IGNORE_PAGE_MAPPED = 1,
 				       .MAP_IMMEDIATELY = 1
 		};
-		mmap(PG_ROUND_DOWN(ph.p_vaddr), section_size, flags);
+		mmap(PG_ROUND_DOWN(ph.p_vaddr), segment_size, flags);
 
 		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_filesz, ph.p_offset);
 
+		//filesz = segment size in file
+		//memsz = segment size in memory, can be > filesz
 		//Set the rest of memory to zero
 		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;
 		memset((void *)program_header_end, 0, ph.p_memsz - ph.p_filesz);
+
+		if (ph.p_vaddr + ph.p_filesz > heap_start) {
+			heap_start = ph.p_vaddr + ph.p_filesz;
+		}
 	}
+	assert(heap_start != 0);
+	PG_ROUND_UP(heap_start);
+	current->process->heap = heap_start;
 
 	//Setup user stack
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };

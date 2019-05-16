@@ -73,6 +73,9 @@ $(OBJDIR)/%.o: %.S mkdirectories
 $(OBJDIR)/%: %.c mkdirectories ${LIBC-OBJ}
 	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} ${LIBC-OBJ} $< -o $@
 
+libc: ${LIBC-OBJ}
+	$(CROSS-LINKER) -r ${LIBC-OBJ} -o obj/libc/libcoraxlibc.a
+
 mkdirectories:
 	@mkdir -p $(OBJDIRS)
 	

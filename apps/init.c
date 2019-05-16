@@ -1,5 +1,4 @@
-#include "syscalls.h"
-#include "main.h"
+#include "include/syscalls.h"
 
 void testFunc()
 {
@@ -19,7 +18,8 @@ int main()
 			exec("/test");
 		} else {
 			printf("I'm just a normal child\n");
-			clone(testFunc);
+			//clone(testFunc);
+			exec("/testProgram.a");
 		}
 	} else {
 		printf("I'm a parent process! Child pid: %d\n", y);

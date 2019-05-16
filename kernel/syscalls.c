@@ -20,6 +20,19 @@ int sys_exec(char *filename)
 	//Does not get here
 	return 0;
 }
+extern task_t *current;
+vptr_t sys_sbrk(uint32_t size)
+{
+	size = PG_ROUND_UP(size);
+	vptr_t old_heap_addr = current->process->heap;
+
+	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1,
+			       .IGNORE_PAGE_MAPPED = 0,
+			       .IGNORE_FRAME_REUSE = 0 };
+	mmap(old_heap_addr, size, flags);
+	current->process->heap = old_heap_addr + size;
+	return old_heap_addr;
+}
 void syscall(int_regs_t *regs)
 {
 	print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
@@ -33,6 +46,7 @@ void syscall(int_regs_t *regs)
 	case 4:
 		sys_clone(regs);
 		break;
+		DEF_SYSCALL1(10, sbrk, uint32_t, size);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}
