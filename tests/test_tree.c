@@ -45,5 +45,5 @@ void test_tree()
 	tree_remove_reparent_root(child1);
 	//Tree should be / -> b, c
 	assert(child3->parent == root);
-	assert(list_index_of(root->children, (vptr_t)child3) != NULL);
+	assert(list_index_of(root->children, (vptr_t)child3) != -1);
 }

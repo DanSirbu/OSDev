@@ -61,7 +61,7 @@ task_t *create_task(process_t *process)
 }
 task_t *spawn_idle()
 {
-	return copy_task((vptr_t)idle_task, NULL);
+	return copy_task((vptr_t)idle_task, (vptr_t)NULL);
 }
 void tasking_install()
 {

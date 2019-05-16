@@ -16,7 +16,7 @@ vptr_t heap_top;
 vptr_t heap_start;
 vptr_t heap_end;
 
-void *sbrk(u32 size);
+void *sbrk(uint32_t size);
 void sbrk_alignto(size_t alignment);
 
 /*
@@ -167,10 +167,10 @@ void sbrk_alignto(size_t alignment)
 		sbrk(alignment - (curOffset - alignment));
 	}
 }
-void *sbrk(u32 size)
+void *sbrk(uint32_t size)
 {
 	//Initialize heap if this is the first call to it
-	if (heap_top == NULL) {
+	if (heap_top == (vptr_t)NULL) {
 #define PGSIZE 4096
 		void *start = sbrk(PGSIZE);
 		kinit_malloc((vptr_t)start, (vptr_t)(start + PGSIZE));

@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "types.h"
 
 void *malloc(size_t size);
 void free(void *ptr);

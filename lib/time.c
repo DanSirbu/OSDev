@@ -10,7 +10,7 @@
 #define CMOS_PORT_INOUT 0x71
 #define IRQ_PIT 0x20
 
-uint8_t read_cmos(u8 cmos_reg)
+uint8_t read_cmos(uint8_t cmos_reg)
 {
 	outb(CMOS_PORT,
 	     cmos_reg); // Must always reselect before reading because it seems

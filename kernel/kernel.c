@@ -27,8 +27,6 @@
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
 
-typedef unsigned int u32;
-
 extern unsigned char keyboard_map[128];
 extern void initialize_gdt();
 extern void initialize_tss();

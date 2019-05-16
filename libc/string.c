@@ -24,17 +24,17 @@ void reverse(char *str)
 	}
 }
 
-void itoa(u32 number, char *str, u32 base)
+void itoa(uint32_t number, char *str, uint32_t base)
 {
 	if (number == 0) {
 		str[0] = '0';
 		str[1] = '\0';
 		return;
 	}
-	u32 i = 0;
-	u32 lowBytes = number; //& 0xFFFFFFFF;
+	uint32_t i = 0;
+	uint32_t lowBytes = number; //& 0xFFFFFFFF;
 	while (lowBytes != 0) {
-		u32 rem = lowBytes % base;
+		uint32_t rem = lowBytes % base;
 		if (rem < 10) {
 			str[i] = rem + ASCII_NUMBER_CONST;
 		} else {
@@ -43,7 +43,7 @@ void itoa(u32 number, char *str, u32 base)
 		lowBytes /= base;
 		i++;
 	}
-	/*u32 highBytes = (number >> 31) >> 1 & 0xFFFFFFFF; //>> 32, but IA-32
+	/*uint32_t highBytes = (number >> 31) >> 1 & 0xFFFFFFFF; //>> 32, but IA-32
   processors mask shift to 5 bits so max is shift is 31 while(highBytes != 0) {
           u64 rem = highBytes % base;
           if(rem < 10) {

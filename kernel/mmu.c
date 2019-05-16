@@ -173,12 +173,12 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, flags);
 
 	//First 4MB of heap are mapped already by the boot_page_directory
-	flags.bits = NULL;
+	flags.bits = 0;
 	flags.IGNORE_FRAME_REUSE = 1;
 	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, 0x400000, flags);
 
 	//Map the rest of it
-	flags.bits = NULL;
+	flags.bits = 0;
 	mmap(KERN_HEAP_START + 0x400000,
 	     KERN_HEAP_END - KERN_HEAP_START - 0x400000, flags);
 
@@ -288,8 +288,8 @@ void free_table(page_table_t *src_tbl)
 	for (int x = 0; x < 1024; x++) {
 		if (src_tbl->pages[x].frame != 0) {
 			free_frame(FRAME_TO_ADDR(src_tbl->pages[x].frame));
-			src_tbl->pages[x].frame = NULL;
-			src_tbl->pages[x].present = FALSE;
+			src_tbl->pages[x].frame = 0;
+			src_tbl->pages[x].present = false;
 		}
 	}
 	kfree(src_tbl);

@@ -20,8 +20,8 @@ extern uint8_t PIC2_INT;
 #define END_OF_INTERRUPT 0x20
 
 struct idt_description_structure_t {
-	u16 size; // in bytes
-	u32 offset;
+	uint16_t size; // in bytes
+	uint32_t offset;
 } __attribute__((packed)) idt_description_structure;
 
 struct IDT_entry {
@@ -41,11 +41,11 @@ struct IDT_entry IDT[IDT_SIZE];
 
 void idt_init(void)
 {
-	u32 idt_address;
-	u32 idt_0_address;
+	uint32_t idt_address;
+	uint32_t idt_0_address;
 
 	/* populate IDT entry of keyboard's interrupt */
-	idt_0_address = (u32)idt_0;
+	idt_0_address = (uint32_t)idt_0;
 
 	for (int x = 0; x < 256; x++) {
 		idt_address =
@@ -94,7 +94,7 @@ void idt_init(void)
 	/* fill the IDT descriptor */
 	idt_address = (unsigned long)IDT;
 	idt_description_structure.size = sizeof(IDT) - 1;
-	idt_description_structure.offset = (u32)IDT;
+	idt_description_structure.offset = (uint32_t)IDT;
 
 	load_idt((size_t *)&idt_description_structure);
 }

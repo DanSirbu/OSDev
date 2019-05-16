@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "types.h"
 
 #define ASCII_NUMBER_CONST 0x30
 #define ASCII_LETTER_CONST 0x57
