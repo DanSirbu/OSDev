@@ -10,6 +10,8 @@ typedef struct block {
 #define B2P(mblock) (mblock + 1)
 #define P2B(mblock) (((block_t *)mblock) - 1)
 
+#define MIN(a, b) (a) < (b) ? (a) : (b)
+
 block_t *free_list;
 
 vptr_t heap_top;
@@ -119,7 +121,18 @@ void *calloc(size_t size)
 	memset(ptr, 0, size);
 	return ptr;
 }
-
+void *realloc(void *ptr, size_t size)
+{
+	void *new_ptr = malloc(size);
+	if (new_ptr == NULL) {
+		return NULL;
+	}
+	block_t *ptr_block = P2B(ptr);
+	size_t new_size = MIN(ptr_block->size, ptr_block->size);
+	memcpy(new_ptr, ptr, new_size);
+	free(ptr);
+	return new_ptr;
+}
 void free(void *ptr)
 {
 	if (ptr == 0) {
@@ -190,9 +203,33 @@ void memset(void *ptr, char value, size_t s)
 		((char *)ptr)[x] = value;
 	}
 }
-void memcpy(void *dst, void *src, size_t s)
+void memcpy(void *dst, const void *src, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
 		((uint8_t *)dst)[x] = ((uint8_t *)src)[x];
 	}
+}
+void *memmove(void *dest, const void *src, size_t n)
+{
+	//TODO IMPORTANT, implement without malloc
+	if (n == 0) {
+		return dest;
+	}
+	void *tempLocation = malloc(n);
+	memcpy(tempLocation, src, n);
+	memcpy(dest, tempLocation, n);
+	free(tempLocation);
+
+	return dest;
+}
+int memcmp(const void *s1, const void *s2, size_t n)
+{
+	uint8_t *p1 = (uint8_t *)s1;
+	uint8_t *p2 = (uint8_t *)s2;
+	for (size_t x = 0; x < n; x++) {
+		if (p2[x] - p1[x] != 0) {
+			return p2[x] - p1[x];
+		}
+	}
+	return 0;
 }

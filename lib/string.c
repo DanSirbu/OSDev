@@ -1,6 +1,6 @@
 #include "string.h"
 
-uint32_t strlen(char *str)
+size_t strlen(const char *str)
 {
 	int i = 0;
 	while (str[i] != '\0') {

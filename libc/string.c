@@ -1,6 +1,7 @@
 #include "string.h"
+#include "include/malloc.h"
 
-uint32_t strlen(char *str)
+size_t strlen(const char *str)
 {
 	int i = 0;
 	while (str[i] != '\0') {
@@ -85,4 +86,13 @@ int strcmp(char *str1, char *str2)
 		q++;
 	}
 	return (int)(*p - *q);
+}
+char *strdup(const char *s)
+{
+	size_t len = strlen(s) + 1;
+
+	char *new_str = malloc(len);
+	memcpy(new_str, s, len);
+
+	return new_str;
 }
