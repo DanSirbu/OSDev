@@ -7,10 +7,6 @@ extern void asm_lgdt();
 
 #include "types.h"
 
-const uint16_t NULL_SEGMENT_SELECTOR;
-const uint16_t KERNAL_CODE_SEGMENT_SELECTOR;
-const uint16_t KERNAL_DATA_SEGMENT_SELECTOR;
-
 // A struct describing a Task State Segment.
 struct tss_entry_struct {
 	uint32_t prev_tss; // The previous TSS - if we used hardware task switching
@@ -41,9 +37,7 @@ struct tss_entry_struct {
 	uint32_t ldt;
 	uint16_t trap;
 	uint16_t iomap_base;
-} __packed;
-typedef struct tss_entry_struct tss_entry_t;
-tss_entry_t tss;
+} __attribute__((packed)) tss;
 
 // As described here: http://wiki.osdev.org/Global_Descriptor_Table#Structure
 struct segment_descriptor_t {
@@ -55,26 +49,12 @@ struct segment_descriptor_t {
 	uint8_t base_24_31;
 } __attribute__((packed));
 
-enum segment_selector_t {
-	NULL_DESCRIPTOR, // Not used but has to be here
-	KERNAL_CODE_SEGMENT_INDEX, // Offset 0x8
-	KERNAL_DATA_SEGMENT_INDEX, // Offset 0x10
-	USER_CODE_SEGMENT_INDEX, // Offset 0x18
-	USER_DATA_SEGMENT_INDEX, // Offset 0x20
-	TASK_STATE_SEGMENT_INDEX // Offset 0x28
-};
-
-const uint16_t NULL_SEGMENT_SELECTOR = 0x0;
-const uint16_t KERNAL_CODE_SEGMENT_SELECTOR =
-	sizeof(struct segment_descriptor_t) * KERNAL_CODE_SEGMENT_INDEX;
-const uint16_t KERNAL_DATA_SEGMENT_SELECTOR =
-	sizeof(struct segment_descriptor_t) * KERNAL_DATA_SEGMENT_INDEX;
-const uint16_t USER_CODE_SEGMENT_SELECTOR =
-	sizeof(struct segment_descriptor_t) * USER_CODE_SEGMENT_INDEX;
-const uint16_t USER_DATA_SEGMENT_SELECTOR =
-	sizeof(struct segment_descriptor_t) * USER_DATA_SEGMENT_INDEX;
-const uint16_t TASK_STATE_SEGMENT_SELECTOR =
-	sizeof(struct segment_descriptor_t) * TASK_STATE_SEGMENT_INDEX;
+#define NULL_SEGMENT_INDEX 0
+#define KERNEL_CODE_SEGMENT_INDEX 1
+#define KERNEL_DATA_SEGMENT_INDEX 2
+#define USER_CODE_SEGMENT_INDEX 3
+#define USER_DATA_SEGMENT_INDEX 4
+#define TASK_STATE_SEGMENT_INDEX 5
 
 struct segment_descriptor_t gdt[6];
 
@@ -83,25 +63,46 @@ struct segment_descriptor_t gdt[6];
 struct gdt_description_structure_t {
 	uint16_t size; // in bytes
 	uint32_t offset;
-} __attribute__((packed)) gdt_description_structure;
+} __attribute__((packed)) gdt_pointer;
 
+#define GDT_PRESENT (1 << 15)
+#define GDT_RING(ring_level) ((ring_level) << (5 + 8))
+#define GDT_CODE_DATA_SEGMENT (1 << (4 + 8))
+#define GDT_EXECUTABLE (1 << (3 + 8))
+
+#define GDT_DIRECTION_UP 0
+#define GDT_DIRECTION_DOWN 1
+#define GDT_DIRECTION(direction) ((direction) << (2 + 8))
+
+#define GDT_RW (1 << (1 + 8))
+
+#define GDT_PAGE_GRANULARITY (1 << 7)
+#define GDT_PROTECTED_MODE_SELECTOR (1 << 6)
+
+void initialize_segment_descriptor(int index, uint32_t base, uint32_t limit,
+				   uint16_t flags)
+{
+	gdt[index].limit_0_15 = limit & 0xFFFF;
+	gdt[index].base_0_15 = base & 0xFFFF;
+	gdt[index].base_16_23 = (base >> 16) & 0xFF;
+	gdt[index].access_byte = flags >> 8;
+	gdt[index].flags_and_limit_16_19 = (flags & 0xF0) | (limit & 0xF);
+	gdt[index].base_24_31 = (base >> 24) & 0xFF;
+}
 void initialize_tss()
 {
 	uint32_t tss_base = (uint32_t)&tss;
 	uint32_t tss_limit = sizeof(tss);
-	gdt[TASK_STATE_SEGMENT_INDEX].limit_0_15 = tss_limit & 0xFFFF;
-	gdt[TASK_STATE_SEGMENT_INDEX].base_0_15 = tss_base & 0xFFFF;
-	gdt[TASK_STATE_SEGMENT_INDEX].base_16_23 = (tss_base & 0xFF0000) >> 16;
-	gdt[TASK_STATE_SEGMENT_INDEX].access_byte = 0b11101001;
-	gdt[TASK_STATE_SEGMENT_INDEX].flags_and_limit_16_19 =
-		tss_limit & 0xF0000;
-	gdt[TASK_STATE_SEGMENT_INDEX].base_24_31 =
-		(tss_base & 0xFF000000) >> 24;
 
-	tss.ss0 = KERNAL_DATA_SEGMENT_SELECTOR;
-	tss.esp0 =
-		((uint32_t)&kernel_stack_lowest_address + KERNEL_STACK_SIZE) -
-		4;
+	uint16_t tss_flags =
+		GDT_PRESENT | GDT_RING(3) | GDT_EXECUTABLE | 0x1 << 8;
+	initialize_segment_descriptor(TASK_STATE_SEGMENT_INDEX, tss_base,
+				      tss_limit, tss_flags);
+
+	uint16_t kernel_data_segment_offset =
+		KERNEL_DATA_SEGMENT_INDEX * 8; //Each entry is 8 bytes
+	tss.ss0 = kernel_data_segment_offset;
+	tss.esp0 = 0; //Initialized by set_kernel_stack
 
 	tss.cs = 0x0b;
 	tss.ss = tss.ds = tss.es = tss.fs = tss.gs = 0x13;
@@ -110,38 +111,41 @@ void initialize_tss()
 
 void initialize_gdt()
 {
-	gdt_description_structure.size = sizeof(gdt) - 1;
-	gdt_description_structure.offset = (uint32_t)gdt;
+	gdt_pointer.size = sizeof(gdt) - 1;
+	gdt_pointer.offset = (uint32_t)gdt;
 
-	gdt[KERNAL_CODE_SEGMENT_INDEX].limit_0_15 = 0xFFFF;
-	gdt[KERNAL_CODE_SEGMENT_INDEX].base_0_15 = 0x0000;
-	gdt[KERNAL_CODE_SEGMENT_INDEX].base_16_23 = 0x00;
-	gdt[KERNAL_CODE_SEGMENT_INDEX].access_byte = 0b10011010;
-	gdt[KERNAL_CODE_SEGMENT_INDEX].flags_and_limit_16_19 = 0xCF;
-	gdt[KERNAL_CODE_SEGMENT_INDEX].base_24_31 = 0x00;
+	initialize_segment_descriptor(NULL_SEGMENT_INDEX, 0, 0, 0);
 
-	gdt[KERNAL_DATA_SEGMENT_INDEX].limit_0_15 = 0xFFFF;
-	gdt[KERNAL_DATA_SEGMENT_INDEX].base_0_15 = 0x0000;
-	gdt[KERNAL_DATA_SEGMENT_INDEX].base_16_23 = 0x00;
-	gdt[KERNAL_DATA_SEGMENT_INDEX].access_byte = 0b10010010;
-	gdt[KERNAL_DATA_SEGMENT_INDEX].flags_and_limit_16_19 = 0xCF;
-	gdt[KERNAL_DATA_SEGMENT_INDEX].base_24_31 = 0x00;
+	uint16_t kernel_code_flags = GDT_PRESENT | GDT_RING(0) |
+				     GDT_CODE_DATA_SEGMENT | GDT_EXECUTABLE |
+				     GDT_RW | GDT_PAGE_GRANULARITY |
+				     GDT_PROTECTED_MODE_SELECTOR;
 
-	gdt[USER_CODE_SEGMENT_INDEX].limit_0_15 = 0xFFFF;
-	gdt[USER_CODE_SEGMENT_INDEX].base_0_15 = 0x0000;
-	gdt[USER_CODE_SEGMENT_INDEX].base_16_23 = 0x00;
-	gdt[USER_CODE_SEGMENT_INDEX].access_byte = 0b11111010;
-	gdt[USER_CODE_SEGMENT_INDEX].flags_and_limit_16_19 = 0xCF;
-	gdt[USER_CODE_SEGMENT_INDEX].base_24_31 = 0x00;
+	initialize_segment_descriptor(KERNEL_CODE_SEGMENT_INDEX, 0, 0xFFFFFFFF,
+				      kernel_code_flags);
 
-	gdt[USER_DATA_SEGMENT_INDEX].limit_0_15 = 0xFFFF;
-	gdt[USER_DATA_SEGMENT_INDEX].base_0_15 = 0x0000;
-	gdt[USER_DATA_SEGMENT_INDEX].base_16_23 = 0x00;
-	gdt[USER_DATA_SEGMENT_INDEX].access_byte = 0b11110010;
-	gdt[USER_DATA_SEGMENT_INDEX].flags_and_limit_16_19 = 0xCF;
-	gdt[USER_DATA_SEGMENT_INDEX].base_24_31 = 0x00;
+	initialize_segment_descriptor(KERNEL_DATA_SEGMENT_INDEX, 0, 0xFFFFFFFF,
+				      kernel_code_flags & (~GDT_EXECUTABLE));
 
-	asm_lgdt(&gdt_description_structure);
+	uint16_t user_code_flags = GDT_PRESENT | GDT_RING(3) |
+				   GDT_CODE_DATA_SEGMENT | GDT_EXECUTABLE |
+				   GDT_RW | GDT_PAGE_GRANULARITY |
+				   GDT_PROTECTED_MODE_SELECTOR;
+
+	initialize_segment_descriptor(USER_CODE_SEGMENT_INDEX, 0, 0xFFFFFFFF,
+				      user_code_flags);
+	initialize_segment_descriptor(USER_DATA_SEGMENT_INDEX, 0, 0xFFFFFFFF,
+				      user_code_flags & (~GDT_EXECUTABLE));
+
+	//gdt[KERNEL_CODE_SEGMENT_INDEX].access_byte = 0b10011010;
+
+	//gdt[KERNEL_DATA_SEGMENT_INDEX].access_byte = 0b10010010;
+
+	//gdt[USER_CODE_SEGMENT_INDEX].access_byte = 0b11111010;
+
+	//gdt[USER_DATA_SEGMENT_INDEX].access_byte = 0b11110010;
+
+	asm_lgdt(&gdt_pointer);
 
 	// Grub has already loaded the segment registers
 	// with the correct values (0x8 for cs, 0x10 for the others)
