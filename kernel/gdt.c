@@ -2,6 +2,7 @@
 extern void *kernel_stack_lowest_address;
 extern void tss_flush();
 extern void asm_lgdt();
+extern void update_segment_registers();
 
 #define KERNEL_STACK_SIZE 4096
 
@@ -147,8 +148,7 @@ void initialize_gdt()
 
 	asm_lgdt(&gdt_pointer);
 
-	// Grub has already loaded the segment registers
-	// with the correct values (0x8 for cs, 0x10 for the others)
+	update_segment_registers();
 }
 void set_kernel_stack(size_t stack)
 {

@@ -144,6 +144,20 @@ StartHigherHalf:
 	call kmain
 	hlt 				;halt the CPU
 
+
+global update_segment_registers
+update_segment_registers:
+	mov ax, 0x10 ; kernel data segment
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	jmp 0x8:return_func ; Far jump to change cs register
+
+return_func:
+	ret
+
+
 ; since we are using cdecl
 ; the following registers are assumed to be changed to the called method (i.e. the caller saves them)
 ; eax, ecx and edx
