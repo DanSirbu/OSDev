@@ -22,7 +22,7 @@ common_interrupt_handler:
     push fs
     push gs
 
-    mov ax, 0x10
+    mov ax, 0x10 ; kernel data segment, the cs has already been changed by the cpu
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -99,7 +99,7 @@ no_error 15
 align 16
 no_error 16
 align 16
-no_error 17
+error 17
 align 16
 no_error 18
 align 16
@@ -125,7 +125,7 @@ no_error 28
 align 16
 no_error 29
 align 16
-no_error 30
+error 30
 align 16
 no_error 31
 align 16
