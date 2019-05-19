@@ -58,8 +58,13 @@ debug: $(OBJDIR)/kernel.elf obj/ramfs.img
 $(OBJDIR)/kernel.elf: ${OBJFILES}
 	@$(CROSS-LINKER) -T link.ld $^ -o $@
 
-obj/ramfs.img: ${APPS-OBJ}
-	@./ramfs_gen $@ $^
+obj/ramfs.img: ${APPS-OBJ} ramfs_gen libc
+	@./ramfs_gen $@ obj/apps/*
+
+.PHONY: obj/ramfs.img
+
+ramfs_gen: ramfs_gen.c
+	$(CROSS-COMPILER) $< -o $@
 
 $(OBJDIR)/%.o: %.c mkdirectories
 	@$(CROSS-COMPILER) ${ARGS} $< -c -o $@ -I include/ -I tests/
