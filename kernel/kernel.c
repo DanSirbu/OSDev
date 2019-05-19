@@ -17,6 +17,7 @@
 #include "spinlock.h"
 #include "task.h"
 #include "syscalls.h"
+#include "display.h"
 
 #include "test.h"
 #include "ramfs.h"
@@ -241,22 +242,10 @@ void kmain(multiboot_info_t *multiboot_info)
 			      multiboot_info->framebuffer_height),
 		  map_flags);
 
-	uint32_t *vga_addr = (uint32_t *)KERN_IO_BASE;
-
-	uint32_t window_width = multiboot_info->framebuffer_width;
-	uint32_t window_height = multiboot_info->framebuffer_height;
-
-	for (uint32_t col = 0; col < 256; col += 1) {
-		vga_addr = (uint32_t *)KERN_IO_BASE;
-		for (uint32_t y = 0; y < window_height; y++) {
-			for (uint32_t x = 0;
-			     x < multiboot_info->framebuffer_width; x++) {
-				uint32_t *pixel = vga_addr + x;
-				*pixel = 0xFF0000 + col;
-			}
-			vga_addr += window_width;
-		}
-	}
+	debug_print("Initializing display\n");
+	display_init((const uint32_t *)KERN_IO_BASE,
+		     multiboot_info->framebuffer_width,
+		     multiboot_info->framebuffer_height);
 
 	debug_print("Enabling Interrupts\n");
 	sti();

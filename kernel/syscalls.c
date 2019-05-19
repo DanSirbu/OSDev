@@ -3,6 +3,7 @@
 #include "syscalls.h"
 #include "fs.h"
 #include "vfs.h"
+#include "display.h"
 
 int sys_write(int fd, char *buf, int size)
 {
@@ -33,6 +34,13 @@ vptr_t sys_sbrk(uint32_t size)
 	current->process->heap = old_heap_addr + size;
 	return old_heap_addr;
 }
+vptr_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
+{
+	int z = w + h;
+	display_update(buffered_data);
+	z++;
+	return 0;
+}
 void syscall(int_regs_t *regs)
 {
 	print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
@@ -47,6 +55,8 @@ void syscall(int_regs_t *regs)
 		sys_clone(regs);
 		break;
 		DEF_SYSCALL1(5, sbrk, uint32_t, size);
+		DEF_SYSCALL3(10, update_display, size_t, w, size_t, h,
+			     uint32_t *, buffered_data);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}
