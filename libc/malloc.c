@@ -1,5 +1,6 @@
 #include "include/assert.h"
 #include "include/malloc.h"
+#include "include/syscalls.h"
 
 // Block header is 8 bytes total
 typedef struct block {
@@ -10,13 +11,11 @@ typedef struct block {
 #define B2P(mblock) (mblock + 1)
 #define P2B(mblock) (((block_t *)mblock) - 1)
 
-#define MIN(a, b) (a) < (b) ? (a) : (b)
-
 block_t *free_list;
 
-vptr_t heap_top;
-vptr_t heap_start;
-vptr_t heap_end;
+vptr_t heap_top = 0;
+vptr_t heap_start = 0;
+vptr_t heap_end = 0;
 
 void *sbrk(uint32_t size);
 void sbrk_alignto(size_t alignment);
@@ -86,8 +85,7 @@ void *malloc(size_t size)
 
 	for (cur_block = free_list; cur_block != NULL;
 	     prev_block = cur_block, cur_block = cur_block->next_free) {
-		//Note: cur_block->size == 4096: Leave page-sized blocks alone for page directories
-		if (cur_block->size < size || cur_block->size == 4096)
+		if (cur_block->size < size)
 			continue;
 
 		if (cur_block->size == size) { // Found our perfect match
@@ -103,7 +101,7 @@ void *malloc(size_t size)
 		}
 	}
 
-	// Use the smallest fit even if not ideal
+	// Use the block that fits the best (least space wasted)
 	if (curBestFit != NULL) {
 		mark_block_used(curBestFitPrevious, curBestFit);
 		return B2P(curBestFit);
@@ -138,7 +136,8 @@ void free(void *ptr)
 	if (ptr == 0) {
 		return;
 	}
-	assert(ptr < (void *)heap_start);
+	assert(ptr >= (void *)heap_start);
+	assert(ptr < (void *)heap_end);
 
 	block_t *cur_block = P2B(ptr);
 
@@ -184,15 +183,16 @@ void *sbrk(uint32_t size)
 {
 	//Initialize heap if this is the first call to it
 	if (heap_top == (vptr_t)NULL) {
-#define PGSIZE 4096
-		void *start = sbrk(PGSIZE);
-		kinit_malloc((vptr_t)start, (vptr_t)(start + PGSIZE));
+		uint32_t alloc_size =
+			0x200000; //TODO IMPORTANT make this value dynamic
+		void *start = (void *)syscall_sbrk(alloc_size);
+		kinit_malloc((vptr_t)start, (vptr_t)(start + alloc_size));
 	}
 	void *returnVal = (void *)heap_top;
 	heap_top += size;
 
 	assert(heap_top <= heap_end);
-	assert(heap_top >= heap_start); // Should never happen
+	assert(heap_top >= heap_start);
 
 	return returnVal;
 }
