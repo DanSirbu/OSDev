@@ -136,12 +136,14 @@ void exec(file_t *file)
 		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;
 		memset((void *)program_header_end, 0, ph.p_memsz - ph.p_filesz);
 
-		if (ph.p_vaddr + ph.p_filesz > heap_start) {
-			heap_start = ph.p_vaddr + ph.p_filesz;
+		if (segment_end > heap_start) {
+			heap_start = segment_end;
 		}
 	}
 	assert(heap_start != 0);
-	PG_ROUND_UP(heap_start);
+	heap_start = PG_ROUND_UP(heap_start + PGSIZE -
+				 1); //Add one guard page between code and heap
+
 	current->process->heap = heap_start;
 
 	//Setup user stack
