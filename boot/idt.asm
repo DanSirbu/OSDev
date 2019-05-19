@@ -50,6 +50,14 @@ global enter_userspace ; (entry_point, stack)
 enter_userspace:
     mov ebp, esp
 
+    ; bits 0 and 1 are requested priviledge level RPL
+    ; bit 2 is the Table Indicator (Ti), Ti = 1 -> get segment from local descriptor table
+    ; the rest of the bits are the index
+    ; USER_CODE_SEGMENT_INDEX = 3, so index = 3 << 3 = 0x18 
+    ; USER_DATA_SEGMENT_INDEX = 4, so index = 4 << 3 = 0x20
+    ; 0x18 + 3 = 0x1B
+    ; 0x20 + 3 = 0x20
+    
     mov ax,0x23
     mov ds,ax
     mov es,ax
