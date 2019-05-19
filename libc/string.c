@@ -96,3 +96,25 @@ char *strdup(const char *s)
 
 	return new_str;
 }
+int atoi(const char *nptr)
+{
+	int returnVal = 0;
+	for (size_t x = 0; x < strlen(nptr); x++) {
+		returnVal += nptr[x] - '0';
+		returnVal *= 10;
+	}
+
+	return returnVal;
+}
+
+char *strncpy(char *dest, const char *src, size_t n)
+{
+	for (size_t x = 0; x < n; x++) {
+		dest[x] = src[x];
+		if (src[x] == '\0') {
+			break;
+		}
+	}
+
+	return dest;
+}
