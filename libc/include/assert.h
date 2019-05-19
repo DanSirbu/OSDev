@@ -5,5 +5,5 @@
 	(expr) ? (void)0 :                                                     \
 		 assert_failed(#expr, __FILE__, __LINE__, __FUNCTION__)
 
-//TODO add assert_failed in userland
-#define assert_failed(unused, unused1, unused2, unused3) (void)0
+extern void assert_failed(char *statement, char *file, uint32_t line,
+			  const char *func);

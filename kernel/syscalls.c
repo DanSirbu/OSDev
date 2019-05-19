@@ -46,7 +46,7 @@ void syscall(int_regs_t *regs)
 	case 4:
 		sys_clone(regs);
 		break;
-		DEF_SYSCALL1(10, sbrk, uint32_t, size);
+		DEF_SYSCALL1(5, sbrk, uint32_t, size);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}
