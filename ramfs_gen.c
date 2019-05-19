@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
-
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
+#include <stdint.h>
 
 #define FS_FILE 0x01
 #define FS_DIRECTORY 0x02
@@ -65,14 +63,16 @@ int main(int argc1, char const *argv1[])
 	//Directory "file"
 	ramfs_dir_t *rootDir = malloc(sizeof(ramfs_dir_t));
 	rootDir->numDir = argc;
+	printf("RAMFS Files:");
 	for (int x = 0; x < argc; x++) {
 		rootDir->dirents[x].ino = x + 1;
 		char tmp[64];
 		strcpy(tmp, argv[x]);
 		char *base = basename(tmp);
-		//printf("Base: %s\n", base);
+		printf(" %s", base);
 		strcpy(rootDir->dirents[x].name, base);
 	}
+	printf("\n");
 
 	FILE *outFile = fopen(argv1[1], "w");
 
