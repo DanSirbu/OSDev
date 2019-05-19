@@ -14,7 +14,7 @@ section .text
         dd -(0x1BADB002 + FLAGS)   ;checksum. m+f+c should be zero
 				times 5 dd 0
 				dd 0 ; 0 = set graphics mode
-			  dd 1024, 768, 32 ; Width, height, depth
+			  dd 640, 480, 32 ; Width, height, depth
 
 
 global start
