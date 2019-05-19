@@ -14,5 +14,5 @@ DECL_SYSCALL3(NULL, write, int, fd, char *, buf, int, size)
 DECL_SYSCALL1(NULL, clone, void *, func);
 DECL_SYSCALL1(NULL, syscall_sbrk, uint32_t, size);
 
-void printf(char *fmt, ...);
+int printf(const char *fmt, ...);
 int exec(char *filename);

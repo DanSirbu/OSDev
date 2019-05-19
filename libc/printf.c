@@ -12,10 +12,10 @@ char print_buffer[2048];
 		out_string_index += write_size;                                \
 	} while (0)
 
-void vprintf(char *message, va_list args);
+void vprintf(const char *message, va_list args);
 void vsnprintf(char *s, size_t n, const char *message, va_list args);
 
-int printf(char *fmt, ...)
+int printf(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -112,7 +112,7 @@ void vsnprintf(char *s, size_t n, const char *message, va_list args)
 	}
 	print_buffer[out_string_index] = '\0';
 }
-void vprintf(char *format, va_list args)
+void vprintf(const char *format, va_list args)
 {
 	vsnprintf(print_buffer, sizeof(print_buffer) / sizeof(print_buffer[0]),
 		  format, args);
