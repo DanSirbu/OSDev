@@ -1,47 +1,72 @@
 #include "include/syscalls.h"
-#include <stdint.h>
-#include "string.h"
-
-#define ASCII_NUMBER_CONST 0x30
-#define ASCII_LETTER_CONST 0x57
-
-#define HEX_PREFIX "0x"
+#include "include/types.h"
+#include "include/string.h"
 
 char print_buffer[2048];
-int ii;
 
-void write_char_serial(char charVal);
-void serial_print_string(char *str);
+#define COPY_BUF(buffer)                                                       \
+	do {                                                                   \
+		int write_size =                                               \
+			MIN(n - out_string_index - 1, strlen(buffer));         \
+		strncpy(&out_string[out_string_index], buffer, write_size);    \
+		out_string_index += write_size;                                \
+	} while (0)
+
 void vprintf(char *message, va_list args);
+void vsnprintf(char *s, size_t n, const char *message, va_list args);
 
-void printf(char *fmt, ...)
+int printf(char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
 	vprintf(fmt, args);
 	va_end(args);
+
+	//TODO proper return value
+	return 0;
 }
-void vprintf(char *message, va_list args)
+int snprintf(char *s, size_t n, const char *format, ...)
 {
-	ii = 0;
+	va_list args;
+	va_start(args, format);
+	vsnprintf(s, n, format, args);
+	va_end(args);
 
-	int i = 0;
+	//TODO proper return value
+	return n;
+}
+void vsnprintf(char *s, size_t n, const char *message, va_list args)
+{
+	char *out_string = s;
+
+	size_t format_index = 0;
+	size_t out_string_index = 0;
 	uint8_t minSize = 0;
-	while (message[i] != '\0') {
-		if (message[i] == '%') {
-			i++;
+	while (message[format_index] != '\0') {
+		if (out_string_index == (n - 1)) {
+			break;
+		}
+		if (message[format_index] == '%') {
+			format_index++;
 
-			minSize = 0;
-			if ((message[i] - ASCII_NUMBER_CONST) > 0 &&
-			    (message[i] - ASCII_NUMBER_CONST) <
-				    10) { // Its a number
-				minSize = message[i] - ASCII_NUMBER_CONST;
-				i++;
+			//%%
+			if (message[format_index] == '%') {
+				out_string[out_string_index] = '%';
+				out_string_index++;
+				continue;
 			}
 
-			if (message[i] == '%') {
-				write_char_serial('%');
-			} else if (message[i] == 'x' || message[i] == 'p') {
+			//ex: %5x
+			minSize = 0;
+			while (message[format_index] >= '0' &&
+			       message[format_index] <= '9') {
+				minSize = minSize * 10 +
+					  (message[format_index] - '0');
+				format_index++;
+			}
+
+			if (message[format_index] == 'x' ||
+			    message[format_index] == 'p') {
 				char buf[256];
 				itoa(va_arg(args, size_t), buf, 16);
 
@@ -59,34 +84,43 @@ void vprintf(char *message, va_list args)
 					buf[bufLen + padding_needed] = '\0';
 				}
 
-				if (message[i] == 'p') {
-					serial_print_string(HEX_PREFIX);
+				if (message[format_index] == 'p') {
+					out_string[out_string_index] = '0';
+					out_string_index++;
+					out_string[out_string_index] = 'x';
+					out_string_index++;
 				}
-				serial_print_string(buf);
-			} else if (message[i] == 'd') {
+
+				COPY_BUF(buf);
+			} else if (message[format_index] == 'd') {
 				char buf[256];
 				itoa(va_arg(args, uint32_t), buf, 10);
-				serial_print_string(buf);
-			} else if (message[i] == 's') {
-				serial_print_string(va_arg(args, char *));
+				COPY_BUF(buf);
+			} else if (message[format_index] == 's') {
+				char *str = (va_arg(args, char *));
+
+				COPY_BUF(str);
 			}
 		} else {
-			write_char_serial(message[i]);
+			out_string[out_string_index] = message[format_index];
+			out_string_index++;
 		}
-		i++;
+		format_index++;
 	}
-
-	print_buffer[ii] = '\0';
-	write(1, print_buffer, ii);
-}
-void write_char_serial(char charVal)
-{
-	print_buffer[ii++] = charVal;
-}
-void serial_print_string(char *str)
-{
-	int i = 0;
-	while (str[i] != '\0') {
-		print_buffer[ii++] = str[i++];
+	if (out_string_index > n - 1) {
+		out_string_index = n - 1;
 	}
+	print_buffer[out_string_index] = '\0';
+}
+void vprintf(char *format, va_list args)
+{
+	vsnprintf(print_buffer, sizeof(print_buffer) / sizeof(print_buffer[0]),
+		  format, args);
+	write(1, print_buffer, strlen(print_buffer) + 1);
+}
+void assert_failed(char *statement, char *file, uint32_t line, const char *func)
+{
+	printf("ASSERT FAILED: %s at %s %d:%s\n", statement, file, line, func);
+	while (1)
+		;
 }
