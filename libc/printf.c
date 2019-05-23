@@ -8,35 +8,65 @@ char print_buffer[2048];
 	do {                                                                   \
 		int write_size =                                               \
 			MIN(n - out_string_index - 1, strlen(buffer));         \
-		strncpy(&out_string[out_string_index], buffer, write_size);    \
+		if (!onlyReturnSize) {                                         \
+			strncpy(&out_string[out_string_index], buffer,         \
+				write_size);                                   \
+		}                                                              \
 		out_string_index += write_size;                                \
 	} while (0)
 
-void vprintf(const char *message, va_list args);
-void vsnprintf(char *s, size_t n, const char *message, va_list args);
+int vprintf(const char *message, va_list args);
+int vsnprintf(char *s, size_t n, const char *message, va_list args);
 
+int fprintf(FILE *stream, const char *format, ...)
+{
+	//TODO implement
+	return 0;
+}
+int puts(const char *s)
+{
+	return printf("%s", s);
+}
 int printf(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vprintf(fmt, args);
+	int ret = vprintf(fmt, args);
 	va_end(args);
 
-	//TODO proper return value
-	return 0;
+	return ret;
+}
+
+int sprintf(char *s, const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	int ret = vsnprintf(s, SIZE_MAX, format,
+			    args); //TODO maybe? unbounded sprintf
+	va_end(args);
+
+	return ret;
 }
 int snprintf(char *s, size_t n, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	vsnprintf(s, n, format, args);
+	int ret = vsnprintf(s, n, format, args);
 	va_end(args);
 
-	//TODO proper return value
-	return n;
+	return ret;
 }
-void vsnprintf(char *s, size_t n, const char *message, va_list args)
+int vsprintf(char *str, const char *format, va_list ap)
 {
+	return vsnprintf(str, SIZE_MAX, format,
+			 ap); //TODO maybe make infinite print
+}
+int vsnprintf(char *s, size_t n, const char *message, va_list args)
+{
+	bool onlyReturnSize = false;
+	if (s == NULL || n == 0) {
+		onlyReturnSize = true;
+	}
 	char *out_string = s;
 
 	size_t format_index = 0;
@@ -51,7 +81,9 @@ void vsnprintf(char *s, size_t n, const char *message, va_list args)
 
 			//%%
 			if (message[format_index] == '%') {
-				out_string[out_string_index] = '%';
+				if (!onlyReturnSize) {
+					out_string[out_string_index] = '%';
+				}
 				out_string_index++;
 				continue;
 			}
@@ -85,9 +117,15 @@ void vsnprintf(char *s, size_t n, const char *message, va_list args)
 				}
 
 				if (message[format_index] == 'p') {
-					out_string[out_string_index] = '0';
+					if (!onlyReturnSize) {
+						out_string[out_string_index] =
+							'0';
+					}
 					out_string_index++;
-					out_string[out_string_index] = 'x';
+					if (!onlyReturnSize) {
+						out_string[out_string_index] =
+							'x';
+					}
 					out_string_index++;
 				}
 
@@ -102,7 +140,10 @@ void vsnprintf(char *s, size_t n, const char *message, va_list args)
 				COPY_BUF(str);
 			}
 		} else {
-			out_string[out_string_index] = message[format_index];
+			if (!onlyReturnSize) {
+				out_string[out_string_index] =
+					message[format_index];
+			}
 			out_string_index++;
 		}
 		format_index++;
@@ -110,17 +151,27 @@ void vsnprintf(char *s, size_t n, const char *message, va_list args)
 	if (out_string_index > n - 1) {
 		out_string_index = n - 1;
 	}
-	print_buffer[out_string_index] = '\0';
+	if (!onlyReturnSize) {
+		out_string[out_string_index] = '\0';
+	}
+	return out_string_index;
 }
-void vprintf(const char *format, va_list args)
+int vprintf(const char *format, va_list args)
 {
-	vsnprintf(print_buffer, sizeof(print_buffer) / sizeof(print_buffer[0]),
-		  format, args);
+	int ret = vsnprintf(print_buffer,
+			    sizeof(print_buffer) / sizeof(print_buffer[0]),
+			    format, args);
 	write(1, print_buffer, strlen(print_buffer) + 1);
+
+	return ret;
 }
 void assert_failed(char *statement, char *file, uint32_t line, const char *func)
 {
 	printf("ASSERT FAILED: %s at %s %d:%s\n", statement, file, line, func);
 	while (1)
 		;
+}
+int fputc(int c, FILE *stream)
+{
+	return printf("Fputc\n");
 }

@@ -19,3 +19,8 @@ typedef size_t pptr_t; //Pointer to physical memory
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+typedef void *FILE; //TODO proper file
+typedef uint32_t mode_t;
+typedef int32_t ssize_t;
+typedef size_t off_t;

@@ -1,4 +1,4 @@
-#include "string.h"
+#include "include/string.h"
 #include "include/malloc.h"
 
 size_t strlen(const char *str)
@@ -9,7 +9,7 @@ size_t strlen(const char *str)
 	}
 	return i;
 }
-void reverse(char *str)
+void reverse(const char *str)
 {
 	char *start = str;
 	char *end = str + strlen(str) - 1;
@@ -37,24 +37,14 @@ void itoa(uint32_t number, char *str, uint32_t base)
 	while (lowBytes != 0) {
 		uint32_t rem = lowBytes % base;
 		if (rem < 10) {
-			str[i] = rem + ASCII_NUMBER_CONST;
+			str[i] = rem + '0';
 		} else {
-			str[i] = rem + ASCII_LETTER_CONST;
+			str[i] = rem + '0';
 		}
 		lowBytes /= base;
 		i++;
 	}
-	/*uint32_t highBytes = (number >> 31) >> 1 & 0xFFFFFFFF; //>> 32, but IA-32
-  processors mask shift to 5 bits so max is shift is 31 while(highBytes != 0) {
-          u64 rem = highBytes % base;
-          if(rem < 10) {
-                  str[i] = rem + 0x30;
-          } else {
-                  str[i] = rem + 0x57;
-          }
-          highBytes /= base;
-          i++;
-  }*/
+
 	str[i] = '\0';
 
 	reverse(str);
@@ -76,7 +66,7 @@ void strcpy(char *dst, char *src)
 	}
 	dst[x] = '\0';
 }
-int strcmp(char *str1, char *str2)
+int strcmp(const char *str1, const char *str2)
 {
 	char *p = str1;
 	char *q = str2;
@@ -109,12 +99,145 @@ int atoi(const char *nptr)
 
 char *strncpy(char *dest, const char *src, size_t n)
 {
-	for (size_t x = 0; x < n; x++) {
+	size_t x;
+	for (x = 0; x < n; x++) {
 		dest[x] = src[x];
 		if (src[x] == '\0') {
 			break;
 		}
 	}
+	for (; x < n; x++) {
+		dest[x] = '\0';
+	}
 
 	return dest;
+}
+long int strtol(const char *nptr, char **endptr, int base)
+{
+	//TODO implement
+	return 0;
+}
+char *strcat(char *dest, const char *src)
+{
+	char *destAddr = (char *)dest;
+	while (*destAddr != '\0') {
+		destAddr++;
+	}
+	char *srcAddr = (char *)src;
+	while (*srcAddr != '\0') {
+		*destAddr = *srcAddr;
+		destAddr++;
+		srcAddr++;
+	}
+	*destAddr = '\0';
+
+	return dest;
+}
+char *strncat(char *dest, const char *src, size_t n)
+{
+	char *destAddr = (char *)dest + strlen(dest);
+
+	char *srcAddr = (char *)src;
+	size_t count = 0;
+	while (*srcAddr != '\0' && count < n) {
+		*destAddr = *srcAddr;
+		destAddr++;
+		srcAddr++;
+		count++;
+	}
+	*destAddr = '\0';
+
+	return dest;
+}
+int strncmp(const char *s1, const char *s2, size_t max_len)
+{
+	int n = max_len;
+	char *p = s1;
+	char *q = s2;
+
+	while (n > 0 && *p && *p == *q) {
+		n--;
+		p++;
+		q++;
+	}
+	if (n == 0) {
+		return 0;
+	}
+	return (int)(*p - *q);
+}
+char *strchr(const char *s, int c)
+{
+	size_t len = strlen(s) + 1; //include '\0' at end of the string
+	for (size_t x = 0; x < len; x++) {
+		if (s[x] == c) {
+			return &s[x];
+		}
+	}
+	return NULL;
+}
+char *strrchr(const char *s, int c)
+{
+	size_t len = strlen(s) + 1; //include '\0' at end of the string
+	for (size_t x = len; x >= 0; x--) {
+		if (s[x] == c) {
+			return (char *)&s[x];
+		}
+	}
+	return NULL;
+}
+bool contains(const char *input, char c)
+{
+	size_t len = strlen(input);
+	for (size_t i = 0; i < len; i++) {
+		if (input[i] == c) {
+			return true;
+		}
+	}
+	return false;
+}
+size_t strspn(const char *s, const char *accept)
+{
+	//TODO, there is a faster algo
+	size_t len = strlen(s);
+
+	size_t numOccurences = 0;
+	for (size_t x = 0; x < len; x++) {
+		if (!contains(accept, s[x])) {
+			break;
+		}
+		numOccurences++;
+	}
+	return numOccurences;
+}
+size_t strcspn(const char *s, const char *reject)
+{
+	//TODO, there is a faster algo
+	size_t len = strlen(s);
+
+	size_t numNotContains = 0;
+	for (size_t x = 0; x < len; x++) {
+		if (contains(reject, s[x])) {
+			break;
+		}
+		numNotContains++;
+	}
+	return numNotContains;
+}
+char *strtok(char *s, const char *delim)
+{
+	//TODO TAKEN FROM MUSL
+	static char *strtok_ptr;
+	if (s == NULL && !(s = strtok_ptr))
+		return NULL;
+
+	s += strspn(s, delim);
+	if (*s == NULL)
+		return strtok_ptr = 0;
+	strtok_ptr = s + strcspn(s, delim);
+	if (*strtok_ptr)
+		*strtok_ptr++ = 0;
+	else
+		strtok_ptr = 0;
+
+	return s;
 }

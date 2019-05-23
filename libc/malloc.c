@@ -197,17 +197,19 @@ void *sbrk(uint32_t size)
 	return returnVal;
 }
 
-void memset(void *ptr, char value, size_t s)
+void *memset(void *ptr, int value, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
-		((char *)ptr)[x] = value;
+		((uint8_t *)ptr)[x] = (uint8_t)(value & 0xFF);
 	}
+	return ptr;
 }
-void memcpy(void *dst, const void *src, size_t s)
+void *memcpy(void *dst, const void *src, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
 		((uint8_t *)dst)[x] = ((uint8_t *)src)[x];
 	}
+	return dst;
 }
 void *memmove(void *dest, const void *src, size_t n)
 {
@@ -227,7 +229,7 @@ int memcmp(const void *s1, const void *s2, size_t n)
 	uint8_t *p1 = (uint8_t *)s1;
 	uint8_t *p2 = (uint8_t *)s2;
 	for (size_t x = 0; x < n; x++) {
-		if (p2[x] - p1[x] != 0) {
+		if (p2[x] != p1[x]) {
 			return p2[x] - p1[x];
 		}
 	}

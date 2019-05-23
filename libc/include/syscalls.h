@@ -8,7 +8,7 @@
 #define DECL_SYSCALL3(unused, name, P1, p1, P2, p2, P3, p3)                    \
 	int name(P1 p1, P2 p2, P3 p3);
 
-DECL_SYSCALL1(NULL, exit, int, exitcode)
+DECL_SYSCALL1(NULL, _exit, int, exitcode)
 DECL_SYSCALL0(NULL, fork)
 DECL_SYSCALL3(NULL, write, int, fd, char *, buf, int, size)
 DECL_SYSCALL1(NULL, clone, void *, func);
@@ -16,3 +16,5 @@ DECL_SYSCALL1(NULL, syscall_sbrk, uint32_t, size);
 
 int printf(const char *fmt, ...);
 int exec(char *filename);
+int atexit(void (*function)(void));
+void exit(uint32_t exitcode);

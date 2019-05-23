@@ -1,4 +1,5 @@
 #include "include/ctype.h"
+#include <ctype.h>
 
 char _ctype_[256] = {
 	_C,      _C,      _C,      _C,      _C,      _C,      _C,      _C,
@@ -40,3 +41,4 @@ int toupper(int c)
 	}
 	return c;
 }
+//__ctype_toupper_loc
