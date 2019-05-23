@@ -148,8 +148,39 @@ void exec(file_t *file)
 
 	//Setup user stack
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
+#undef STACK_SIZE
+#define STACK_SIZE 0x1000 * 128
 	mmap(USTACKTOP - STACK_SIZE, STACK_SIZE, flags);
 	vptr_t stack = USTACKTOP;
+#undef STACK_SIZE
+#define STACK_SIZE 0x1000
+	char *envs[] = { "HOME", "/", NULL };
+
+	int i = 0;
+	while (envs[i] != NULL) {
+		i++;
+	}
+	i++;
+
+	uint32_t env_num_items = i;
+	//uint32_t env_num_items = sizeof(envs) / sizeof(envs[0]); //this creates a movsd instruction for some reason
+	char *envs_ptr[env_num_items];
+
+	for (size_t x = 0; envs[x] != NULL; x++) {
+		uint32_t env_size = strlen(envs[x]) + 1;
+		stack -= env_size;
+		memcpy(stack, envs[x], env_size);
+		envs_ptr[x] = stack;
+	}
+	envs_ptr[env_num_items - 1] = NULL;
+
+	for (int x = env_num_items - 1; x >= 0; x--) {
+		if (x < 0) {
+			debug_print("WTF!\n");
+		}
+		PUSH(stack, char *, envs_ptr[x]);
+	}
+	PUSH(stack, char **, stack + sizeof(char **));
 
 	PUSH(stack, vptr_t, 0); //argv
 	PUSH(stack, size_t, 0); //argc
