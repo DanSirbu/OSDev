@@ -92,10 +92,10 @@ int strncmp(char *str1, char *str2, size_t max_len)
 	return (int)(*p - *q);
 }
 
-int strcmp(char *str1, char *str2)
+int strcmp(const char *str1, const char *str2)
 {
-	char *p = str1;
-	char *q = str2;
+	char *p = (char *)str1;
+	char *q = (char *)str2;
 
 	while (*p && *p == *q) {
 		p++;
