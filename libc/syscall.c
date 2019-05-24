@@ -1,14 +1,15 @@
 #include "include/sys.h"
 #include "include/syscalls.h"
 #include "types.h"
+#include "coraxstd.h"
 
-DEF_SYSCALL1(1, _exit, int, exitcode)
-DEF_SYSCALL0(2, fork)
-DEF_SYSCALL3(4, write, int, fd, char *, buf, int, size)
+DEF_SYSCALL1(__NR_exit, _exit, int, exitcode)
+DEF_SYSCALL0(__NR_fork, fork)
+DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
 
-DEF_SYSCALL1(3, exec, char *, filename)
-DEF_SYSCALL2(5, clone2, void *, fn, void *, target_fn);
-DEF_SYSCALL1(6, syscall_sbrk, uint32_t, size);
+DEF_SYSCALL1(__NR_execve, exec, char *, filename)
+DEF_SYSCALL2(__NR_clone, clone2, void *, fn, void *, target_fn);
+DEF_SYSCALL1(__NR_sbrk, syscall_sbrk, uint32_t, size);
 
 void (*exit_funcs[10])(void);
 

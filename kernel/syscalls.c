@@ -4,6 +4,7 @@
 #include "fs.h"
 #include "vfs.h"
 #include "display.h"
+#include "coraxstd.h"
 
 int sys_write(int fd, char *buf, int size)
 {
@@ -45,16 +46,16 @@ void syscall(int_regs_t *regs)
 {
 	print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
 	switch (regs->eax) {
-		DEF_SYSCALL1(1, exit, int, exitcode)
-	case 2:
-		regs->eax = sys_fork(regs); //Special case
+		DEF_SYSCALL1(__NR_exit, exit, int, exitcode)
+	case __NR_fork:
+		regs->eax = sys_fork(regs);
 		break;
-		DEF_SYSCALL3(4, write, int, fd, char *, buf, int, size)
-		DEF_SYSCALL1(3, exec, char *, filename);
-	case 5:
+		DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
+		DEF_SYSCALL1(__NR_execve, exec, char *, filename);
+	case __NR_clone:
 		sys_clone(regs);
 		break;
-		DEF_SYSCALL1(6, sbrk, uint32_t, size);
+		DEF_SYSCALL1(__NR_sbrk, sbrk, uint32_t, size);
 		DEF_SYSCALL3(10, update_display, size_t, w, size_t, h,
 			     uint32_t *, buffered_data);
 	default:
