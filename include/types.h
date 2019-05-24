@@ -16,3 +16,6 @@ typedef size_t pptr_t; //Pointer to physical memory
 
 #define cli() asm volatile("cli")
 #define sti() asm volatile("sti")
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))

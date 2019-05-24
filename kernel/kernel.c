@@ -85,6 +85,7 @@ void test_process2(vptr_t args)
 }*/
 //extern process_t task[];
 //extern volatile process_t *current;
+
 extern void get_func_info(uint32_t addr, char **name, char **file);
 extern void dump_stack_trace();
 
@@ -98,11 +99,15 @@ void test1()
 }
 extern char _kernel_end;
 extern inode_t *(*dummy_find_child)();
+
+size_t kern_max_address;
 void kmain(multiboot_info_t *multiboot_info)
 {
 	cli();
 	init_serial();
 	debug_print("Flags: 0x%x\n", multiboot_info->flags);
+
+	assert(multiboot_info->flags & MULTIBOOT_INFO_MODS);
 
 	assert(multiboot_info->mods_count == 1);
 	multiboot_module_t *modules =
@@ -114,8 +119,26 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	debug_print("Kernel ends at 0x%x\n", &_kernel_end);
 
-	assert(modules[multiboot_info->mods_count - 1].mod_end <
-	       (vptr_t)&_kernel_end); //Future me will deal with this
+	if (multiboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
+		//Section header table
+		multiboot_elf_section_header_table_t sec_info =
+			multiboot_info->u.elf_sec;
+		assert(sec_info.num != 0);
+
+		size_t sections_end =
+			sec_info.addr + (sec_info.num * sec_info.size);
+
+		debug_print("Section start: 0x%x\n", sec_info.addr);
+		debug_print("Section end: 0x%x\n", sections_end);
+
+		//Update kernel end pointer
+		kern_max_address = MAX(kern_max_address, sections_end);
+	}
+
+	//Update kernel end pointer
+	kern_max_address = MAX(kern_max_address, modules[0].mod_end);
+	kern_max_address = MAX(kern_max_address, &_kernel_end - KERN_BASE);
+	kern_max_address = LPG_ROUND_UP(kern_max_address);
 
 	initialize_gdt();
 	initialize_tss();
@@ -126,13 +149,10 @@ void kmain(multiboot_info_t *multiboot_info)
 	print_memory_map(multiboot_info->mmap_addr,
 			 multiboot_info->mmap_length);
 
-	//test1();
-
-	//We are guaranteed to have a 4MB heap (large page) at this point
-	kinit_malloc((vptr_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
 	//Switch to 2-level paging (2 level)
 	debug_print("Paging init\n");
-	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length);
+	paging_init(multiboot_info->mmap_addr, multiboot_info->mmap_length,
+		    kern_max_address);
 	debug_print("Paging init finished\n");
 	//Malloc can now use the full heap
 	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);

@@ -9,7 +9,7 @@ extern char _kernel_end;
 
 void page_fault_handler(int_regs_t *regs);
 
-extern page_directory_t *boot_page_directory;
+extern void *boot_page_directory;
 page_directory_t *current_directory;
 page_directory_t *kernel_page_directory;
 
@@ -19,12 +19,14 @@ int PAGING_INIT = 0;
  * 
  * If paging has not been initialized (PAGING_INIT = 0), then this method returns ONLY the address of frames on the heap
  */
+extern size_t kern_max_address;
 pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
 {
-	if (!PAGING_INIT) {
-		//Initial heap is right after the kernel_end
-		return (addr - KERN_HEAP_START) +
-		       ((size_t)&_kernel_end - KERN_BASE);
+	if (!PAGING_INIT) { //TODO maybe: get rid of this ugly hack
+		print(LOG_INFO,
+		      "virtual_to_physical: not using page table entry yet\n");
+		//Initial heap is right after the kernel_max_size
+		return (addr - KERN_HEAP_START) + kern_max_address;
 	}
 	size_t pdx = PDX(addr);
 	size_t ptx = PTX(addr);
@@ -145,12 +147,22 @@ void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr)
 	page_entry->present = 1;
 }
 
-void paging_init(size_t memory_map_base, size_t memory_map_full_len)
+void paging_init(size_t memory_map_base, size_t memory_map_full_len,
+		 size_t kernel_end_phy_addr)
 {
+	//We need an initial heap to create some structures
+	//So we map the first 4 MB starting at kernel_end_phy_addr to KERN_HEAP_START
+	((uint32_t *)&boot_page_directory)[KERN_HEAP_START >> 22] =
+		(uint32_t)(kernel_end_phy_addr | 0x83);
+	invlpg(KERN_HEAP_START);
+	//LoadNewPageDirectory(
+	//	(pptr_t)((void *)&boot_page_directory - KERN_BASE));
+	kinit_malloc((vptr_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
+	//4 MB heap initialized
+	debug_print("Paging init: Initial heap initialized\n");
+
 	frame_init(memory_map_base, memory_map_full_len);
 	register_isr_handler(TRAP_PAGE_FAULT, page_fault_handler);
-
-	size_t kernel_end_phy_addr = (size_t)&_kernel_end - KERN_BASE;
 
 	//Mark kernel in use
 	for (uint32_t i = 0; i < kernel_end_phy_addr; i += PGSIZE) {
@@ -171,16 +183,14 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len)
 	mmap_flags_t flags = { .IGNORE_FRAME_REUSE = 1 };
 	//Map kernel code
 	mmap_addr(KERN_BASE, 0x0, kernel_end_phy_addr, flags);
-
 	//First 4MB of heap are mapped already by the boot_page_directory
-	flags.bits = 0;
-	flags.IGNORE_FRAME_REUSE = 1;
-	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, 0x400000, flags);
+	mmap_addr(KERN_HEAP_START, kernel_end_phy_addr, LPGSIZE, flags);
 
-	//Map the rest of it
+	//Map the rest of the heap
 	flags.bits = 0;
-	mmap(KERN_HEAP_START + 0x400000,
-	     KERN_HEAP_END - KERN_HEAP_START - 0x400000, flags);
+	mmap(KERN_HEAP_START + LPGSIZE,
+	     KERN_HEAP_END - KERN_HEAP_START - PGSIZE,
+	     flags); //-PGSIZE = Leave a guard page
 
 	switch_page_directory(current_directory); //Load the new page directory
 	DisablePSE(); //Disable 4 MiB pages

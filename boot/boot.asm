@@ -49,10 +49,7 @@ load_idt:
 	ret
 
 KERN_BASE equ 0xC0000000
-KERN_HEAP equ 0xD0000000
-
-KERN_PAGE_NUM equ KERN_BASE >> 22
-KERN_HEAP_NUM equ KERN_HEAP >> 22
+KERN_BASE_INDEX equ KERN_BASE >> 22
 
 KERNEL_STACK_SIZE equ 4096
 
@@ -61,43 +58,55 @@ align 0x1000
 boot_page_directory:
 	times 4096 dd 0
 
-_kernel_end_num: dd 0
-
 boot_page_directory_phy equ (boot_page_directory - KERN_BASE)
-_kernel_end_phy equ (_kernel_end - KERN_BASE)
-_kernel_end_num_phy equ (_kernel_end_num - KERN_BASE)
+
+
+KERNEL_END_PHY equ (_kernel_end - KERN_BASE)
+
+KERNEL_END_PHY_INDEX dd 0 ; EQU (KERNEL_END_PHY >> 22)
+KERNEL_END_INDEX dd 0 ; EQU (_kernel_end >> 22)
+
 
 section .text
 start:
 	;cli 				;block interrupts
-	; Carefull not to mess up ebx, it is the multiboot header pointer 
+	; Careful not to mess up ebx, it is the multiboot header pointer 
 
-	; Set _kernel_end_num (i.e. the index in boot_page_directory where _kernel_end is)
-	mov edi, _kernel_end
-	shr edi, 22
-	mov [_kernel_end_num_phy], edi
+	; Set up constants
+	;;;;;;;;;;;;;;;;;;;;;;
+	mov eax, KERNEL_END_PHY
+	shr eax, 22
+	mov [KERNEL_END_PHY_INDEX], eax
 
-	; Identity mapping
-	mov [boot_page_directory_phy], dword 0x00000083
+	mov eax, _kernel_end
+	shr eax, 22
+	mov [KERNEL_END_INDEX], eax
+	;;;;;;;;;;;;;;;;;;;;;;
 
-	; esi = index
-	; edi = physical address + flags
-	mov esi, KERN_PAGE_NUM
-	mov edi, 0x00000083
-map_kernel_code:
+
+	; map 0->kernel_end_phy to 0->kernel_end_phy
+	mov esi, 0 ; index in boot_page_directory
+	mov edi, 0x00000083  ; physical address + flags entry
+map_identity:
+	mov [boot_page_directory_phy + esi * 4], edi
+
+	inc esi ; next index
+	add edi, 0x00400000 ; Next 4MB
+
+	cmp esi, KERNEL_END_PHY_INDEX
+	jl map_identity
+
+	; map 0->kernel_end_phy to KERN_BASE -> KERN_BASE + kernel_end_phy
+	mov esi, KERN_BASE_INDEX ; index in boot_page_directory
+	mov edi, 0x00000083 ; physical address + flags entry
+map_higher_half:
 	mov [boot_page_directory_phy + esi * 4], edi
 
 	inc esi
 	add edi, 0x00400000 ; Next 4MB
 
-	cmp esi, [_kernel_end_num_phy]
-	jl map_kernel_code
-
-	; Map first 4MB of heap to _kernel_end
-	mov esi, KERN_HEAP_NUM
-	mov edi, _kernel_end_phy
-	or edi, 0x83
-	mov [boot_page_directory_phy + esi * 4], edi
+	cmp esi, KERNEL_END_INDEX
+	jl map_higher_half
 	 
 
 	; Write boot_page_directory to cpu
@@ -127,8 +136,8 @@ DisablePSE:
 	ret
 
 StartHigherHalf:
-	mov dword [boot_page_directory], 0
-	invlpg [0]
+	; mov dword [boot_page_directory], 0
+	; invlpg [0]
 
 	mov esp, kernel_stack_lowest_address + KERNEL_STACK_SIZE
 
@@ -231,4 +240,4 @@ global kernel_stack_lowest_address
 section .bss
 align 4
 kernel_stack_lowest_address:
-resb KERNEL_STACK_SIZE; 8KB for stack
+resb KERNEL_STACK_SIZE
