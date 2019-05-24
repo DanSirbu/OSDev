@@ -23,7 +23,7 @@ CROSS-COMPILER:=clang#$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
 ARGS = -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common
-ARGS += -Wall -Wextra -Werror -Wno-int-to-pointer-cast -m32
+ARGS += -Wall -Wextra -Wno-int-to-pointer-cast -m32
 QEMU-ARGS = -no-shutdown -no-reboot -s -m 512M
 
 GCC-APPS-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -I./libc/ -m32
@@ -61,7 +61,7 @@ $(OBJDIR)/kernel.elf: ${OBJFILES}
 obj/ramfs.img: ${APPS-OBJ} ramfs_gen libc
 	@./ramfs_gen $@ obj/apps/*
 
-.PHONY: obj/ramfs.img
+.PHONY: obj/ramfs.img install-app
 
 ramfs_gen: ramfs_gen.c
 	$(CROSS-COMPILER) $< -o $@
@@ -79,7 +79,7 @@ $(OBJDIR)/%: %.c mkdirectories ${LIBC-OBJ}
 	@$(CROSS-COMPILER) ${GCC-APPS-ARGS} ${LIBC-OBJ} $< -o $@
 
 libc: ${LIBC-OBJ}
-	$(CROSS-LINKER) -r ${LIBC-OBJ} -o obj/libc/libcoraxlibc.a
+	$(CROSS-LINKER) -r ${LIBC-OBJ} -o obj/libc/libcorax.a
 
 mkdirectories:
 	@mkdir -p $(OBJDIRS)
@@ -98,3 +98,6 @@ os.iso: $(OBJDIR)/kernel.elf obj/ramfs.img
 	cp obj/kernel.elf isofiles/boot/kernel.elf
 	cp obj/ramfs.img isofiles/boot/ramfs.img
 	grub-mkrescue -o os.iso isofiles
+
+install-app:
+	cp /home/admin/prboom/games/prboom /home/admin/Github/mkeykernel/obj/apps/testProgram.a
