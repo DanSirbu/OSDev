@@ -113,5 +113,5 @@ int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size)
 
 	memcpy(buf, (void *)file_start, size);
 
-	return 0;
+	return size;
 }

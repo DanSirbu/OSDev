@@ -146,6 +146,7 @@ typedef struct {
 typedef struct file {
 	//path_t *path;
 	inode_t *f_inode;
+	size_t offset;
 } file_t;
 
 int vfs_read(file_t *file, void *buf, size_t count, size_t offset);

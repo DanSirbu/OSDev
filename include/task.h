@@ -48,6 +48,9 @@ typedef struct {
 	vptr_t heap;
 
 	list_t *threads;
+
+	file_t *files[10];
+	size_t lastFileIndex;
 } process_t;
 
 typedef struct {

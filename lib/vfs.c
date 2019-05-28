@@ -139,6 +139,7 @@ file_t *vfs_open(char *path)
 
 	file_t *file = kmalloc(sizeof(file_t));
 	file->f_inode = inode;
+	file->offset = 0;
 	//file->path = cur;
 
 	return file;
