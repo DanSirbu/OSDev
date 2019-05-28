@@ -1,4 +1,4 @@
-#include "include/syscalls.h"
+#include "syscalls.h"
 
 void testFunc()
 {
@@ -19,7 +19,10 @@ int main()
 		} else {
 			printf("I'm just a normal child\n");
 			//clone(testFunc);
-			exec("/testProgram.a");
+			int res = exec("/testProgram.a");
+			if (res == -1) {
+				printf("ERROR: Exec testProgram failed\n");
+			}
 		}
 	} else {
 		printf("I'm a parent process! Child pid: %d\n", y);
