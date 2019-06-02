@@ -5,6 +5,7 @@
 #include "vfs.h"
 #include "display.h"
 #include "coraxstd.h"
+#include "debug.h"
 
 int sys_write(int fd, char *buf, int size)
 {
@@ -26,7 +27,7 @@ char **copy_arr(char *arr[])
 	newArray[numItems] = NULL;
 
 	return newArray;
-	}
+}
 int sys_execve(const char *filename, char *args1[], char *envs1[])
 {
 	char **args = { filename, NULL };
@@ -137,7 +138,11 @@ int sys_seek(int fd, long int offset, int whence)
 }
 void syscall(int_regs_t *regs)
 {
-	print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
+	if (getSyscallName(regs->eax) != NULL) {
+		print(LOG_INFO, "Syscall %s\n", getSyscallName(regs->eax));
+	} else {
+		print(LOG_INFO, "Syscall 0x%x\n", regs->eax);
+	}
 
 	switch (regs->eax) {
 		DEF_SYSCALL1(__NR_exit, exit, int, exitcode)
