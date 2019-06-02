@@ -1,12 +1,19 @@
-#include "include/implementme.h"
-#include "include/syscalls.h"
-#include "include/assert.h"
+#include "implementme.h"
+#include "syscalls.h"
+#include "assert.h"
+#include "coraxstd.h"
 
-int stdin = 0, stdout = 1, stderr = 2;
+FILE stdin_f = { .fd = STDIN_FILENO };
+FILE stdout_f = { .fd = STDOUT_FILENO };
+FILE stderr_f = { .fd = STDERR_FILENO };
+
+FILE *stdin = &stdin_f;
+FILE *stdout = &stdout_f;
+FILE *stderr = &stderr_f;
 
 void sigaction(void)
 {
-	printf("DEBUG: sigaction\n");
+	printf("IMPLEMENT: sigaction\n");
 }
 extern char **environ;
 char *getenv(const char *name)
@@ -25,14 +32,30 @@ char *getenv(const char *name)
 
 void raise(void)
 {
+	printf("IMPLEMENT: raise\n");
 }
 int strcasecmp(const char *s1, const char *s2)
 {
-	return 0; //TODO
+	char *p1 = s1;
+	char *p2 = s2;
+	while (tolower(*p1) == tolower(*p2)) {
+		if (*p1 == '\0') {
+			return 0;
+		}
+		p1++;
+		p2++;
+	}
+	return tolower(*p1) - tolower(*p2);
 }
 int strncasecmp(const char *s1, const char *s2, size_t n)
 {
-	return 0; //IMPLEMENT
+	size_t i;
+	for (i = 0; i < n; i++) {
+		if (tolower(s1[i]) != tolower(s2[i])) {
+			break;
+		}
+	}
+	return tolower(s1[i]) - tolower(s2[i]);
 }
 
 FILE *fopen(const char *pathname, const char *mode)
@@ -42,7 +65,7 @@ FILE *fopen(const char *pathname, const char *mode)
 		return NULL;
 	}
 
-	FILE *file = malloc(sizeof(FILE));
+	FILE *file = (FILE *)malloc(sizeof(FILE));
 	file->fd = fd;
 
 	return file;
@@ -56,53 +79,101 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 }
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	printf("Fwrite: TODO\n");
+	assert(stream != NULL);
+	return write(stream->fd, ptr, size * nmemb) / size;
 }
 int fseek(FILE *stream, long offset, int whence)
 {
 	assert(stream != NULL);
-	return call_seek(stream->fd, offset, whence);
+	long int ret = call_seek(stream->fd, offset, whence);
+	if (ret == -1) {
+		return -1;
+	}
+	return 0;
 }
 int fclose(FILE *stream)
 {
-	printf("Fclose\n");
+	printf("CLOSE F\n");
+	return 0;
 }
 int fgetc(FILE *stream)
 {
-	printf("Fgetc: TODO\n");
+	uint8_t buf;
+	int ret = fread(
+		&buf, 1, 1,
+		stream); //TODO, this is highly inefficient, create a buffer in FILE
+
+	if (ret < 0) {
+		return ret;
+	}
+	return buf;
+}
+int getc(FILE *stream)
+{
+	return fgetc(stream);
+}
+int ungetc(int c, FILE *stream)
+{
+	printf("IMPLEMENT: ungetc\n");
+	return -1;
 }
 char *fgets(char *s, int size, FILE *stream)
 {
-	printf("Fgets: %s\n", s);
+	assert(s != NULL);
+
+	if (size <= 1) { //Can't read negative
+		if (size - 1 != 0)
+			return 0;
+		*s = 0;
+		return s;
+	}
+	int ret = read(stream->fd, s, size);
+	if (ret <= 0) {
+		return NULL;
+	}
+	for (int x = 0; x < size; x++) {
+		if (s[x] == '\n') {
+			fseek(stream, (x + 1) - size, SEEK_CUR);
+			s[x + 1] = '\0';
+			break;
+		}
+	}
+
+	return s;
 }
 int feof(FILE *stream)
 {
-	printf("feof \n");
+	printf("IMPLEMENT: feof\n");
 }
 int __isoc99_sscanf(const char *str, const char *format, ...)
 {
-	printf("sscanf: %s\n", str);
 }
 void *memchr(const void *s, int c, size_t n)
 {
-	printf("memchr \n");
-	return s;
+	uint8_t *cur = s;
+	for (size_t i = 0; i < n; i++) {
+		if (cur[i] == (uint8_t)c) {
+			return &cur[i];
+		}
+	}
+	return NULL;
 }
 int __isoc99_fscanf(FILE *stream, const char *format, ...)
 {
-	printf("fscanf: \n");
+	printf("IMPLEMENT: fscanf: %s\n", format);
 }
 int isatty(int fd)
 {
-	//TODO implement
+	printf("IMPLEMENT: isatty\n");
 	return 0; //1 if terminal or 0
 }
 void setbuf(FILE *stream, char *buf)
 {
-	printf("Setbuf\n");
+	printf("IMPLEMENT: setbuf\n");
 }
 int remove(const char *pathname)
 {
+	printf("IMPLEMENT: remove\n");
 	//unlink for files
 	//rmdir for directories
 	//todo
@@ -110,6 +181,7 @@ int remove(const char *pathname)
 }
 int mkdir(const char *path, mode_t mode)
 {
+	printf("IMPLEMENT: mkdir\n");
 	return 0; //TODO
 }
 ssize_t read(int fildes, void *buf, size_t nbyte)
@@ -118,19 +190,22 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
 }
 int ferror(FILE *stream)
 {
-	printf("ferror \n");
+	printf("IMPLEMENT: isatty\n");
+	return 0;
 }
 char *strerror(int errnum)
 {
-	printf("strerror\n");
+	printf("IMPLEMENT: strerror\n");
+	return "";
 }
 long ftell(FILE *stream)
 {
-	printf("ftell\n");
+	printf("IMPLEMENT: ftell\n");
+	return 0;
 }
 off_t lseek(int fildes, off_t offset, int whence)
 {
-	printf("lseek\n");
+	return call_seek(fildes, offset, whence);
 }
 int open(const char *path, int oflag, ...)
 {
@@ -154,16 +229,13 @@ int *__errno_location()
 /* Get information about the file descriptor FD in BUF.  */
 int __fxstat(int vers, int fd, struct stat *buf)
 {
+	printf("IMPLEMENT: fxstat\n");
 	return 0;
 }
 //From glibc
 /* Get information about the file NAME in BUF.  */
 int __xstat(int vers, const char *name, struct stat *buf)
 {
+	printf("IMPLEMENT: xstat\n");
 	return -1;
 }
-/*void __stack_chk_fail_local()
-{
-	//noop
-}*/
-//strspn strcspn strpbrk

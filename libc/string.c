@@ -57,7 +57,7 @@ void strcpy_max_len(char *src, char *dest, uint32_t maxLen)
 	}
 	dest[x] = '\0';
 }
-void strcpy(char *dst, char *src)
+char *strcpy(char *dst, char *src)
 {
 	uint32_t len = strlen(src);
 	uint32_t x;
@@ -65,6 +65,8 @@ void strcpy(char *dst, char *src)
 		dst[x] = src[x];
 	}
 	dst[x] = '\0';
+
+	return dst;
 }
 int strcmp(const char *str1, const char *str2)
 {
@@ -111,11 +113,6 @@ char *strncpy(char *dest, const char *src, size_t n)
 	}
 
 	return dest;
-}
-long int strtol(const char *nptr, char **endptr, int base)
-{
-	//TODO implement
-	return 0;
 }
 char *strcat(char *dest, const char *src)
 {
@@ -223,15 +220,16 @@ size_t strcspn(const char *s, const char *reject)
 	}
 	return numNotContains;
 }
+
 char *strtok(char *s, const char *delim)
 {
 	//TODO TAKEN FROM MUSL
 	static char *strtok_ptr;
-	if (s == NULL && !(s = strtok_ptr))
+	if (s == '\0' && !(s = strtok_ptr))
 		return NULL;
 
 	s += strspn(s, delim);
-	if (*s == NULL)
+	if (*s == '\0')
 		return strtok_ptr = 0;
 	strtok_ptr = s + strcspn(s, delim);
 	if (*strtok_ptr)

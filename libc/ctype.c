@@ -27,18 +27,28 @@ const unsigned short int **__ctype_b_loc(void)
 
 int tolower(int c)
 {
-	if (c >= 'A' && c <= 'Z') {
-		return c - 'A' + 'a';
+	if (c == '\0') {
+		return '\0';
 	}
-	return c;
+	const int32_t **tbl = __ctype_tolower_loc();
+	int32_t ret = (*tbl)[c];
+	if (ret == 0) {
+		return c;
+	}
+	return ret;
 }
 
 /* Return the uppercase version of C.  */
 int toupper(int c)
 {
-	if (c >= 'a' && c <= 'z') {
-		return c - 'a' + 'A';
+	if (c == '\0') {
+		return '\0';
 	}
-	return c;
+	const int32_t **tbl = __ctype_toupper_loc();
+	int32_t ret = (*tbl)[c];
+	if (ret == 0) {
+		return c;
+	}
+	return ret;
 }
 //__ctype_toupper_loc

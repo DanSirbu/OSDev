@@ -16,7 +16,8 @@ DECL_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 
 DECL_SYSCALL1(__NR_open, sys_open, const char *, path);
 DECL_SYSCALL3(__NR_read, call_read, int, fd, void *, buf, size_t, n);
-DECL_SYSCALL3(__NR_seek, call_seek, int, fd, size_t, offset, int, whence);
+DECL_SYSCALL3(__NR_seek, call_seek, int, fd, long int, offset, int, whence);
+
 
 int printf(const char *fmt, ...);
 int exec(char *filename);

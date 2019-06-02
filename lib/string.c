@@ -66,7 +66,7 @@ void strcpy_max_len(char *src, char *dest, uint32_t maxLen)
 	}
 	dest[x] = '\0';
 }
-void strcpy(char *dst, char *src)
+char *strcpy(char *dst, char *src)
 {
 	uint32_t len = strlen(src);
 	uint32_t x;
@@ -74,6 +74,8 @@ void strcpy(char *dst, char *src)
 		dst[x] = src[x];
 	}
 	dst[x] = '\0';
+
+	return dst;
 }
 int strncmp(char *str1, char *str2, size_t max_len)
 {
@@ -102,4 +104,12 @@ int strcmp(const char *str1, const char *str2)
 		q++;
 	}
 	return (int)(*p - *q);
+}
+
+size_t array_length(char *arr[])
+{
+	size_t i;
+	for (i = 0; arr[i] != NULL; i++)
+		;
+	return i;
 }

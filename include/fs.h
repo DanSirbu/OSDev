@@ -148,5 +148,3 @@ typedef struct file {
 	inode_t *f_inode;
 	size_t offset;
 } file_t;
-
-int vfs_read(file_t *file, void *buf, size_t count, size_t offset);

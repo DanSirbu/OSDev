@@ -13,6 +13,9 @@ int fseek(FILE *stream, long offset, int whence);
 int fclose(FILE *stream);
 char *fgets(char *s, int size, FILE *stream);
 int feof(FILE *stream);
+int getc(FILE *stream);
+int ungetc(int c, FILE *stream);
+ssize_t read(int fildes, void *buf, size_t nbyte);
 
 int __isoc99_sscanf(const char *str, const char *format, ...);
 char *strtok(char *str, const char *delim);

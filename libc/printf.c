@@ -1,6 +1,7 @@
 #include "include/syscalls.h"
 #include "include/types.h"
 #include "include/string.h"
+#include "include/assert.h"
 
 char print_buffer[2048];
 
@@ -20,8 +21,15 @@ int vsnprintf(char *s, size_t n, const char *message, va_list args);
 
 int fprintf(FILE *stream, const char *format, ...)
 {
-	//TODO implement
-	return 0;
+	assert(stream != NULL);
+	//TODO handle other than stdout
+	assert_msg(stream->fd == 1 || stream->fd == 2, "FD: %d\n", stream->fd);
+
+	va_list args;
+	va_start(args, format);
+	int ret = vprintf(format, args);
+	va_end(args);
+	return ret;
 }
 int puts(const char *s)
 {
@@ -78,6 +86,10 @@ int vsnprintf(char *s, size_t n, const char *message, va_list args)
 		}
 		if (message[format_index] == '%') {
 			format_index++;
+			if (message[format_index] ==
+			    '.') { //TODO, handle dot, ignore for now
+				format_index++;
+			}
 
 			//%%
 			if (message[format_index] == '%') {
@@ -165,13 +177,22 @@ int vprintf(const char *format, va_list args)
 
 	return ret;
 }
-void assert_failed(char *statement, char *file, uint32_t line, const char *func)
+void assert_failed(char *statement, char *file, uint32_t line, const char *func,
+		   char *format, ...)
 {
-	printf("ASSERT FAILED: %s at %s %d:%s\n", statement, file, line, func);
+	printf("ASSERT FAILED: %s at %s %d:%s   - ", statement, file, line,
+	       func);
+
+	va_list args;
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
+
+	printf("\n");
 	while (1)
 		;
 }
 int fputc(int c, FILE *stream)
 {
-	return printf("Fputc\n");
+	return write(stream->fd, &c, 1);
 }

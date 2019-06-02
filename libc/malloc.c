@@ -119,21 +119,27 @@ void *calloc(size_t size)
 	memset(ptr, 0, size);
 	return ptr;
 }
-void *realloc(void *ptr, size_t size)
+void *realloc(void *ptr, size_t newSize)
 {
-	void *new_ptr = malloc(size);
+	if (newSize == 0 && ptr != NULL) {
+		free(ptr);
+		return NULL;
+	}
+	void *new_ptr = malloc(newSize);
 	if (new_ptr == NULL) {
 		return NULL;
 	}
-	block_t *ptr_block = P2B(ptr);
-	size_t new_size = MIN(ptr_block->size, ptr_block->size);
-	memcpy(new_ptr, ptr, new_size);
+	if (ptr == NULL) {
+		return new_ptr;
+	}
+	block_t *old_block = P2B(ptr);
+	memcpy(new_ptr, ptr, MIN(old_block->size, newSize));
 	free(ptr);
 	return new_ptr;
 }
 void free(void *ptr)
 {
-	if (ptr == 0) {
+	if (ptr == NULL) {
 		return;
 	}
 	assert(ptr >= (void *)heap_start);

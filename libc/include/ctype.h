@@ -1,4 +1,5 @@
 #pragma once
+#include "types.h"
 
 const unsigned short int **__ctype_b_loc(void);
 

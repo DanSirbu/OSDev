@@ -44,10 +44,13 @@ vptr_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
 }
 size_t sys_access(const char *path, int amode)
 {
+	print(LOG_INFO, "Access: %s\n", path);
 	//TODO use amode
-	if (vfs_open(path) == NULL) {
+	file_t *file = vfs_open(path);
+	if (file == NULL) {
 		return -1;
 	}
+	vfs_close(file);
 	return 0;
 }
 size_t sys_open(const char *path)
@@ -90,7 +93,7 @@ uint32_t sys_read(int fd, void *buf, size_t n)
 
 	return readAmount;
 }
-int sys_seek(int fd, size_t offset, int whence)
+int sys_seek(int fd, long int offset, int whence)
 {
 	file_t *file = getProcessFile(fd);
 	if (file == NULL) {
@@ -98,8 +101,12 @@ int sys_seek(int fd, size_t offset, int whence)
 	}
 
 	if (whence == SEEK_SET) {
+		assert(offset >= 0); //TODO handle < 0
 		file->offset = offset;
 	} else if (whence == SEEK_CUR) {
+		if (offset < 0) {
+			assert(-offset < file->offset); //TODO handle this case
+		}
 		file->offset += offset;
 	} else {
 		print(LOG_ERROR, "UNIMPLEMENTED: seek with whence %d\n",
@@ -107,7 +114,7 @@ int sys_seek(int fd, size_t offset, int whence)
 		return -1;
 	}
 
-	return 0;
+	return file->offset;
 }
 void syscall(int_regs_t *regs)
 {
@@ -118,8 +125,8 @@ void syscall(int_regs_t *regs)
 	case __NR_fork:
 		regs->eax = sys_fork(regs);
 		break;
-		DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
-		DEF_SYSCALL1(__NR_execve, exec, char *, filename);
+		DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int,
+			     size);
 	case __NR_clone:
 		sys_clone(regs);
 		break;
@@ -131,7 +138,7 @@ void syscall(int_regs_t *regs)
 
 		DEF_SYSCALL1(__NR_open, open, const char *, path);
 		DEF_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n);
-		DEF_SYSCALL3(__NR_seek, seek, int, fd, size_t, offset, int,
+		DEF_SYSCALL3(__NR_seek, seek, int, fd, long int, offset, int,
 			     whence);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
