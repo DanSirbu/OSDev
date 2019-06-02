@@ -7,7 +7,8 @@ DEF_SYSCALL1(__NR_exit, _exit, int, exitcode)
 DEF_SYSCALL0(__NR_fork, fork)
 DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
 
-DEF_SYSCALL1(__NR_execve, exec, char *, filename)
+DEF_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
+	     char **, envs);
 DEF_SYSCALL2(__NR_clone, clone2, void *, fn, void *, target_fn);
 DEF_SYSCALL1(__NR_sbrk, syscall_sbrk, uint32_t, size);
 DEF_SYSCALL2(__NR_access, access, const char *, path, int, amode);

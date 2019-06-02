@@ -18,8 +18,9 @@ DECL_SYSCALL1(__NR_open, sys_open, const char *, path);
 DECL_SYSCALL3(__NR_read, call_read, int, fd, void *, buf, size_t, n);
 DECL_SYSCALL3(__NR_seek, call_seek, int, fd, long int, offset, int, whence);
 
+DECL_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
+	      char **, envs);
 
 int printf(const char *fmt, ...);
-int exec(char *filename);
 int atexit(void (*function)(void));
 void exit(uint32_t exitcode);

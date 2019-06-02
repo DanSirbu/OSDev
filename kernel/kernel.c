@@ -271,7 +271,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	sti();
 
 	debug_print("Starting Init\n");
-	exec(vfs_open("/init"));
+
+	const char *filename = "/init";
+	char *args[] = { filename, NULL };
+	char *envs[] = { "HOME", "/", NULL };
+	execve(filename, args, envs);
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;

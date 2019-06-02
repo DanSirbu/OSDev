@@ -6,6 +6,7 @@
 #include "mmu.h"
 #include "elf.h"
 #include "trap.h"
+#include "vfs.h"
 
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
@@ -98,11 +99,44 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 
 	return new_task;
 }
-#include "fs.h"
+
 extern void enter_userspace(vptr_t fn, vptr_t user_stack);
 extern void interrupt_return();
-void exec(file_t *file)
+
+size_t push_array_to_stack(size_t stacktop, char *arr[])
 {
+	size_t stack = stacktop;
+	uint32_t num_items = array_length(arr);
+
+	assert(num_items > 0);
+
+	char *envs_ptr[num_items];
+	//Copy strings into the stack
+	for (size_t x = 0; x < num_items; x++) {
+		uint32_t item_size =
+			strlen(arr[x]) + 1; //Include null terminator
+		stack -= item_size;
+		memcpy((void *)stack, arr[x], item_size);
+		envs_ptr[x] = (char *)stack;
+	}
+
+	//Push string pointers in reverse order
+	PUSH(stack, size_t, NULL); //Don't forget terminating null pointer
+	for (int x = num_items - 1; x >= 0; x--) {
+		PUSH(stack, char *, envs_ptr[x]);
+	}
+	PUSH(stack, char **, (char **)(stack + sizeof(char **)));
+
+	return stack;
+}
+
+int execve(const char *filename, char *argv[], char *envp[])
+{
+	file_t *file = vfs_open(filename);
+	if (file == NULL) {
+		return -1;
+	}
+
 	free_user_mappings(current->process->page_directory);
 
 	//TODO zero the BSS
@@ -154,37 +188,24 @@ void exec(file_t *file)
 	vptr_t stack = USTACKTOP;
 #undef STACK_SIZE
 #define STACK_SIZE 0x1000
-	char *envs[] = { "HOME", "/", NULL };
 
-	int i = 0;
-	while (envs[i] != NULL) {
-		i++;
-	}
-	i++;
+	stack = push_array_to_stack(stack, envp);
+	size_t envp_pointer_value = *(size_t *)stack;
+	stack += sizeof(char **);
 
-	uint32_t env_num_items = i;
-	//uint32_t env_num_items = sizeof(envs) / sizeof(envs[0]); //this creates a movsd instruction for some reason
-	char *envs_ptr[env_num_items];
+	stack = push_array_to_stack(stack, argv);
+	size_t argv_pointer_value = *(size_t *)stack;
+	stack += sizeof(char **);
 
-	for (size_t x = 0; envs[x] != NULL; x++) {
-		uint32_t env_size = strlen(envs[x]) + 1;
-		stack -= env_size;
-		memcpy(stack, envs[x], env_size);
-		envs_ptr[x] = stack;
-	}
-	envs_ptr[env_num_items - 1] = NULL;
+	//main(argc, argv, envp)
+	PUSH(stack, char **, envp_pointer_value);
+	PUSH(stack, char **, argv_pointer_value);
+	PUSH(stack, int, array_length(argv));
 
-	for (int x = env_num_items - 1; x >= 0; x--) {
-		if (x < 0) {
-			debug_print("WTF!\n");
-		}
-		PUSH(stack, char *, envs_ptr[x]);
-	}
-	PUSH(stack, char **, stack + sizeof(char **));
+	//Cleanup
+	vfs_close(file);
 
-	PUSH(stack, vptr_t, 0); //argv
-	PUSH(stack, size_t, 0); //argc
-
+	//Start user process
 	enter_userspace(header.e_entry, stack);
 }
 void make_task_ready(task_t *task)
@@ -282,7 +303,7 @@ uint32_t sys_fork(int_regs_t *regs)
 }
 uint32_t sys_exit(int exitcode)
 {
-	debug_print("Exitcode 0x%x\n", exitcode);
+	debug_print("Exitcode %d\n", exitcode);
 	current->state = STATE_FINISHED;
 
 	schedule();

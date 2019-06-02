@@ -5,6 +5,7 @@ extern main
 extern exit
 
 _start:
+    ; We are called by the kernel with these arguments: argc, argv, envp
     mov eax, [esp+8]
     mov [environ], eax
 

@@ -8,19 +8,38 @@
 
 int sys_write(int fd, char *buf, int size)
 {
-	debug_print("sys_write: %d %s %d\n", fd, buf, size);
+	print(LOG_INFO, "write->fd(%d) %s", fd, buf);
 	return 1;
 }
-int sys_exec(char *filename)
+/*
+ * Note: must be freed after done with it
+ */
+char **copy_arr(char *arr[])
 {
-	file_t *file = vfs_open(filename);
-	if (file == NULL) {
-		return -1;
+	size_t numItems = array_length(arr);
+	char **newArray = kmalloc((numItems + 1) * sizeof(char *));
+	for (size_t x = 0; x < numItems; x++) {
+		size_t strLen = strlen(arr[x]) + 1; //Include null terminator
+		newArray[x] = kmalloc(strLen);
+		memcpy(newArray[x], arr[x], strLen);
 	}
-	exec(file);
+	newArray[numItems] = NULL;
 
-	//Does not get here
-	return 0;
+	return newArray;
+	}
+int sys_execve(const char *filename, char *args1[], char *envs1[])
+{
+	char **args = { filename, NULL };
+	char **envs = { NULL };
+
+	if (args1 != NULL) {
+		//TODO MEMORY LEAK: how to free this after easily?
+		args = copy_arr(args1);
+	}
+	if (envs1 != NULL) {
+		envs = copy_arr(envs1);
+	}
+	return execve((const char *)filename, args, envs);
 }
 extern task_t *current;
 vptr_t sys_sbrk(uint32_t size)
@@ -127,6 +146,8 @@ void syscall(int_regs_t *regs)
 		break;
 		DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int,
 			     size);
+		DEF_SYSCALL3(__NR_execve, execve, const char *, filename,
+			     char **, args, char **, envs);
 	case __NR_clone:
 		sys_clone(regs);
 		break;

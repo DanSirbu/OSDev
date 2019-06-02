@@ -1,3 +1,4 @@
+#include "types.h"
 #include "syscalls.h"
 
 void testFunc()
@@ -7,15 +8,17 @@ void testFunc()
 		printf("X is %d\n", x);
 	}
 }
-int main()
+
+extern char **environ;
+int main(int argc, char *args[])
 {
-	unsigned int y = fork();
+	/*unsigned int y = fork();
 	if (y == 0) {
 		printf("I'm a child process %x\n", y);
 		int x = fork();
 		if (x == 0) {
 			printf("I'm a super child\n");
-			exec("/test");
+			execve("/test");
 		} else {
 			printf("I'm just a normal child\n");
 			//clone(testFunc);
@@ -26,7 +29,13 @@ int main()
 		}
 	} else {
 		printf("I'm a parent process! Child pid: %d\n", y);
-	}
+	}*/
 
-	return 0;
+	char *args1[] = { "/prboom",  "-nosound", "-complevel", "0",
+			  "-devparm", "-nodeh",   NULL };
+	char **envs = (char **)environ;
+	execve("/prboom", args1, envs);
+	//execve("/test", args1, envs);
+
+	return -1;
 }

@@ -129,9 +129,9 @@ int umount(char *path)
 	return 0;
 }
 
-file_t *vfs_open(char *path)
+file_t *vfs_open(const char *path)
 {
-	inode_t *inode = vfs_namei(path);
+	inode_t *inode = vfs_namei((char *)path);
 
 	if (inode == NULL) {
 		return NULL;
@@ -144,7 +144,13 @@ file_t *vfs_open(char *path)
 
 	return file;
 }
+int vfs_close(file_t *file)
+{
+	//TODO proper cleanup, especially the inode
+	kfree(file);
 
+	return 0;
+}
 int vfs_read(file_t *file, void *buf, size_t count, size_t offset)
 {
 	if (file->f_inode->i_op->read) {
