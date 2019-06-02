@@ -145,9 +145,6 @@ int feof(FILE *stream)
 {
 	printf("IMPLEMENT: feof\n");
 }
-int __isoc99_sscanf(const char *str, const char *format, ...)
-{
-}
 void *memchr(const void *s, int c, size_t n)
 {
 	uint8_t *cur = s;
@@ -157,10 +154,6 @@ void *memchr(const void *s, int c, size_t n)
 		}
 	}
 	return NULL;
-}
-int __isoc99_fscanf(FILE *stream, const char *format, ...)
-{
-	printf("IMPLEMENT: fscanf: %s\n", format);
 }
 int isatty(int fd)
 {

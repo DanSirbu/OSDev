@@ -1481,3 +1481,9 @@ uintmax_t strtoumax(const char *restrict s, char **restrict p, int base)
 {
 	return strtoull(s, p, base);
 }
+#define weak_alias(name, aliasname) _weak_alias(name, aliasname)
+#define _weak_alias(name, aliasname)                                           \
+	extern __typeof(name) aliasname __attribute__((weak, alias(#name)));
+
+weak_alias(sscanf, __isoc99_sscanf);
+weak_alias(fscanf, __isoc99_fscanf);
