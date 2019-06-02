@@ -2,7 +2,7 @@ INCDIR = -I include -I ../include_common
 OBJDIR = ../obj/libc
 
 CROSS-COMPILER-DIR=/home/admin/opt/cross/bin
-CC:=clang
+CC:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
 
