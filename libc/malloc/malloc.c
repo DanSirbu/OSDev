@@ -11,6 +11,8 @@ typedef struct block {
 #define B2P(mblock) (mblock + 1)
 #define P2B(mblock) (((block_t *)mblock) - 1)
 
+#define INITIAL_HEAP_SIZE 0x100000
+
 block_t *free_list;
 
 size_t heap_top = 0;
@@ -189,8 +191,13 @@ void *sbrk(uint32_t size)
 {
 	//Initialize heap if this is the first call to it
 	if (heap_top == (size_t)NULL) {
+		uint32_t alloc_size = INITIAL_HEAP_SIZE;
 		void *start = (void *)syscall_sbrk(alloc_size);
 		kinit_malloc((size_t)start, (size_t)(start + alloc_size));
+	} else if (heap_top + size > heap_end) {
+		syscall_sbrk(size);
+		void *newEnd = syscall_sbrk(0);
+		kinit_malloc(NULL, newEnd);
 	}
 	void *returnVal = (void *)heap_top;
 	heap_top += size;

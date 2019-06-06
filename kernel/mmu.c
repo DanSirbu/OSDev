@@ -81,6 +81,9 @@ void mmap(size_t base, size_t len, mmap_flags_t flags)
 void mmap_addr(size_t vaddr_start, size_t phyaddr_start, size_t len,
 	       mmap_flags_t flags)
 {
+	if (len == 0) {
+		return;
+	}
 	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
 	assert((phyaddr_start & PGMASK) == 0); //Has to be 4k aligned
 	assert((len & PGMASK) == 0); //Len has to be multiples of PGSIZE
