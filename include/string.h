@@ -10,6 +10,5 @@ void itoa(uint32_t number, char *str, uint32_t base);
 int strcmp(const char *str1, const char *str2);
 char *strcpy(char *dst, char *src);
 int strncmp(char *str1, char *str2, size_t max_len);
-void strcpy_max_len(char *src, char *dest, uint32_t maxLen);
 
 size_t array_length(char *arr[]);

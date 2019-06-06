@@ -13,3 +13,7 @@ dump.pcap
 isofiles/boot/kernel.elf
 isofiles/boot/ramfs.img
 os.iso
+
+apps/ramfs/ramfs_gen
+
+gdb.txt*
