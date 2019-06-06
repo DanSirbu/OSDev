@@ -16,6 +16,8 @@ DEF_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 DEF_SYSCALL1(__NR_open, sys_open, const char *, path);
 DEF_SYSCALL3(__NR_read, call_read, int, fd, void *, buf, size_t, n);
 DEF_SYSCALL3(__NR_seek, call_seek, int, fd, long int, offset, int, whence);
+DEF_SYSCALL3(__NR_update_screen, update_display, size_t, w, size_t, h, void *,
+	     buffered_data);
 
 void (*exit_funcs[10])(void);
 

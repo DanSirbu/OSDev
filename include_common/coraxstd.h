@@ -85,3 +85,4 @@
 #define __NR_sbrk 67
 #define __NR_clone 68
 #define __NR_seek 69
+#define __NR_update_screen 70

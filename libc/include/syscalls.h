@@ -21,6 +21,9 @@ DECL_SYSCALL3(__NR_seek, call_seek, int, fd, long int, offset, int, whence);
 DECL_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
 	      char **, envs);
 
+DECL_SYSCALL3(__NR_update_screen, update_display, size_t, w, size_t, h, void *,
+	      buffered_data);
+
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));
 void exit(uint32_t exitcode);

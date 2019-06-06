@@ -59,9 +59,7 @@ size_t sys_sbrk(uint32_t size)
 }
 size_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
 {
-	int z = w + h;
 	display_update(buffered_data);
-	z++;
 	return 0;
 }
 size_t sys_access(const char *path, int amode)
@@ -159,8 +157,8 @@ void syscall(int_regs_t *regs)
 		sys_clone(regs);
 		break;
 		DEF_SYSCALL1(__NR_sbrk, sbrk, uint32_t, size);
-		DEF_SYSCALL3(10, update_display, size_t, w, size_t, h,
-			     uint32_t *, buffered_data);
+		DEF_SYSCALL3(__NR_update_screen, update_display, size_t, w,
+			     size_t, h, void *, buffered_data);
 		DEF_SYSCALL2(__NR_access, access, const char *, path, int,
 			     amode);
 
