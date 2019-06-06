@@ -4,6 +4,8 @@
 
 #define KERN_BASE /*      */ 0xC0000000
 
+#define KERN_P2V(addr) ((void *)((size_t)addr) + KERN_BASE)
+
 //Leave some pages unmapped after the heap so we know if we go past it
 #define KERN_HEAP_START /* */ 0xD0000000
 #define KERN_HEAP_END /*  */ (0xE0000000 - 0x3000)

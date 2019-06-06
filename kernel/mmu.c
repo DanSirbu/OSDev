@@ -134,9 +134,7 @@ void setPTE(page_directory_t *pgdir, size_t vaddr, size_t phyaddr)
 		size_t frame_addr = virtual_to_physical(pgdir, page);
 
 		page_dir_entry_t *pde = &pgdir->actual_tables[pdx];
-		if (pdx < KERN_BASE_PAGE_NO) {
-			pde->user = 1;
-		}
+		pde->user = pdx < KERN_BASE_PAGE_NO;
 		pde->rw = 1;
 		pde->frame = frame_addr >> POFFSHIFT;
 		pde->present = 1;
@@ -155,12 +153,11 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len,
 		 size_t kernel_end_phy_addr)
 {
 	//We need an initial heap to create some structures
-	//So we map the first 4 MB starting at kernel_end_phy_addr to KERN_HEAP_START
+	//So we map the first 4 MB starting at kernel_end_phy_addr
 	((uint32_t *)&boot_page_directory)[KERN_HEAP_START >> 22] =
 		(uint32_t)(kernel_end_phy_addr | 0x83);
 	invlpg(KERN_HEAP_START);
-	//LoadNewPageDirectory(
-	//	(size_t)((void *)&boot_page_directory - KERN_BASE));
+
 	kinit_malloc((size_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
 	//4 MB heap initialized
 	debug_print("Paging init: Initial heap initialized\n");

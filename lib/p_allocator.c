@@ -21,7 +21,7 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	memset(frames, 0xFF,
 	       NUM_BIT_FRAMES * 4); //* 4 since 32 bits = 4 bytes
 
-	void *memory_map = (void *)memory_map_base + KERN_BASE;
+	void *memory_map = KERN_P2V(memory_map_base);
 	void *memory_map_end = memory_map + memory_map_len;
 
 	for (; memory_map < memory_map_end;

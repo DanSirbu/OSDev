@@ -38,10 +38,9 @@ extern void kprint_newline();
 uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
-void print_memory_map(uint32_t mmap_addr, uint32_t mmap_len)
+void print_memory_map(size_t mmap_addr, size_t mmap_len)
 {
-	// Must add KERN_BASE because mmap is a physical address
-	void *mmap = (void *)mmap_addr + KERN_BASE;
+	void *mmap = (void *)mmap_addr;
 	void *mmap_end = mmap + mmap_len;
 
 	debug_print("Memory Map\n");
@@ -110,9 +109,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	assert(multiboot_info->flags & MULTIBOOT_INFO_MODS);
 
 	assert(multiboot_info->mods_count == 1);
-	multiboot_module_t *modules =
-		(multiboot_module_t *)(multiboot_info->mods_addr + KERN_BASE);
-	size_t ramfs_location = modules[0].mod_start + KERN_BASE;
+	multiboot_module_t *modules = KERN_P2V(multiboot_info->mods_addr);
+	size_t ramfs_location = (size_t)KERN_P2V(modules[0].mod_start);
 
 	debug_print("Module start: 0x%x\n", modules[0].mod_start);
 	debug_print("Module end: 0x%x\n", modules[0].mod_end);
@@ -147,7 +145,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	idt_init();
 
 	screen_init();
-	print_memory_map(multiboot_info->mmap_addr,
+	print_memory_map((size_t)KERN_P2V(multiboot_info->mmap_addr),
 			 multiboot_info->mmap_length);
 
 	//Switch to 2-level paging (2 level)
@@ -251,7 +249,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("\nTests complete!\n");
 
 //struct ModeInfoBlock *vbe_mode =
-//	(struct ModeInfoBlock *)(multiboot_info->vbe_mode + KERN_BASE);
+//	KERN_P2V(multiboot_info->vbe_mode);
 
 //multiboot_info->framebuffer_height * multiboot_info->framebuffer_pitch;
 #define FLAG_FRAMEBUFFER_EXISTS (1 << 12)

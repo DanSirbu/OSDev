@@ -1,7 +1,7 @@
 #include "screen.h"
 #include "io.h"
 
-static char *vidptr = (char *)0x000b8000 + KERN_BASE;
+static char *vidptr = KERN_P2V(0x000b8000);
 
 /* current cursor location */
 unsigned int current_loc = 0;
