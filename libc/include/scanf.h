@@ -1,18 +1,18 @@
-//Taken from https://github.com/rqou/standalone-printf-scanf
 #ifndef SCANF_H_
 #define SCANF_H_
 
-#include "types.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <inttypes.h>
 
-/*
 int vcbscanf(void *restrict cb_state, int (*getc_cb)(void *state),
 	     void (*ungetc_cb)(void *state, int c), const char *restrict fmt,
 	     va_list ap);
 int cbscanf(void *restrict cb_state, int (*getc_cb)(void *state),
 	    void (*ungetc_cb)(void *state, int c), const char *restrict fmt,
 	    ...);
-*/
-//int fscanf(FILE *restrict f, const char *restrict fmt, ...);
+
+int fscanf(FILE *restrict f, const char *restrict fmt, ...);
 int sscanf(const char *restrict s, const char *restrict fmt, ...);
 
 float strtof(const char *restrict s, char **restrict p);

@@ -23,16 +23,14 @@ extern size_t kern_max_address;
 pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
 {
 	if (!PAGING_INIT) { //TODO maybe: get rid of this ugly hack
-		print(LOG_INFO,
-		      "virtual_to_physical: not using page table entry yet\n");
+		//print(LOG_INFO, "virtual_to_physical: not using page table entry yet\n");
 		//Initial heap is right after the kernel_max_size
 		return (addr - KERN_HEAP_START) + kern_max_address;
 	}
 	size_t pdx = PDX(addr);
 	size_t ptx = PTX(addr);
 
-	return (pgdir->tables[pdx]->pages[ptx].frame << POFFSHIFT) |
-	       (addr & 0xFFF);
+	return (pgdir->tables[pdx]->pages[ptx].frame << POFFSHIFT) | POFF(addr);
 }
 void switch_page_directory(page_directory_t *new_pg_dir)
 {
@@ -307,12 +305,12 @@ void free_table(page_table_t *src_tbl)
 void free_user_mappings(page_directory_t *src_pg_dir)
 {
 	for (uint32_t x = 0; x < 1024; x++) {
-		page_dir_entry_t entry_bits = src_pg_dir->actual_tables[x];
+		page_dir_entry_t *entry_bits = &src_pg_dir->actual_tables[x];
 		page_table_t *src_tbl = src_pg_dir->tables[x];
 
-		if (entry_bits.bits != 0 && x < KERN_BASE_PAGE_NO) {
+		if (entry_bits->bits != 0 && x < KERN_BASE_PAGE_NO) {
 			free_table(src_tbl);
-			entry_bits.bits = 0;
+			entry_bits->bits = 0;
 		}
 	}
 }

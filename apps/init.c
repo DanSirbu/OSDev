@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sys/types.h"
 #include "syscalls.h"
 
 void testFunc()
@@ -31,11 +31,10 @@ int main(int argc, char *args[])
 		printf("I'm a parent process! Child pid: %d\n", y);
 	}*/
 
-	char *args1[] = { "/prboom",  "-nosound", "-complevel", "0",
-			  "-devparm", "-nodeh",   NULL };
+	char *args1[] = { "/prboom", "-nodraw", "-nosound", NULL };
 	char **envs = (char **)environ;
 	execve("/prboom", args1, envs);
-	//execve("/test", args1, envs);
+	//execve("/testApp", args1, envs);
 
 	return -1;
 }

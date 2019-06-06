@@ -137,7 +137,8 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	//Update kernel end pointer
 	kern_max_address = MAX(kern_max_address, modules[0].mod_end);
-	kern_max_address = MAX(kern_max_address, &_kernel_end - KERN_BASE);
+	kern_max_address =
+		MAX(kern_max_address, (size_t)&_kernel_end - KERN_BASE);
 	kern_max_address = LPG_ROUND_UP(kern_max_address);
 
 	initialize_gdt();

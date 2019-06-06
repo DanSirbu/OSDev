@@ -20,7 +20,7 @@ $(info $(shell mkdir -p $(OBJDIRS))) # Make the directories
 ARGS= $(INCDIR) -O0 -fno-pic -fno-stack-protector -g -nostdlib -ffreestanding -fno-common -Wall -Wextra -Wno-int-to-pointer-cast -m32 -std=c99
 # 28/05/2019: I feel honoured, I've hit a qemu bug (#1748296 on launchpad) instead of my own bugs.
 # shlx does not work unless we use the kvm
-QEMU-ARGS=-no-shutdown -no-reboot -s -m 512M -serial file:serial.log -drive format=raw,file=$< -vga std -accel kvm
+QEMU-ARGS=-no-shutdown -no-reboot -s -m 512M -serial file:serial.log -drive format=raw,file=$< -vga std
 
 run: os.iso
 	$(QEMU) $(QEMU-ARGS)

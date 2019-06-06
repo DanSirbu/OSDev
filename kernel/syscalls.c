@@ -9,7 +9,11 @@
 
 int sys_write(int fd, char *buf, int size)
 {
-	print(LOG_INFO, "write->fd(%d) %s", fd, buf);
+	if (fd != 1) {
+		print(LOG_INFO, "write->fd(%d) %s", fd, buf);
+	} else {
+		debug_print("%s", buf);
+	}
 	return 1;
 }
 /*
@@ -48,9 +52,7 @@ vptr_t sys_sbrk(uint32_t size)
 	size = PG_ROUND_UP(size);
 	vptr_t old_heap_addr = current->process->heap;
 
-	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1,
-			       .IGNORE_PAGE_MAPPED = 0,
-			       .IGNORE_FRAME_REUSE = 0 };
+	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
 	mmap(old_heap_addr, size, flags);
 	current->process->heap = old_heap_addr + size;
 	return old_heap_addr;

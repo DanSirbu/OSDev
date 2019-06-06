@@ -183,7 +183,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 	//Setup user stack
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
 #undef STACK_SIZE
-#define STACK_SIZE 0x1000 * 128
+#define STACK_SIZE (0x1000 * 500)
 	mmap(USTACKTOP - STACK_SIZE, STACK_SIZE, flags);
 	vptr_t stack = USTACKTOP;
 #undef STACK_SIZE

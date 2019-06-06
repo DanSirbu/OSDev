@@ -6,12 +6,11 @@ CC:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
 CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
 
 
-SRC = $(wildcard *.c) $(wildcard *.S)
+SRC = $(wildcard **/*.c) $(wildcard **/*.S)
 OBJFILES = $(patsubst %, $(OBJDIR)/%, $(filter %.o, $(SRC:%.c=%.o) $(SRC:%.S=%.o)))
 
 OBJDIRS:=$(shell echo $(dir $(OBJFILES)) | tr ' ' '\n' | uniq | tr '\n' ' ') # Keep unique only
 $(info $(shell mkdir -p $(OBJDIRS))) # Make the directories
-
 
 ARGS = -c -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common $(INCDIR) -m32 -O0 -g
 ARGS += -Wall -Wextra -Wno-int-to-pointer-cast -m32 -std=c99

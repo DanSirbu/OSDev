@@ -36,7 +36,7 @@
 static inline int syscall(int num, int p1, int p2, int p3, int p4, int p5)
 {
 	int ret;
-	asm("push %%ebx; push %%esi; push %%edi; \
+	__asm__ volatile("push %%ebx; push %%esi; push %%edi; \
     movl %1, %%eax; \
     movl %2, %%ebx; \
     movl %3, %%ecx; \
@@ -46,9 +46,9 @@ static inline int syscall(int num, int p1, int p2, int p3, int p4, int p5)
     int $0x80; \
     movl %%eax, %[retval]; \
     pop %%edi; pop %%esi; pop %%ebx"
-	    : [retval] "=r"(ret)
-	    : "0"(num), "g"(p1), "g"(p2), "g"(p3), "g"(p4), "g"(p5)
-	    : "ebx", "esi", "edi", "eax");
+			 : [retval] "=r"(ret)
+			 : "0"(num), "g"(p1), "g"(p2), "g"(p3), "g"(p4), "g"(p5)
+			 : "ebx", "esi", "edi", "eax");
 
 	return ret;
 }

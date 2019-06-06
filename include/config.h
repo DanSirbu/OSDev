@@ -1,6 +1,6 @@
 #pragma once
 
-#define PRINT_TO_SCREEN //If this is enabled, we print to the screen instead of the serial port
+//#define PRINT_TO_SCREEN //If this is enabled, we print to the screen instead of the serial port
 
 #define LOG_ALL 0
 #define LOG_INFO 1

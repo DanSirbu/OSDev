@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "sys/types.h"
 
 #define DECL_SYSCALL0(unused, name) int name();
 #define DECL_SYSCALL1(unused, name, P1, p1) int name(P1 p1);
