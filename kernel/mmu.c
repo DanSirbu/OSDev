@@ -200,7 +200,7 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len,
 static inline uint32_t read_cr2()
 {
 	uint32_t ret;
-	asm("movl %%cr2, %0" : "=r"(ret));
+	__asm__("movl %%cr2, %0" : "=r"(ret));
 	return ret;
 }
 void page_fault_handler(int_regs_t *regs)

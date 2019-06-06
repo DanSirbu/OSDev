@@ -1,6 +1,6 @@
 DEP-LIBS = ../obj/libc/libcorax.a
 
-INCDIR = -I ../libc/include -I ../include_common
+INCS = -I ../libc/include -I ../include_common
 OBJDIR = ../obj/apps
 
 CROSS-COMPILER-DIR=/home/admin/opt/cross/bin
@@ -17,9 +17,7 @@ $(info $(shell mkdir -p $(OBJDIRS))) # Make the directories
 
 LIBS = -L ../obj/libc/ -lcorax -lgcc
 
-ARGS = -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -m32 -g
-ARGS += $(INCDIR)
-
+ARGS = $(INCS) -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common -m32 -g -std=c99
 
 all: $(OBJDIR)/ramfs.img
 

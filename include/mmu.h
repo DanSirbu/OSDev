@@ -95,7 +95,7 @@ typedef struct {
 
 static inline void invlpg(vptr_t addr)
 {
-	asm volatile("invlpg (%0)" ::"r"(addr) : "memory");
+	__asm__ volatile("invlpg (%0)" ::"r"(addr) : "memory");
 }
 
 typedef union {

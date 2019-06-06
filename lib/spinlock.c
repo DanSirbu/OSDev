@@ -3,7 +3,7 @@
 
 static inline int xchg(volatile int *lock_addr, int value)
 {
-	asm volatile("xchg %0, %1"
+	__asm__ volatile("xchg %0, %1"
 		     : "=r"(value), "=m"(*lock_addr)
 		     : "0"(value)
 		     : "memory");

@@ -14,7 +14,7 @@ $(info $(shell mkdir -p $(OBJDIRS))) # Make the directories
 
 
 ARGS = -c -fno-pic -fno-stack-protector -nostdlib -ffreestanding -fno-common $(INCDIR) -m32 -O0 -g
-ARGS += -Wall -Wextra -Wno-int-to-pointer-cast -m32
+ARGS += -Wall -Wextra -Wno-int-to-pointer-cast -m32 -std=c99
 
 libcorax.a: $(OBJFILES)
 	$(CROSS-LINKER) -r $^ -o $(OBJDIR)/$@

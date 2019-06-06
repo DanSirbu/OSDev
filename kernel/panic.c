@@ -27,7 +27,7 @@ void debug_print(char *message, ...)
 void halt()
 {
 	cli();
-	asm("hlt");
+	__asm__("hlt");
 	while (1)
 		;
 }

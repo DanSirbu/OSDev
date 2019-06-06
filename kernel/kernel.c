@@ -62,7 +62,7 @@ void print_memory_map(uint32_t mmap_addr, uint32_t mmap_len)
 
 void err()
 {
-	asm("cli");
+	__asm__("cli");
 }
 /*
 void test_process1(vptr_t args)
