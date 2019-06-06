@@ -137,14 +137,20 @@ int execve(const char *filename, char *argv[], char *envp[])
 		return -1;
 	}
 
-	free_user_mappings(current->process->page_directory);
-
-	//TODO zero the BSS
-
 	//Load ELF file
 	Elf32_Ehdr header;
-
 	vfs_read(file, &header, sizeof(header), 0);
+	if (!(header.e_ident[EI_MAG0] == ELFMAG0 &&
+	      header.e_ident[EI_MAG1] == ELFMAG1 &&
+	      header.e_ident[EI_MAG2] == ELFMAG2 &&
+	      header.e_ident[EI_MAG3] == ELFMAG3)) {
+		print(LOG_WARNING, "execve: not an elf file %s\n", filename);
+		return -1;
+	}
+
+	//Clean up userspace
+	free_user_mappings(current->process->page_directory);
+	//TODO zero the BSS
 
 	size_t heap_start = 0;
 	for (int x = 0; x < header.e_phnum; x++) {
