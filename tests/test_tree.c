@@ -18,23 +18,23 @@ void test_tree()
 	//Make sure root has two children
 	assert(child1->parent == root);
 	assert(child2->parent == root);
-	assert(list_find(root->children, (vptr_t)child1) != NULL);
-	assert(list_find(root->children, (vptr_t)child2) != NULL);
+	assert(list_find(root->children, (size_t)child1) != NULL);
+	assert(list_find(root->children, (size_t)child2) != NULL);
 	assert(root->children->len == 2);
 
 	//Remove child1 temporarely
 	tree_break_off(child1);
 	assert(child1->parent == NULL);
-	assert(list_find(root->children, (vptr_t)child1) == NULL);
-	assert(list_find(root->children, (vptr_t)child2) != NULL);
+	assert(list_find(root->children, (size_t)child1) == NULL);
+	assert(list_find(root->children, (size_t)child2) != NULL);
 	assert(root->children->len == 1);
 
 	//Make sure the states the same as before after reinserting
 	tree_node_insert_child_node(root, child1);
 	assert(child1->parent == root);
 	assert(child2->parent == root);
-	assert(list_find(root->children, (vptr_t)child1) != NULL);
-	assert(list_find(root->children, (vptr_t)child2) != NULL);
+	assert(list_find(root->children, (size_t)child1) != NULL);
+	assert(list_find(root->children, (size_t)child2) != NULL);
 	assert(root->children->len == 2);
 
 	//Test insert new value
@@ -45,5 +45,5 @@ void test_tree()
 	tree_remove_reparent_root(child1);
 	//Tree should be / -> b, c
 	assert(child3->parent == root);
-	assert(list_index_of(root->children, (vptr_t)child3) != -1);
+	assert(list_index_of(root->children, (size_t)child3) != -1);
 }

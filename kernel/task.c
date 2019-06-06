@@ -43,7 +43,7 @@ task_t *spawn_init()
 	init_task->state = STATE_RUNNING;
 
 	//TODO, reuse kernel stack?
-	init_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+	init_task->stack = (size_t)kmalloc(STACK_SIZE);
 	init_task->process->page_directory = clone_directory(current_directory);
 
 	return init_task;
@@ -56,13 +56,13 @@ task_t *create_task(process_t *process)
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
-	list_append_item(process->threads, (vptr_t)new_task);
+	list_append_item(process->threads, (size_t)new_task);
 
 	return new_task;
 }
 task_t *spawn_idle()
 {
-	return copy_task((vptr_t)idle_task, (vptr_t)NULL);
+	return copy_task((size_t)idle_task, (size_t)NULL);
 }
 void tasking_install()
 {
@@ -79,17 +79,17 @@ void tasking_install()
 //Creates a new "thread" that runs the function fn
 //Also allocates a new stack
 //Does not start it yet
-task_t *copy_task(vptr_t fn, vptr_t args)
+task_t *copy_task(size_t fn, size_t args)
 {
 	task_t *new_task = create_task(NULL);
-	list_append_item(task_list, (vptr_t)new_task);
+	list_append_item(task_list, (size_t)new_task);
 
-	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
-	vptr_t stack = new_task->stack + STACK_SIZE;
+	new_task->stack = (size_t)kmalloc(STACK_SIZE);
+	size_t stack = new_task->stack + STACK_SIZE;
 
-	PUSH(stack, vptr_t, args);
+	PUSH(stack, size_t, args);
 	//Where fn returns to
-	PUSH(stack, vptr_t, (vptr_t)exit_task);
+	PUSH(stack, size_t, (size_t)exit_task);
 
 	new_task->context.eip = fn;
 	new_task->context.esp = stack;
@@ -100,7 +100,7 @@ task_t *copy_task(vptr_t fn, vptr_t args)
 	return new_task;
 }
 
-extern void enter_userspace(vptr_t fn, vptr_t user_stack);
+extern void enter_userspace(size_t fn, size_t user_stack);
 extern void interrupt_return();
 
 size_t push_array_to_stack(size_t stacktop, char *arr[])
@@ -146,14 +146,14 @@ int execve(const char *filename, char *argv[], char *envp[])
 
 	vfs_read(file, &header, sizeof(header), 0);
 
-	vptr_t heap_start = 0;
+	size_t heap_start = 0;
 	for (int x = 0; x < header.e_phnum; x++) {
-		vptr_t ph_offset = x * header.e_phentsize + header.e_phoff;
+		size_t ph_offset = x * header.e_phentsize + header.e_phoff;
 
 		Elf32_Phdr ph;
 		vfs_read(file, &ph, sizeof(ph), ph_offset);
 
-		vptr_t segment_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
+		size_t segment_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
 		size_t segment_size = segment_end - PG_ROUND_DOWN(ph.p_vaddr);
 
 		mmap_flags_t flags = { //The elf file has overlapping sections
@@ -167,7 +167,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 		//filesz = segment size in file
 		//memsz = segment size in memory, can be > filesz
 		//Set the rest of memory to zero
-		vptr_t program_header_end = ph.p_vaddr + ph.p_filesz;
+		size_t program_header_end = ph.p_vaddr + ph.p_filesz;
 		memset((void *)program_header_end, 0, ph.p_memsz - ph.p_filesz);
 
 		if (segment_end > heap_start) {
@@ -185,7 +185,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 #undef STACK_SIZE
 #define STACK_SIZE (0x1000 * 500)
 	mmap(USTACKTOP - STACK_SIZE, STACK_SIZE, flags);
-	vptr_t stack = USTACKTOP;
+	size_t stack = USTACKTOP;
 #undef STACK_SIZE
 #define STACK_SIZE 0x1000
 
@@ -215,7 +215,7 @@ void make_task_ready(task_t *task)
 	}
 
 	task->state = STATE_READY;
-	list_append_item(ready_queue, (vptr_t)task);
+	list_append_item(ready_queue, (size_t)task);
 }
 
 task_t *pick_next_task()
@@ -241,23 +241,23 @@ uint32_t sys_clone(int_regs_t *regs)
 	assert(current != NULL &&
 	       "Current process does not exist, can't clone");
 
-	vptr_t function_to_call = regs->ebx;
-	vptr_t target_fn = regs->ecx;
+	size_t function_to_call = regs->ebx;
+	size_t target_fn = regs->ecx;
 
 	task_t *new_task = create_task(current->process);
-	list_append_item(task_list, (vptr_t)new_task);
+	list_append_item(task_list, (size_t)new_task);
 
-	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
 	int_regs_t new_regs;
 	memcpy(&new_regs, regs, sizeof(int_regs_t));
 	//clone(fn) -> ebx has function address
 	new_regs.eip = function_to_call;
 
-	vptr_t kernel_stack = new_task->stack + STACK_SIZE;
+	size_t kernel_stack = new_task->stack + STACK_SIZE;
 	PUSH(kernel_stack, int_regs_t, new_regs);
 
-	new_task->context.eip = (vptr_t)&interrupt_return;
+	new_task->context.eip = (size_t)&interrupt_return;
 	new_task->context.esp = kernel_stack;
 
 	//Page directory remains the same
@@ -266,7 +266,7 @@ uint32_t sys_clone(int_regs_t *regs)
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
 	mmap(USTACKTOP2 - STACK_SIZE, STACK_SIZE, flags);
 
-	vptr_t user_stack = USTACKTOP2;
+	size_t user_stack = USTACKTOP2;
 	PUSH(user_stack, uint32_t, target_fn);
 	new_regs.esp = user_stack;
 
@@ -280,18 +280,18 @@ uint32_t sys_fork(int_regs_t *regs)
 	assert(current != NULL && "Current process does not exist, can't fork");
 
 	task_t *new_task = create_task(NULL);
-	list_append_item(task_list, (vptr_t)new_task);
+	list_append_item(task_list, (size_t)new_task);
 
-	new_task->stack = (vptr_t)kmalloc(STACK_SIZE);
+	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
 	int_regs_t new_regs;
 	memcpy(&new_regs, regs, sizeof(int_regs_t));
 	new_regs.eax = 0;
 
-	vptr_t stack = new_task->stack + STACK_SIZE;
+	size_t stack = new_task->stack + STACK_SIZE;
 	PUSH(stack, int_regs_t, new_regs);
 
-	new_task->context.eip = (vptr_t)&interrupt_return;
+	new_task->context.eip = (size_t)&interrupt_return;
 	new_task->context.esp = stack;
 
 	new_task->process->page_directory =
@@ -322,7 +322,7 @@ void free_task(task_t *task)
 {
 	process_t *process = task->process;
 	//Cleanup
-	list_remove_item(process->threads, (vptr_t)task);
+	list_remove_item(process->threads, (size_t)task);
 	kfree((void *)task->stack);
 	kfree(task);
 

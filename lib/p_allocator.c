@@ -43,7 +43,7 @@ void frame_init(size_t memory_map_base, size_t memory_map_len)
 	FRAME_MAP_INITIALIZED = 1;
 }
 
-pptr_t alloc_frame()
+size_t alloc_frame()
 {
 	for (int x = 0; x < 0xFFFE0; x++) {
 		//There is a free frame here (since at least one bit is set to 0)
@@ -60,7 +60,7 @@ pptr_t alloc_frame()
 	debug_print("No more free frames\n");
 	return 0xFFFFFFFF;
 }
-void frame_set_used(pptr_t frame, uint8_t reuse_ok)
+void frame_set_used(size_t frame, uint8_t reuse_ok)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
 	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
@@ -71,7 +71,7 @@ void frame_set_used(pptr_t frame, uint8_t reuse_ok)
 		debug_print("Error: frame already used 0x%x\n", frame);
 	}
 }
-void free_frame(pptr_t frame)
+void free_frame(size_t frame)
 {
 	uint32_t frame_index = frame / BIT_FRAME_SIZE;
 	uint32_t frame_shift = 1U << ((frame % BIT_FRAME_SIZE) / PGSIZE);
@@ -83,7 +83,7 @@ void free_frame(pptr_t frame)
 		halt();
 	}
 }
-void free_frame_range(pptr_t first_frame, uint32_t len)
+void free_frame_range(size_t first_frame, uint32_t len)
 {
 	debug_print("Freeing frame ranges: base: %x len: %x\n", first_frame,
 		    len);

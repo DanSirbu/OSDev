@@ -47,17 +47,17 @@ int sys_execve(const char *filename, char *args1[], char *envs1[])
 	return execve((const char *)filename, args, envs);
 }
 extern task_t *current;
-vptr_t sys_sbrk(uint32_t size)
+size_t sys_sbrk(uint32_t size)
 {
 	size = PG_ROUND_UP(size);
-	vptr_t old_heap_addr = current->process->heap;
+	size_t old_heap_addr = current->process->heap;
 
 	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
 	mmap(old_heap_addr, size, flags);
 	current->process->heap = old_heap_addr + size;
 	return old_heap_addr;
 }
-vptr_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
+size_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
 {
 	int z = w + h;
 	display_update(buffered_data);

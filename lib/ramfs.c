@@ -20,7 +20,7 @@ inode_t *getInode(uint32_t ino);
 int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size);
 inode_t *ramfs_get_child(struct inode *parent, uint32_t index);
 
-void initramfs(vptr_t location)
+void initramfs(size_t location)
 {
 	ramfs_ops = kcalloc(sizeof(inode_operations_t));
 	ramfs_ops->find_child = ramfs_find_child;

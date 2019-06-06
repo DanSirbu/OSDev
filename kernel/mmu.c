@@ -20,7 +20,7 @@ int PAGING_INIT = 0;
  * If paging has not been initialized (PAGING_INIT = 0), then this method returns ONLY the address of frames on the heap
  */
 extern size_t kern_max_address;
-pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
+size_t virtual_to_physical(page_directory_t *pgdir, size_t addr)
 {
 	if (!PAGING_INIT) { //TODO maybe: get rid of this ugly hack
 		//print(LOG_INFO, "virtual_to_physical: not using page table entry yet\n");
@@ -34,12 +34,12 @@ pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr)
 }
 void switch_page_directory(page_directory_t *new_pg_dir)
 {
-	pptr_t pgdir_phy =
-		virtual_to_physical(kernel_page_directory, (vptr_t)new_pg_dir);
+	size_t pgdir_phy =
+		virtual_to_physical(kernel_page_directory, (size_t)new_pg_dir);
 	current_directory = new_pg_dir;
 	LoadNewPageDirectory(pgdir_phy);
 }
-int is_mapped(page_directory_t *pg, vptr_t addr)
+int is_mapped(page_directory_t *pg, size_t addr)
 {
 	size_t pdx = PDX(addr);
 	size_t ptx = PTX(addr);
@@ -55,10 +55,13 @@ int is_mapped(page_directory_t *pg, vptr_t addr)
 //if the virtual address < KERN_BASE_PAGE_NO == user page
 void mmap(size_t base, size_t len, mmap_flags_t flags)
 {
+	if (len == 0) {
+		return;
+	}
 	assert((base & PGMASK) == 0); //Has to be 4k aligned
 	//len = PG_ROUND_UP(len);
 	for (size_t x = 0; x < len / PGSIZE; x++) {
-		vptr_t vaddr = base + x * PGSIZE;
+		size_t vaddr = base + x * PGSIZE;
 		if (is_mapped(current_directory, vaddr)) {
 			if (!flags.IGNORE_PAGE_MAPPED) {
 				print(LOG_WARNING,
@@ -66,7 +69,7 @@ void mmap(size_t base, size_t len, mmap_flags_t flags)
 			}
 			continue;
 		}
-		pptr_t phyaddr = alloc_frame();
+		size_t phyaddr = alloc_frame();
 		setPTE(current_directory, vaddr, phyaddr);
 		if (flags.MAP_IMMEDIATELY) {
 			invlpg(vaddr);
@@ -75,7 +78,7 @@ void mmap(size_t base, size_t len, mmap_flags_t flags)
 }
 
 //Map it to a specific address, ex. for the kernel code or MMIO
-void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
+void mmap_addr(size_t vaddr_start, size_t phyaddr_start, size_t len,
 	       mmap_flags_t flags)
 {
 	assert((vaddr_start & PGMASK) == 0); //Has to be 4k aligned
@@ -97,15 +100,15 @@ void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 
 	//Mark pages used
 	for (size_t x = 0; x < len / PGSIZE; x++) {
-		pptr_t phyaddr = phyaddr_start + x * PGSIZE;
+		size_t phyaddr = phyaddr_start + x * PGSIZE;
 
 		frame_set_used(phyaddr, flags.IGNORE_FRAME_REUSE);
 	}
 
 	//Make the page entries
 	for (size_t x = 0; x < len / PGSIZE; x++) {
-		vptr_t vaddr = vaddr_start + x * PGSIZE;
-		pptr_t phyaddr = phyaddr_start + x * PGSIZE;
+		size_t vaddr = vaddr_start + x * PGSIZE;
+		size_t phyaddr = phyaddr_start + x * PGSIZE;
 		setPTE(current_directory, vaddr, phyaddr);
 		if (flags.MAP_IMMEDIATELY) {
 			invlpg(vaddr);
@@ -113,19 +116,19 @@ void mmap_addr(vptr_t vaddr_start, pptr_t phyaddr_start, size_t len,
 	}
 }
 
-void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr)
+void setPTE(page_directory_t *pgdir, size_t vaddr, size_t phyaddr)
 {
 	uint32_t pdx = PDX(vaddr);
 	uint32_t ptx = PTX(vaddr);
 
 	//Page table does not exist yet so create it
 	if (!(pgdir->actual_tables[pdx].present)) {
-		vptr_t page = (vptr_t)kvmalloc(PGSIZE);
+		size_t page = (size_t)kvmalloc(PGSIZE);
 		memset((void *)page, 0, PGSIZE); //Initialize table
 
 		//Set the pointer in the page directory table
 		pgdir->tables[pdx] = (page_table_t *)page;
-		pptr_t frame_addr = virtual_to_physical(pgdir, page);
+		size_t frame_addr = virtual_to_physical(pgdir, page);
 
 		page_dir_entry_t *pde = &pgdir->actual_tables[pdx];
 		if (pdx < KERN_BASE_PAGE_NO) {
@@ -154,8 +157,8 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len,
 		(uint32_t)(kernel_end_phy_addr | 0x83);
 	invlpg(KERN_HEAP_START);
 	//LoadNewPageDirectory(
-	//	(pptr_t)((void *)&boot_page_directory - KERN_BASE));
-	kinit_malloc((vptr_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
+	//	(size_t)((void *)&boot_page_directory - KERN_BASE));
+	kinit_malloc((size_t)KERN_HEAP_START, KERN_HEAP_START + LPGSIZE);
 	//4 MB heap initialized
 	debug_print("Paging init: Initial heap initialized\n");
 
@@ -227,7 +230,7 @@ void alloc_page(pte_t *page, int is_user, int is_writable)
 		page->present = 1;
 		return;
 	}
-	pptr_t frame = alloc_frame();
+	size_t frame = alloc_frame();
 	page->frame = frame >> 12;
 	page->present = 1;
 }
@@ -243,8 +246,8 @@ page_table_t *clone_table(page_table_t *src)
 			continue;
 		}
 
-		pptr_t oldFrame = FRAME_TO_ADDR(pg.frame);
-		pptr_t newFrame = alloc_frame();
+		size_t oldFrame = FRAME_TO_ADDR(pg.frame);
+		size_t newFrame = alloc_frame();
 
 		memcpy_frame_contents(newFrame, oldFrame);
 
@@ -278,8 +281,8 @@ page_directory_t *clone_directory(page_directory_t *src_pg_dir)
 
 		if (entry_bits.bits != 0) {
 			page_table_t *dst_tbl = clone_table(src_tbl);
-			pptr_t dst_tbl_phy = virtual_to_physical(
-				current_directory, (vptr_t)dst_tbl);
+			size_t dst_tbl_phy = virtual_to_physical(
+				current_directory, (size_t)dst_tbl);
 
 			entry_bits.frame = ADDR_TO_FRAME(dst_tbl_phy);
 
@@ -320,7 +323,7 @@ void free_page_directory(page_directory_t *src_pg_dir)
 	kfree(src_pg_dir);
 }
 
-void clear_pte(vptr_t addr)
+void clear_pte(size_t addr)
 {
 	uint32_t pdx = PDX(addr);
 	uint32_t ptx = PTX(addr);
@@ -328,7 +331,7 @@ void clear_pte(vptr_t addr)
 		current_directory->tables[pdx]->pages[ptx].present = 0;
 	}
 }
-void memcpy_frame_contents(pptr_t dst, pptr_t src)
+void memcpy_frame_contents(size_t dst, size_t src)
 {
 	//Unmap pages
 	clear_pte(COPY_PAGE_SOURCE);

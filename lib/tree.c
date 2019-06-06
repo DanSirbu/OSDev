@@ -21,7 +21,7 @@ void tree_node_insert_child_node(tree_node_t *parent, tree_node_t *node)
 
 	node->parent = parent;
 
-	list_append_item(parent->children, (vptr_t)node);
+	list_append_item(parent->children, (size_t)node);
 }
 
 tree_node_t *tree_node_insert_child(tree_node_t *parent, void *value)
@@ -39,7 +39,7 @@ void tree_remove_reparent_root(tree_node_t *child)
 	assert(parent != NULL);
 
 	list_remove(parent->children,
-		    list_find(parent->children, (vptr_t)child));
+		    list_find(parent->children, (size_t)child));
 
 	foreach_list(child->children, list_node)
 	{
@@ -77,6 +77,6 @@ void tree_break_off(tree_node_t *node)
 		return;
 
 	list_remove(parent->children,
-		    list_find(parent->children, (vptr_t)node));
+		    list_find(parent->children, (size_t)node));
 	node->parent = NULL;
 }

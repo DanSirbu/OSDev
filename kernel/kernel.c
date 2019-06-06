@@ -65,18 +65,18 @@ void err()
 	__asm__("cli");
 }
 /*
-void test_process1(vptr_t args)
+void test_process1(size_t args)
 {
 	while (1) {
 		cli();
 		debug_print("a");
 		sti();
 		//schedule();
-		//exec(NULL, (vptr_t)err);
+		//exec(NULL, (size_t)err);
 	}
 }
 
-void test_process2(vptr_t args)
+void test_process2(size_t args)
 {
 	while (1) {
 		debug_print("b");
@@ -112,7 +112,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	assert(multiboot_info->mods_count == 1);
 	multiboot_module_t *modules =
 		(multiboot_module_t *)(multiboot_info->mods_addr + KERN_BASE);
-	vptr_t ramfs_location = modules[0].mod_start + KERN_BASE;
+	size_t ramfs_location = modules[0].mod_start + KERN_BASE;
 
 	debug_print("Module start: 0x%x\n", modules[0].mod_start);
 	debug_print("Module end: 0x%x\n", modules[0].mod_end);
@@ -156,7 +156,7 @@ void kmain(multiboot_info_t *multiboot_info)
 		    kern_max_address);
 	debug_print("Paging init finished\n");
 	//Malloc can now use the full heap
-	kinit_malloc((vptr_t)KERN_HEAP_START, (vptr_t)KERN_HEAP_END);
+	kinit_malloc((size_t)KERN_HEAP_START, (size_t)KERN_HEAP_END);
 
 	uint32_t *test = kmalloc(0x4000000);
 	*test = 0x11223344;
@@ -214,11 +214,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	char *addr2 = kmalloc(4080);
 
 	kfree(addr1);
-	vptr_t addr3 = kvmalloc(PGSIZE);
+	size_t addr3 = kvmalloc(PGSIZE);
 	kfree(addr3);
-	vptr_t test1 = kmalloc(1);
-	vptr_t test2 = kmalloc(1);
-	vptr_t addr4 = kvmalloc(PGSIZE);
+	size_t test1 = kmalloc(1);
+	size_t test2 = kmalloc(1);
+	size_t addr4 = kvmalloc(PGSIZE);
 	*/
 	timer_init(1000);
 
@@ -240,8 +240,8 @@ void kmain(multiboot_info_t *multiboot_info)
 	tasking_install();
 	//sti();
 
-	/*task_t *task1 = copy_task((vptr_t)test_process1, (vptr_t)NULL);
-	task_t *task2 = copy_task((vptr_t)test_process2, (vptr_t)NULL);
+	/*task_t *task1 = copy_task((size_t)test_process1, (size_t)NULL);
+	task_t *task2 = copy_task((size_t)test_process2, (size_t)NULL);
 	*/
 	//make_task_ready(task1);
 	//make_task_ready(task2);

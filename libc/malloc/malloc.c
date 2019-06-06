@@ -13,9 +13,9 @@ typedef struct block {
 
 block_t *free_list;
 
-vptr_t heap_top = 0;
-vptr_t heap_start = 0;
-vptr_t heap_end = 0;
+size_t heap_top = 0;
+size_t heap_start = 0;
+size_t heap_end = 0;
 
 void *sbrk(uint32_t size);
 void sbrk_alignto(size_t alignment);
@@ -23,7 +23,7 @@ void sbrk_alignto(size_t alignment);
 /*
  * Can be called multiple times but the second time only updates the heap_end if it's bigger
  */
-void kinit_malloc(vptr_t start, vptr_t end)
+void kinit_malloc(size_t start, size_t end)
 {
 	if (heap_top) { //Already initialized
 		if (heap_end < end) {
@@ -174,7 +174,7 @@ void free_arr(char **ptr1)
 */
 void sbrk_alignto(size_t alignment)
 {
-	vptr_t addr = (vptr_t)sbrk(0);
+	size_t addr = (size_t)sbrk(0);
 	size_t curOffset = (size_t)addr & 0xFFF;
 
 	if (alignment == curOffset) {
@@ -188,11 +188,9 @@ void sbrk_alignto(size_t alignment)
 void *sbrk(uint32_t size)
 {
 	//Initialize heap if this is the first call to it
-	if (heap_top == (vptr_t)NULL) {
-		uint32_t alloc_size =
-			0x200000; //TODO IMPORTANT make this value dynamic
+	if (heap_top == (size_t)NULL) {
 		void *start = (void *)syscall_sbrk(alloc_size);
-		kinit_malloc((vptr_t)start, (vptr_t)(start + alloc_size));
+		kinit_malloc((size_t)start, (size_t)(start + alloc_size));
 	}
 	void *returnVal = (void *)heap_top;
 	heap_top += size;

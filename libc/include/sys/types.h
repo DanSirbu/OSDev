@@ -12,9 +12,6 @@
 
 //#define __cplusplus //So boolean isn't redefined
 
-typedef size_t vptr_t; //Pointer to virtual memory
-typedef size_t pptr_t; //Pointer to physical memory
-
 #define ALIGN(val, alignment)                                                  \
 	if (val % alignment != 0) {                                            \
 		val += alignment - (val % alignment);                          \

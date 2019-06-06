@@ -45,7 +45,7 @@ fork(task) = copy everything = analogous to process
 typedef struct {
 	page_directory_t *page_directory;
 
-	vptr_t heap;
+	size_t heap;
 
 	list_t *threads;
 
@@ -57,7 +57,7 @@ typedef struct {
 	process_t *process;
 
 	context_t context;
-	vptr_t stack; //Kernel stack
+	size_t stack; //Kernel stack
 
 	enum STATES state;
 } task_t; //task = thread
@@ -101,7 +101,7 @@ void make_task_ready(task_t *task);
 task_t *create_task(process_t *process);
 void schedule_task(task_t *next_task);
 
-task_t *copy_task(vptr_t fn, vptr_t args);
+task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 int execve(const char *filename, char *argv[], char *envp[]);
 uint32_t sys_clone(int_regs_t *regs);

@@ -15,13 +15,13 @@ typedef struct block {
 
 block_t *free_list;
 
-vptr_t heap_top;
-vptr_t heap_start;
-vptr_t heap_end;
+size_t heap_top;
+size_t heap_start;
+size_t heap_end;
 /*
  * Can be called multiple times but the second time only updates the heap_end if it's bigger
  */
-void kinit_malloc(vptr_t start, vptr_t end)
+void kinit_malloc(size_t start, size_t end)
 {
 	if (heap_top) { //Already initialized
 		if (heap_end < end) {
@@ -196,7 +196,7 @@ void kfree_arr(char **ptr1)
 */
 void sbrk_alignto(size_t alignment)
 {
-	vptr_t addr = (vptr_t)sbrk(0);
+	size_t addr = (size_t)sbrk(0);
 	size_t curOffset = (size_t)addr & 0xFFF;
 
 	if (alignment == curOffset) {

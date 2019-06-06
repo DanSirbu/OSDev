@@ -30,7 +30,7 @@
 #define LPG_ROUND_DOWN(addr) (addr & ~(LPGMASK))
 #define LPG_ROUND_UP(addr) (LPG_ROUND_DOWN((addr) + (LPGSIZE - 1)))
 
-#define FRAME_TO_ADDR(frame) ((pptr_t)((frame) << POFFSHIFT))
+#define FRAME_TO_ADDR(frame) ((size_t)((frame) << POFFSHIFT))
 #define ADDR_TO_FRAME(addr) ((addr) >> POFFSHIFT)
 
 #define PTE_P 1
@@ -93,7 +93,7 @@ typedef struct {
 	page_table_t *tables[1024]; //pointer to virtual address of the tables
 } __attribute__((packed)) page_directory_t;
 
-static inline void invlpg(vptr_t addr)
+static inline void invlpg(size_t addr)
 {
 	__asm__ volatile("invlpg (%0)" ::"r"(addr) : "memory");
 }
@@ -110,13 +110,13 @@ typedef union {
 extern page_directory_t *kernel_page_directory;
 
 void mmap(size_t base, size_t len, mmap_flags_t flags);
-void mmap_addr(vptr_t vaddr, pptr_t phyaddr, size_t len, mmap_flags_t flags);
-void setPTE(page_directory_t *pgdir, vptr_t vaddr, pptr_t phyaddr);
+void mmap_addr(size_t vaddr, size_t phyaddr, size_t len, mmap_flags_t flags);
+void setPTE(page_directory_t *pgdir, size_t vaddr, size_t phyaddr);
 void paging_init(size_t memory_map_base, size_t memory_map_full_len,
 		 size_t kernel_end_phy_addr);
-pptr_t virtual_to_physical(page_directory_t *pgdir, vptr_t addr);
+size_t virtual_to_physical(page_directory_t *pgdir, size_t addr);
 void switch_page_directory(page_directory_t *new_pg_dir);
 page_directory_t *clone_directory(page_directory_t *pgdir);
 void free_user_mappings(page_directory_t *src_pg_dir);
 void free_page_directory(page_directory_t *src_pg_dir);
-void memcpy_frame_contents(pptr_t dst, pptr_t src);
+void memcpy_frame_contents(size_t dst, size_t src);
