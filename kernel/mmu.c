@@ -189,9 +189,8 @@ void paging_init(size_t memory_map_base, size_t memory_map_full_len,
 
 	//Map the rest of the heap
 	flags.bits = 0;
-	mmap(KERN_HEAP_START + LPGSIZE,
-	     KERN_HEAP_END - KERN_HEAP_START - PGSIZE,
-	     flags); //-PGSIZE = Leave a guard page
+	size_t REST_OF_HEAP_START = KERN_HEAP_START + LPGSIZE;
+	mmap(REST_OF_HEAP_START, KERN_HEAP_END - REST_OF_HEAP_START, flags);
 
 	switch_page_directory(current_directory); //Load the new page directory
 	DisablePSE(); //Disable 4 MiB pages
