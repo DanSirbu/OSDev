@@ -10,7 +10,8 @@
 DECL_SYSCALL1(NULL, _exit, int, exitcode)
 DECL_SYSCALL0(NULL, fork)
 DECL_SYSCALL3(NULL, write, int, fd, char *, buf, int, size)
-DECL_SYSCALL1(NULL, clone, void *, func);
+DECL_SYSCALL3(__NR_clone, clone2, void *, fn, void *, target_fn, void *,
+	      child_stack);
 DECL_SYSCALL1(NULL, syscall_sbrk, uint32_t, size);
 DECL_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 

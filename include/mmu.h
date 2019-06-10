@@ -17,7 +17,6 @@
 #define KERN_IO_END /*    */ 0xE0F00000
 
 #define USTACKTOP 0xB0000000
-#define USTACKTOP2 0xAFFFE000
 
 //Also defined in p_allocator.h
 #define PGSIZE 4096

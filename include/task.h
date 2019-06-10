@@ -104,4 +104,4 @@ void schedule_task(task_t *next_task);
 task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 int execve(const char *filename, char *argv[], char *envp[]);
-uint32_t sys_clone(int_regs_t *regs);
+uint32_t sys_clone(void *fn, void *target_fn, void *child_stack);

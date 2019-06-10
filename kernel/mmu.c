@@ -387,8 +387,6 @@ void memcpy_frame_contents(size_t dst, size_t src)
                         |      Normal User Stack       | RW/RW  PGSIZE
 						+------------------------------+
 						|       Empty Memory           |
-	   USTACKTOP2  ---> +------------------------------+ 0xAFFFE000 
-                        |      Thread 1 stack          | RW/RW  PGSIZE
                         +------------------------------+
                         |                              |
                         |                              |

@@ -242,13 +242,10 @@ task_t *pick_next_task()
 	return task;
 }
 extern void *_start;
-uint32_t sys_clone(int_regs_t *regs)
+uint32_t sys_clone(void *fn, void *target_fn, void *child_stack)
 {
 	assert(current != NULL &&
 	       "Current process does not exist, can't clone");
-
-	size_t function_to_call = regs->ebx;
-	size_t target_fn = regs->ecx;
 
 	task_t *new_task = create_task(current->process);
 	list_append_item(task_list, (size_t)new_task);
@@ -256,9 +253,8 @@ uint32_t sys_clone(int_regs_t *regs)
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
 	int_regs_t new_regs;
-	memcpy(&new_regs, regs, sizeof(int_regs_t));
-	//clone(fn) -> ebx has function address
-	new_regs.eip = function_to_call;
+	memset(&new_regs, 0, sizeof(new_regs));
+	new_regs.eip = fn;
 
 	size_t kernel_stack = new_task->stack + STACK_SIZE;
 	PUSH(kernel_stack, int_regs_t, new_regs);
@@ -269,10 +265,7 @@ uint32_t sys_clone(int_regs_t *regs)
 	//Page directory remains the same
 	new_task->process->page_directory = current->process->page_directory;
 
-	mmap_flags_t flags = { .MAP_IMMEDIATELY = 1 };
-	mmap(USTACKTOP2 - STACK_SIZE, STACK_SIZE, flags);
-
-	size_t user_stack = USTACKTOP2;
+	size_t user_stack = (size_t)child_stack;
 	PUSH(user_stack, uint32_t, target_fn);
 	new_regs.esp = user_stack;
 
