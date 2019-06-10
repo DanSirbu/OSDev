@@ -5,6 +5,8 @@
 #include "io.h"
 #include "trap.h"
 #include "task.h"
+#include "cmos.h"
+#include "time.h"
 
 #define CMOS_PORT 0x70
 #define CMOS_PORT_INOUT 0x71
@@ -41,9 +43,9 @@ void print_time()
 #define PIT0_DATA 0x40
 
 #define BYTE0(a) ((a)&0xFF)
-#define BYTE1(a) ((a) >> 8 & 0xFF)
-#define BYTE2(a) ((a) >> 16 & 0xFF)
-#define BYTE3(a) ((a) >> 24 & 0xFF)
+#define BYTE1(a) (((a) >> 8) & 0xFF)
+#define BYTE2(a) (((a) >> 16) & 0xFF)
+#define BYTE3(a) (((a) >> 24) & 0xFF)
 
 void timer_interrupt();
 
@@ -56,31 +58,32 @@ void timer_init(uint32_t frequency)
 	register_isr_handler(TRAP_TIMER, timer_interrupt);
 }
 extern void sendEOI(uint32_t interrupt_no);
-uint32_t ticks = 0; //Since frequency is 1000, this is a millisecond
-uint32_t unix_time = 0; //Seconds
+uint32_t ticks_millis = 0; //Since frequency is 1000, this is a millisecond
+uint32_t ticks_seconds = 0; //Seconds
+
+uint32_t boot_time;
+
 void timer_interrupt(__attribute__((unused)) int_regs_t *regs)
 {
-	ticks++;
-	if (ticks % 1000 == 0) {
-		unix_time++;
+	if (ticks_millis == 0) {
+		boot_time = read_rtc_sec_from_epoch();
 	}
 
-	if (ticks % 100 == 0) {
+	ticks_millis++;
+	if (ticks_millis % 1000 == 0) {
+		ticks_seconds++;
+		ticks_millis = 0;
+	}
+
+	if (ticks_millis % 100 == 0) {
 		sendEOI(32);
 		schedule();
 	}
 }
 
-/*
-Note that you should probably have:
-A thread state for each thread (saying if it's "running", "ready to run", or blocked for some reason).
-The "switch_to(thread)" function that does nothing if the thread being switched to is currently running; or (otherwise):
-saves the currently running thread's register contents, etc
-checks if the currently running thread's state is "running" and if it is, puts the currently running thread back into the "ready to run" state", and puts it on whatever data structure the scheduler uses to keep track of "ready to run" threads
-sets the state of the thread being switched to to "running", and loads its register contents, etc.
-A "find_thread_to_switch_to()" function that chooses a thread to switch to (using whatever data structure the scheduler uses to keep track of "ready to run" threads), removes the selected thread from the scheduler's data structure, and then calls the "switch_to(thread)" function.
-A "block_thread(reason)" function which sets the currently running thread's state to whatever the reason is, then calls the "find_thread_to_switch_to()" function.
-An "unblock_thread(thread)" function which sets a thread's state to "read to run", then decides if the thread being unblocked should preempt the currently running thread. If the thread being unblocked shouldn't preempt then it puts the thread on whatever data structure the scheduler uses to keep track of "ready to run" threads; and if the thread being unblocked should preempt it calls the "switch_to(thread)" function instead (to cause an immediate task switch, without bothering with the unnecessary overhead of the "find_thread_to_switch_to()" function).
-*/
-
-//Handlers cannot call schedule
+int gettimeofday(struct timeval *p, void *z)
+{
+	p->tv_sec = boot_time + ticks_seconds;
+	p->tv_usec = ticks_millis * 1000;
+	return 0;
+}

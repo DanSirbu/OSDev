@@ -136,6 +136,11 @@ int sys_seek(int fd, long int offset, int whence)
 
 	return file->offset;
 }
+int sys_gettimeofday(struct timeval *p, void *z)
+{
+	return gettimeofday(p, z);
+}
+
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {
@@ -165,6 +170,8 @@ void syscall(int_regs_t *regs)
 		DEF_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n);
 		DEF_SYSCALL3(__NR_seek, seek, int, fd, long int, offset, int,
 			     whence);
+		DEF_SYSCALL2(__NR_time, gettimeofday, struct timeval *, p,
+			     void *, z);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

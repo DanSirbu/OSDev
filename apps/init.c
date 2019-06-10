@@ -31,7 +31,7 @@ int main(int argc, char *args[])
 		printf("I'm a parent process! Child pid: %d\n", y);
 	}*/
 
-	char *args1[] = { "/prboom", "-nodraw", "-nosound", NULL };
+	char *args1[] = { "/prboom", /*"-nodraw",*/ "-nosound", NULL };
 	char **envs = (char **)environ;
 	execve("/prboom", args1, envs);
 	//execve("/testApp", args1, envs);

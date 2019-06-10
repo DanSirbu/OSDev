@@ -86,3 +86,12 @@
 #define __NR_clone 68
 #define __NR_seek 69
 #define __NR_update_screen 70
+
+typedef long time_t;
+typedef unsigned long useconds_t;
+typedef long suseconds_t;
+
+struct timeval {
+	time_t tv_sec; //seconds
+	suseconds_t tv_usec; //microseconds
+};
