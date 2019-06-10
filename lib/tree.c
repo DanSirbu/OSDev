@@ -21,7 +21,7 @@ void tree_node_insert_child_node(tree_node_t *parent, tree_node_t *node)
 
 	node->parent = parent;
 
-	list_append_item(parent->children, (size_t)node);
+	list_enqueue(parent->children, node);
 }
 
 tree_node_t *tree_node_insert_child(tree_node_t *parent, void *value)

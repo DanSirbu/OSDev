@@ -50,13 +50,13 @@ task_t *spawn_init()
 }
 task_t *create_task(process_t *process)
 {
-	if (process == NULL) {
+	if (process == NULL) { //First task
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
-	list_append_item(process->threads, (size_t)new_task);
+	list_enqueue(process->threads, new_task);
 
 	return new_task;
 }
@@ -82,7 +82,7 @@ void tasking_install()
 task_t *copy_task(size_t fn, size_t args)
 {
 	task_t *new_task = create_task(NULL);
-	list_append_item(task_list, (size_t)new_task);
+	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 	size_t stack = new_task->stack + STACK_SIZE;
@@ -221,7 +221,7 @@ void make_task_ready(task_t *task)
 	}
 
 	task->state = STATE_READY;
-	list_append_item(ready_queue, (size_t)task);
+	list_enqueue(ready_queue, task);
 }
 
 task_t *pick_next_task()
@@ -230,14 +230,11 @@ task_t *pick_next_task()
 		return kernel_idle_task;
 	}
 
-	node_t *task_node = list_index(ready_queue, 0);
-	task_t *task = (task_t *)task_node->value;
+	task_t *task = list_dequeue(ready_queue);
 
-	list_remove(ready_queue, task_node);
-
-	if (task->state != STATE_READY) {
+	/*if (task->state != STATE_READY) {
 		return pick_next_task();
-	}
+	}*/
 
 	return task;
 }
@@ -248,7 +245,7 @@ uint32_t sys_clone(void *fn, void *target_fn, void *child_stack)
 	       "Current process does not exist, can't clone");
 
 	task_t *new_task = create_task(current->process);
-	list_append_item(task_list, (size_t)new_task);
+	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
@@ -279,7 +276,7 @@ uint32_t sys_fork(int_regs_t *regs)
 	assert(current != NULL && "Current process does not exist, can't fork");
 
 	task_t *new_task = create_task(NULL);
-	list_append_item(task_list, (size_t)new_task);
+	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
