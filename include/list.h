@@ -15,8 +15,6 @@ typedef struct {
 	size_t len;
 } list_t;
 
-void list_append(list_t *list, node_t *node);
-node_t *list_append_item(list_t *list, size_t item);
 list_t *list_create(void);
 void list_merge(list_t *dst, list_t *src);
 void list_remove(list_t *list, node_t *node);
@@ -26,6 +24,11 @@ void list_free(list_t *list);
 node_t *list_find(list_t *list, size_t value);
 int list_index_of(list_t *list, size_t value);
 node_t *list_index(list_t *list, int item_index);
+
+void list_enqueue(list_t *list, void *item);
+void *list_dequeue(list_t *list);
+void list_push(list_t *list, void *item);
+void *list_pop(list_t *list);
 
 #define foreach_list(list, n)                                                  \
 	for (node_t *n = (list)->head; n != NULL; n = n->next)

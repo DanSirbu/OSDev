@@ -6,7 +6,7 @@
 #define free kfree
 #define calloc kcalloc
 
-void list_append(list_t *list, node_t *node)
+static void list_append(list_t *list, node_t *node)
 {
 	assert(list != NULL);
 	assert(node != NULL);
@@ -24,15 +24,6 @@ void list_append(list_t *list, node_t *node)
 	list->tail = node;
 
 	list->len++;
-}
-node_t *list_append_item(list_t *list, size_t item)
-{
-	assert(list != NULL);
-
-	node_t *node = calloc(sizeof(node_t));
-	node->value = item;
-	list_append(list, node);
-	return node;
 }
 list_t *list_create(void)
 {
@@ -150,4 +141,48 @@ node_t *list_index(list_t *list, int target_index)
 	}
 
 	return NULL;
+}
+void list_enqueue(list_t *list, void *item)
+{
+	assert(list != NULL);
+
+	node_t *node = calloc(sizeof(node_t));
+	node->value = item;
+	list_append(list, node);
+}
+void *list_dequeue(list_t *list)
+{
+	if (list->head == NULL || list->len == 0) {
+		return NULL;
+	}
+	void *item = list->head->value;
+	list_remove(list, list->head);
+
+	return item;
+}
+void list_push(list_t *list, void *item)
+{
+	assert(list != NULL);
+	assert(item != NULL);
+
+	node_t *node = calloc(sizeof(node_t));
+	node->value = item;
+
+	if (list->len == 0) {
+		list->head = node;
+		list->tail = node;
+		node->prev = NULL;
+		node->next = NULL;
+		list->len = 1;
+		return;
+	}
+	node->next = list->head;
+	node->prev = NULL;
+	list->head = node;
+
+	list->len++;
+}
+void *list_pop(list_t *list)
+{
+	return list_dequeue(list);
 }
