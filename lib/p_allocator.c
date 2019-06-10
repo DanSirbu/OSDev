@@ -85,8 +85,8 @@ void free_frame(size_t frame)
 }
 void free_frame_range(size_t first_frame, uint32_t len)
 {
-	debug_print("Freeing frame ranges: base: %x len: %x\n", first_frame,
-		    len);
+	debug_print("Freeing frame range: 0x%8x-0x%8x\n", first_frame,
+		    first_frame + len);
 	for (uint32_t x = 0; x < len / PGSIZE; x++) {
 		free_frame(first_frame + x * PGSIZE);
 	}

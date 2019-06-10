@@ -25,8 +25,9 @@ void kinit_malloc(size_t start, size_t end)
 {
 	if (heap_top) { //Already initialized
 		if (heap_end < end) {
-			debug_print("Before heap expansion, heap top is 0x%x\n",
-				    heap_top);
+			debug_print(
+				"Before heap expansion, there are 0x%x bytes left\n",
+				heap_end - heap_top);
 			heap_end = end;
 		}
 		return;

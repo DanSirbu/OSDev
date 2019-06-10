@@ -174,9 +174,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	uint32_t index = 0;
 	do {
 		cur = curInode->i_op->get_child(curInode, index);
-		if (cur) {
-			debug_print("Ino: %d\n", cur->ino);
-		}
 		index++;
 	} while (cur != NULL);
 
@@ -186,9 +183,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	if (ret < 0) {
 		debug_print("Read error\n");
 	}
+	debug_print("Files: ");
 	for (uint32_t x = 0; x < dirs.numDir; x++) {
-		debug_print("File: %s\n", dirs.dirents[x].name);
+		debug_print(" %s", dirs.dirents[x].name);
 	}
+	debug_print("\n");
 
 	/*dirent_t file1;
 	dirent_t file2;
