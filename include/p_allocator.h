@@ -1,8 +1,7 @@
 #pragma once
 
-#include "types.h"
+#include "sys/types.h"
 #include "multiboot.h"
-
 
 void frame_init(size_t mmap_addr, size_t mmap_len);
 size_t alloc_frame();

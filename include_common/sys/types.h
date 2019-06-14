@@ -27,6 +27,7 @@ typedef struct {
 	size_t fd;
 } FILE;
 
+typedef int pid_t;
 typedef uint32_t mode_t;
 typedef int32_t ssize_t;
 typedef size_t off_t;

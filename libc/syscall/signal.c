@@ -1,4 +1,5 @@
 #include "signal.h"
+#include "sys/types.h"
 
 void (*signal(int sig, void (*func)(int)))(int)
 {

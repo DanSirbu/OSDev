@@ -1,4 +1,5 @@
 #pragma once
+#include "sys/types.h"
 
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1

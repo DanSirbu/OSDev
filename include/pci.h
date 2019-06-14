@@ -1,7 +1,7 @@
 #pragma once
 #include "io.h"
 #include "serial.h"
-#include "types.h"
+#include "sys/types.h"
 
 #define PCI_ADDR 0xCF8
 #define PCI_DATA 0xCFC

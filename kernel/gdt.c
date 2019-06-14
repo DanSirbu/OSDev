@@ -6,7 +6,7 @@ extern void update_segment_registers();
 
 #define KERNEL_STACK_SIZE 4096
 
-#include "types.h"
+#include "sys/types.h"
 
 // A struct describing a Task State Segment.
 struct tss_entry_struct {

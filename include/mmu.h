@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "sys/types.h"
 #include "kmalloc.h"
 
 #define KERN_BASE /*      */ 0xC0000000

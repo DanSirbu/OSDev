@@ -1,6 +1,6 @@
 #include "kmalloc.h"
 #include "serial.h"
-#include "types.h"
+#include "sys/types.h"
 
 void sbrk_alignto(size_t alignment);
 

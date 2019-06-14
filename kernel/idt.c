@@ -1,4 +1,4 @@
-#include "types.h"
+#include "sys/types.h"
 #include "io.h"
 #include "trap.h"
 

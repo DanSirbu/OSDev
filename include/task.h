@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "sys/types.h"
 #include "mmu.h"
 #include "trap.h"
 #include "fs.h"

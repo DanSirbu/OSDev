@@ -1,7 +1,7 @@
 #include "time.h"
 #include "boot.h"
 #include "serial.h"
-#include "types.h"
+#include "sys/types.h"
 #include "io.h"
 #include "trap.h"
 #include "task.h"
