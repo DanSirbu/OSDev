@@ -4,6 +4,7 @@
 #include "trap.h"
 #include "fs.h"
 #include "list.h"
+#include "coraxstd.h"
 
 typedef struct context {
 	size_t eip;
@@ -51,6 +52,7 @@ typedef struct {
 
 	file_t *files[10];
 	size_t lastFileIndex;
+	list_t *signals;
 
 	struct userspace_vars userspace_variables;
 
@@ -59,7 +61,9 @@ typedef struct {
 typedef struct {
 	process_t *process;
 
-	context_t context;
+	int_regs_t *int_regs;
+
+	context_t context; //Kernel context
 	size_t stack; //Kernel stack
 
 	enum STATES state;
@@ -103,6 +107,7 @@ void schedule();
 void make_task_ready(task_t *task);
 task_t *create_task(process_t *process);
 void schedule_task(task_t *next_task);
+void set_int_regs(int_regs_t *regs);
 
 task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);

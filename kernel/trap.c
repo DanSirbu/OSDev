@@ -63,6 +63,7 @@ void register_isr_handler(int interrupt_no, isr_handler_t handler)
 
 void interrupt_handler(int_regs_t regs)
 {
+	set_int_regs(&regs);
 	if (regs.interrupt_no < 32) {
 		debug_print("Exception %d (%s) at 0x%x, error 0x%x\n",
 			    regs.interrupt_no,

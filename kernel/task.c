@@ -53,6 +53,7 @@ task_t *create_task(process_t *process)
 	if (process == NULL) { //First task
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
+		process->signals = list_create();
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
@@ -342,7 +343,10 @@ void schedule()
 void schedule_task(task_t *next_task)
 {
 	make_task_ready(current);
+
+	//If the task is the same, we don't need to load it again
 	if (next_task == current) {
+		handle_signals();
 		return;
 	}
 
@@ -354,5 +358,34 @@ void schedule_task(task_t *next_task)
 
 	switch_page_directory(current->process->page_directory);
 
+	handle_signals();
 	switch_context(old_context, &current->context);
+}
+void handle_signals()
+{
+	//Handle signals
+	if (current->process->signals->len > 0) {
+		size_t userSigHandler =
+			(size_t)current->process->userspace_variables
+				.SignalHandler;
+		assert(userSigHandler != NULL);
+		assert(current->int_regs != NULL);
+
+		int sig = (int)list_dequeue(current->process->signals);
+		//Note: if this is changed, libc/main/signal.S must be changed as well
+		//We push the eip to the stack
+		//Then the signal
+		//Then change the eip to the signal handler which is responsible for preserving the registers and jumping to eip when finished
+
+		size_t stack = current->int_regs->useresp;
+		PUSH(stack, size_t, current->int_regs->eip);
+		PUSH(stack, int, sig);
+		current->int_regs->useresp = stack;
+
+		current->int_regs->eip = userSigHandler;
+	}
+}
+void set_int_regs(int_regs_t *regs)
+{
+	current->int_regs = regs;
 }
