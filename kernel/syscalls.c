@@ -171,6 +171,20 @@ void set_userspace_errno(int errno)
 	*current->process->userspace_variables.errno_addr = errno;
 }
 int sys_setitimer(int which, const struct itimerval *value,
+		  struct itimerval *ovalue)
+{
+	if (which == ITIMER_REAL) {
+		if (ovalue != NULL) {
+			memcpy(ovalue, &current->process->timer,
+			       sizeof(struct itimerval));
+		}
+		memcpy(&current->process->timer, value,
+		       sizeof(struct itimerval));
+	} else {
+		print(LOG_ERROR, "setitimer: unsupported timer type: %d\n",
+		      which);
+		return -1;
+	}
 	return 0;
 }
 void syscall(int_regs_t *regs)
@@ -206,6 +220,9 @@ void syscall(int_regs_t *regs)
 			     void *, z);
 		DEF_SYSCALL1(__NR_signal_register, register_vars, void *, vars);
 		DEF_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
+		DEF_SYSCALL3(__NR_setitimer, setitimer, int, which,
+			     const struct itimerval *, value,
+			     struct itimerval *, ovalue);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

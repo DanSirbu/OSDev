@@ -56,6 +56,7 @@ typedef struct {
 
 	struct userspace_vars userspace_variables;
 
+	struct itimerval timer;
 } process_t;
 
 typedef struct {

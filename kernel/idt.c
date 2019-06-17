@@ -101,11 +101,11 @@ void idt_init(void)
 
 void sendEOI(uint32_t interrupt_no)
 {
-	if (interrupt_no >= 0x20 && interrupt_no <= 0x30) {
-		int irqNum = interrupt_no - 0x20;
-		if (irqNum > 0x7) {
-			outb(PIC2_CMD, END_OF_INTERRUPT);
-		}
-		outb(PIC1_CMD, END_OF_INTERRUPT);
+	//There are 16 interrupts
+	assert(interrupt_no >= 0 && interrupt_no < 0x10);
+
+	if (interrupt_no > 7) { //0-7 only affect PIC1
+		outb(PIC2_CMD, END_OF_INTERRUPT);
 	}
+	outb(PIC1_CMD, END_OF_INTERRUPT);
 }

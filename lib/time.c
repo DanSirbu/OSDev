@@ -38,21 +38,21 @@ void print_time()
 	uint8_t value = read_cmos(0);
 	debug_print("%d\n", value); // Default promotion takes care of casting
 }
-#define PIT_BASE_FREQUENCY 1193180
+#define PIT_BASE_FREQUENCY 1193182
 #define PIT_CMD 0x43
 #define PIT0_DATA 0x40
 
-#define BYTE0(a) ((a)&0xFF)
-#define BYTE1(a) (((a) >> 8) & 0xFF)
-#define BYTE2(a) (((a) >> 16) & 0xFF)
-#define BYTE3(a) (((a) >> 24) & 0xFF)
+#define BYTE0(a) ((uint8_t)((a)&0xFF))
+#define BYTE1(a) ((uint8_t)(((a) >> 8) & 0xFF))
+#define BYTE2(a) ((uint8_t)(((a) >> 16) & 0xFF))
+#define BYTE3(a) ((uint8_t)(((a) >> 24) & 0xFF))
 
 void timer_interrupt();
 
 void timer_init(uint32_t frequency)
 {
 	uint32_t div = PIT_BASE_FREQUENCY / frequency;
-	outb(PIT_CMD, 0x36);
+	outb(PIT_CMD, 0x34);
 	outb(PIT0_DATA, BYTE0(div));
 	outb(PIT0_DATA, BYTE1(div));
 	register_isr_handler(TRAP_TIMER, timer_interrupt);
@@ -63,22 +63,34 @@ uint32_t ticks_seconds = 0; //Seconds
 
 uint32_t boot_time;
 
+uint32_t lastTimerUpdate;
+
+extern void update_timer(uint32_t timeDeltaMillis);
 void timer_interrupt(__attribute__((unused)) int_regs_t *regs)
 {
-	if (ticks_millis == 0) {
+	//debug_print("Timer!\n");
+	if (boot_time == NULL) {
 		boot_time = read_rtc_sec_from_epoch();
 	}
 
 	ticks_millis++;
-	if (ticks_millis % 1000 == 0) {
+	if (ticks_millis == 1000) {
 		ticks_seconds++;
 		ticks_millis = 0;
 	}
 
-	if (ticks_millis % 100 == 0) {
-		sendEOI(32);
+	uint32_t newTime = ticks_seconds * 1000 + ticks_millis;
+	if (lastTimerUpdate == NULL) {
+		lastTimerUpdate = newTime;
+	}
+	update_timer(newTime - lastTimerUpdate);
+	lastTimerUpdate = newTime;
+
+	//Schedule new process every 10 milliseconds
+	if (ticks_millis % 10 == 0) {
 		schedule();
 	}
+	sendEOI(0);
 }
 
 int gettimeofday(struct timeval *p, void *z)

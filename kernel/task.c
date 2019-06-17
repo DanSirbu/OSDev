@@ -328,6 +328,33 @@ void free_task(task_t *task)
 		free_process(process);
 	}
 }
+//Timedelta is milliseconds
+void update_timer(uint32_t timeDelta)
+{
+	timeDelta *= 1000; //Change timedelta from millisecond to microseconds
+	struct itimerval *procTimer = &current->process->timer;
+
+	if (procTimer->it_interval.tv_sec == NULL &&
+	    procTimer->it_interval.tv_usec == NULL) {
+		return;
+	}
+
+	procTimer->it_value.tv_usec += timeDelta;
+	if (procTimer->it_value.tv_usec > 1000000) {
+		uint32_t additionalSeconds =
+			procTimer->it_value.tv_usec / 1000000;
+		procTimer->it_value.tv_sec += additionalSeconds;
+		procTimer->it_value.tv_usec -= additionalSeconds * 1000000;
+	}
+
+	if (procTimer->it_value.tv_usec >= procTimer->it_interval.tv_usec &&
+	    procTimer->it_value.tv_sec >= procTimer->it_interval.tv_sec) {
+		//memset(procTimer, 0, sizeof(struct itimerval));
+		procTimer->it_value = procTimer->it_interval;
+		//TODO IMPORTANT, use current process pid
+		sys_kill(1, SIGALRM);
+	}
+}
 void schedule()
 {
 	task_t *next_task = pick_next_task();
