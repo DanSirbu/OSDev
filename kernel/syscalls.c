@@ -149,6 +149,19 @@ int sys_register_vars(struct userspace_vars *vars)
 
 	return 0;
 }
+int sys_kill(size_t pid, int sig)
+{
+	//TODO use pid
+	//TODO if pid == 0, send to process group
+	//TODO if error, return -1
+	if (pid == 0) {
+		return -1;
+	}
+	list_enqueue(current->process->signals, (void *)sig);
+	schedule();
+
+	return 0;
+}
 void set_userspace_errno(int errno)
 {
 	if (current->process->userspace_variables.errno_addr == NULL) {
@@ -191,6 +204,8 @@ void syscall(int_regs_t *regs)
 			     whence);
 		DEF_SYSCALL2(__NR_time, gettimeofday, struct timeval *, p,
 			     void *, z);
+		DEF_SYSCALL1(__NR_signal_register, register_vars, void *, vars);
+		DEF_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

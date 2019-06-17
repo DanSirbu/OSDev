@@ -21,6 +21,7 @@ DEF_SYSCALL3(__NR_update_screen, update_display, size_t, w, size_t, h, void *,
 	     buffered_data);
 DEF_SYSCALL2(__NR_time, gettimeofday, struct timeval *, p, void *, z);
 DEF_SYSCALL1(__NR_signal_register, register_vars, void *, vars);
+DEF_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
 
 void (*exit_funcs[10])(void);
 

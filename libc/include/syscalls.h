@@ -26,6 +26,7 @@ DECL_SYSCALL3(__NR_update_screen, update_display, size_t, w, size_t, h, void *,
 	      buffered_data);
 
 DECL_SYSCALL1(__NR_signal_register, register_vars, void *, vars);
+DECL_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));
 void exit(uint32_t exitcode);

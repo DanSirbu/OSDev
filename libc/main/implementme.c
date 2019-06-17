@@ -29,11 +29,6 @@ char *getenv(const char *name)
 
 	return NULL;
 }
-
-void raise(void)
-{
-	printf("IMPLEMENT: raise\n");
-}
 int strcasecmp(const char *s1, const char *s2)
 {
 	char *p1 = s1;
