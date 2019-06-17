@@ -51,6 +51,9 @@ typedef struct {
 
 	file_t *files[10];
 	size_t lastFileIndex;
+
+	struct userspace_vars userspace_variables;
+
 } process_t;
 
 typedef struct {

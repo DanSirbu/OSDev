@@ -141,6 +141,25 @@ int sys_gettimeofday(struct timeval *p, void *z)
 	return gettimeofday(p, z);
 }
 
+int sys_register_vars(struct userspace_vars *vars)
+{
+	assert(IS_IN_USERSPACE(vars));
+	memcpy(&current->process->userspace_variables, vars,
+	       sizeof(struct userspace_vars));
+
+	return 0;
+}
+void set_userspace_errno(int errno)
+{
+	if (current->process->userspace_variables.errno_addr == NULL) {
+		print(LOG_ERROR, "Userspace errno not registered in kernel\n");
+		return;
+	}
+	*current->process->userspace_variables.errno_addr = errno;
+}
+int sys_setitimer(int which, const struct itimerval *value,
+	return 0;
+}
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {

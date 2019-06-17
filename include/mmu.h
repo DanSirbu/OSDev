@@ -3,6 +3,7 @@
 #include "kmalloc.h"
 
 #define KERN_BASE /*      */ 0xC0000000
+#define IS_IN_USERSPACE(addr) (((size_t)(addr)) < KERN_BASE)
 
 #define KERN_P2V(addr) ((void *)((size_t)addr) + KERN_BASE)
 
