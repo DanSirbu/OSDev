@@ -67,7 +67,14 @@ enter_userspace:
     ; eip, cs, eflags, useresp, ss
     push DWORD 0x23 ; ss
     push DWORD [ebp+8] ; useresp
-    pushfd ; flags
+    ; pushfd ; flags
+
+    ; Push flags and enable interrupt bit
+    pushf
+    pop eax
+    or eax,0x200 ; Interrupt bit
+    push eax
+
     push DWORD 0x1B ; cs
     push DWORD [ebp+4] ; eip 
     iretd
