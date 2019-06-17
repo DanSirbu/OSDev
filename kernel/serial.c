@@ -4,21 +4,27 @@
 #include "screen.h"
 #include "config.h"
 
-#define PORT 0x3f8 /* COM1 */
+#define COM1 0x3f8
+#define COM2 0x2F8
+
 #define HEX_PREFIX "0x"
 
 void init_serial()
 {
-	outb(PORT + 1, 0x00); // Disable all interrupts
-	outb(PORT + 3, 0x80); // Enable DLAB (set baud rate divisor)
-	outb(PORT + 0, 0x03); // Set divisor to 3 (lo byte) 38400 baud
-	outb(PORT + 1, 0x00); //                  (hi byte)
-	outb(PORT + 3, 0x03); // 8 bits, no parity, one stop bit
-	outb(PORT + 2, 0xC7); // Enable FIFO, clear them, with 14-byte threshold
-	outb(PORT + 4, 0x0B); // IRQs enabled, RTS/DSR set
+	initialize_serial_port(COM1);
+	initialize_serial_port(COM2);
 }
-
-int serial_received()
+void initialize_serial_port(int port)
+{
+	outb(port + 1, 0x00); // Disable all interrupts
+	outb(port + 3, 0x80); // Enable DLAB (set baud rate divisor)
+	outb(port + 0, 0x01); // Set divisor to 1 (lo byte) 115.2k baud
+	outb(port + 1, 0x00); //                  (hi byte)
+	outb(port + 3, 0x03); // 8 bits, no parity, one stop bit
+	outb(port + 2, 0xC7); // Enable FIFO, clear them, with 14-byte threshold
+	outb(port + 4, 0x0B); // IRQs enabled, RTS/DSR set
+}
+/*int serial_received()
 {
 	return inb(PORT + 5) & 1;
 }
@@ -29,11 +35,11 @@ char read_char_serial()
 		;
 
 	return inb(PORT);
-}
+}*/
 
-int is_transmit_empty()
+int is_transmit_empty(int port)
 {
-	return inb(PORT + 5) & 0x20;
+	return inb(port + 5) & 0x20;
 }
 
 void write_char_serial(char a)
@@ -46,10 +52,10 @@ void write_char_serial(char a)
 	}
 	return;
 #endif
-	while (is_transmit_empty() == 0)
+	while (is_transmit_empty(COM1) == 0)
 		;
 
-	outb(PORT, a);
+	outb(COM1, a);
 }
 static void serial_print_string(char *message)
 {

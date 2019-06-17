@@ -16,7 +16,6 @@ void kb_init(void)
 	keyboard_buffer = CircularQueueCreate(100);
 	register_isr_handler(TRAP_KEYBOARD,
 			     (isr_handler_t)keyboard_handler_main);
-	/* 0xFD is 11111101 - enables only IRQ1 (keyboard)*/
 	uint8_t pic_mask = inb(PIC1_DATA);
 	outb(PIC1_DATA, (pic_mask & ~(1 << 1)));
 }

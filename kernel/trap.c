@@ -1,4 +1,5 @@
 #include "trap.h"
+#include "task.h"
 
 extern void sendEOI(uint32_t interrupt_no);
 
@@ -55,7 +56,8 @@ static char *interrupts_string[32] = { "Programmable Interrupt Timer",
 				       "FPU/Coprocessor",
 				       "Primary ATA Hard Disk",
 				       "Secondary ATA Hard Disk" };
-
+uint32_t NUM_INTERRUPT_STRINGS =
+	sizeof(interrupts_string) / sizeof(interrupts_string[0]);
 void register_isr_handler(int interrupt_no, isr_handler_t handler)
 {
 	interrupt_handlers[interrupt_no] = handler;
@@ -70,10 +72,7 @@ void interrupt_handler(int_regs_t regs)
 			    exceptions_string[regs.interrupt_no], regs.eip,
 			    regs.error_code);
 	} else if (interrupt_handlers[regs.interrupt_no] == NULL &&
-		   regs.interrupt_no != 32 &&
-		   (regs.interrupt_no - 32) <
-			   sizeof(interrupts_string) /
-				   sizeof(interrupts_string[0])) {
+		   (regs.interrupt_no - 32) < NUM_INTERRUPT_STRINGS) {
 		debug_print("Interrupt %d (%s) at 0x%x, error 0x%x\n",
 			    regs.interrupt_no - 32,
 			    interrupts_string[regs.interrupt_no - 32], regs.eip,
@@ -89,7 +88,9 @@ void interrupt_handler(int_regs_t regs)
 		debug_print("No handler for interrupt %d\n", regs.interrupt_no);
 	}
 
-	if (regs.interrupt_no >= 32) {
-		sendEOI(regs.interrupt_no);
+	if (regs.interrupt_no >= PIC_REMAPPED_START &&
+	    regs.interrupt_no <= PIC_REMAPPED_END &&
+	    regs.interrupt_no != TRAP_TIMER) {
+		sendEOI(regs.interrupt_no - PIC_REMAPPED_START);
 	}
 }
