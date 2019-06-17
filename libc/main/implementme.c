@@ -11,10 +11,6 @@ FILE *stdin = &stdin_f;
 FILE *stdout = &stdout_f;
 FILE *stderr = &stderr_f;
 
-void sigaction(void)
-{
-	printf("IMPLEMENT: sigaction\n");
-}
 extern char **environ;
 char *getenv(const char *name)
 {
@@ -235,5 +231,21 @@ int stat(const char *restrict path, struct stat *restrict buf)
 {
 	printf("IMPLEMENT: stat\n");
 	return -1;
+}
+
+typedef unsigned long sigset_t;
+int sigemptyset(sigset_t *set)
+{
+	printf("IMPLEMENT: sigemptyset\n");
+	return 0;
+}
+typedef struct {
+	unsigned long fds_bits[1024 / 8 / sizeof(unsigned long)];
+} fd_set;
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
+	   struct timeval *timeout)
+{
+	printf("IMPLEMENT: select\n");
+	return 0; //TODO
 }
 weak_alias(sqrtf, __sqrt_finite);
