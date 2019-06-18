@@ -9,11 +9,6 @@
 
 #define HEX_PREFIX "0x"
 
-void init_serial()
-{
-	initialize_serial_port(COM1);
-	initialize_serial_port(COM2);
-}
 void initialize_serial_port(int port)
 {
 	outb(port + 1, 0x00); // Disable all interrupts
@@ -23,6 +18,11 @@ void initialize_serial_port(int port)
 	outb(port + 3, 0x03); // 8 bits, no parity, one stop bit
 	outb(port + 2, 0xC7); // Enable FIFO, clear them, with 14-byte threshold
 	outb(port + 4, 0x0B); // IRQs enabled, RTS/DSR set
+}
+void init_serial()
+{
+	initialize_serial_port(COM1);
+	initialize_serial_port(COM2);
 }
 /*int serial_received()
 {

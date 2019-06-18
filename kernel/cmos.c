@@ -106,6 +106,8 @@ uint32_t read_rtc_sec_from_epoch()
 	year = get_RTC_register(0x09);
 	if (century_register != 0) {
 		century = get_RTC_register(century_register);
+	} else {
+		century = CENTURY;
 	}
 
 	do {

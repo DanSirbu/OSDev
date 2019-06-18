@@ -1,5 +1,5 @@
+#include "coraxstd.h"
 #include "signal.h"
-#include "sys/types.h"
 #include "assert.h"
 
 #define sa_handler _signal_handlers._handler
@@ -45,6 +45,8 @@ int sigaction(int sig, const struct sigaction *restrict act,
 	      struct sigaction *restrict oact)
 {
 	printf("IMPLEMENT: SIGACTION\n");
+
+	return 0;
 }
 int raise(int sig)
 {

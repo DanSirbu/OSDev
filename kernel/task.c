@@ -8,6 +8,9 @@
 #include "trap.h"
 #include "vfs.h"
 
+/* Prototypes */
+void handle_signals();
+
 #define NO_TASKS 64 //Max 64 tasks for now
 #define STACK_SIZE 4096
 
@@ -214,6 +217,9 @@ int execve(const char *filename, char *argv[], char *envp[])
 
 	//Start user process
 	enter_userspace(header.e_entry, stack);
+
+	//Should not get here
+	return -1;
 }
 void make_task_ready(task_t *task)
 {

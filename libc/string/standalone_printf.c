@@ -856,7 +856,7 @@ static int printf_core(PRINTF_STATE *f, const char *fmt, va_list *ap,
 			     (l = standalone_wcrtomb(mb, *ws++, &mbst)) >= 0 &&
 			     l <= p - i;
 			     i += l)
-				;*/
+				;
 			if (l < 0)
 				return -1;
 			if (i > INT_MAX)
@@ -869,10 +869,10 @@ static int printf_core(PRINTF_STATE *f, const char *fmt, va_list *ap,
 			     i < 0U + p && *ws &&
 			     i + (l = standalone_wcrtomb(mb, *ws++, &mbst)) <=
 				     p;
-			     i += l)*/
+			     i += l)
 			out(f, mb, l);
 			pad(f, ' ', w, p, fl ^ LEFT_ADJ);
-			l = w > p ? w : p;
+			l = w > p ? w : p;*/
 			continue;
 		case 'e':
 		case 'f':
