@@ -18,6 +18,7 @@
 #include "task.h"
 #include "syscalls.h"
 #include "display.h"
+#include "elf.h"
 
 #include "test.h"
 #include "ramfs.h"
@@ -58,7 +59,6 @@ void print_memory_map(size_t mmap_addr, size_t mmap_len)
 			    (uint32_t)mmap_cur->type);
 	}
 }
-
 void err()
 {
 	__asm__("cli");
@@ -118,21 +118,12 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("Kernel ends at 0x%x\n", &_kernel_end);
 
 	if (multiboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
-		//Section header table
-		multiboot_elf_section_header_table_t sec_info =
-			multiboot_info->u.elf_sec;
-		assert(sec_info.num != 0);
-
-		size_t sections_end =
-			sec_info.addr + (sec_info.num * sec_info.size);
-
-		debug_print("Section start: 0x%x\n", sec_info.addr);
-		debug_print("Section end: 0x%x\n", sections_end);
-
+		size_t sections_end;
+		parse_elf_sections(&multiboot_info->u.elf_sec, sections_end);
 		//Update kernel end pointer
 		kern_max_address = MAX(kern_max_address, sections_end);
 	}
-
+	//test1();
 	//Update kernel end pointer
 	kern_max_address = MAX(kern_max_address, modules[0].mod_end);
 	kern_max_address =
