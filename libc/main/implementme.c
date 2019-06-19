@@ -85,7 +85,13 @@ int fseek(FILE *stream, long offset, int whence)
 }
 int fclose(FILE *stream)
 {
-	printf("CLOSE F\n");
+	assert(stream != NULL);
+
+	int ret = sys_close(stream->fd);
+	if (ret != 0) {
+		return ret;
+	}
+	free(stream);
 	return 0;
 }
 int fgetc(FILE *stream)

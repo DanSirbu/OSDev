@@ -92,13 +92,16 @@ size_t sys_open(const char *path)
 
 	return fd;
 }
-file_t *getProcessFile(size_t fd)
+int sys_close(int fd)
 {
-	if (fd > current->process->lastFileIndex) {
-		debug_print("FD %d does not exist\n", fd);
-		return NULL;
+	if (getProcessFile(fd) == NULL) {
+		return -1;
 	}
-	return current->process->files[fd];
+	file_t *file = getProcessFile(fd);
+	vfs_close(file);
+	current->process->files[fd] = NULL;
+
+	return 0;
 }
 uint32_t sys_read(int fd, void *buf, size_t n)
 {
@@ -213,6 +216,7 @@ void syscall(int_regs_t *regs)
 			     amode);
 
 		DEF_SYSCALL1(__NR_open, open, const char *, path);
+		DEF_SYSCALL1(__NR_close, close, int, fd);
 		DEF_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n);
 		DEF_SYSCALL3(__NR_seek, seek, int, fd, long int, offset, int,
 			     whence);

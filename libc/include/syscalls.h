@@ -30,6 +30,7 @@ DECL_SYSCALL1(__NR_signal_register, register_vars, void *, vars);
 DECL_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
 DECL_SYSCALL3(__NR_setitimer, setitimer, int, which, const struct itimerval *,
 	      value, struct itimerval *, ovalue);
+DECL_SYSCALL1(__NR_close, sys_close, int, fd);
 
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));
