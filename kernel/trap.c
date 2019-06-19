@@ -71,6 +71,7 @@ void interrupt_handler(int_regs_t regs)
 			    regs.interrupt_no,
 			    exceptions_string[regs.interrupt_no], regs.eip,
 			    regs.error_code);
+		dump_registers(&regs);
 	} else if (interrupt_handlers[regs.interrupt_no] == NULL &&
 		   (regs.interrupt_no - 32) < NUM_INTERRUPT_STRINGS) {
 		debug_print("Interrupt %d (%s) at 0x%x, error 0x%x\n",

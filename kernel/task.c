@@ -7,6 +7,7 @@
 #include "elf.h"
 #include "trap.h"
 #include "vfs.h"
+#include "debug.h"
 
 /* Prototypes */
 void handle_signals();
@@ -271,7 +272,7 @@ uint32_t sys_clone(void *fn, void *target_fn, void *child_stack)
 
 	size_t user_stack = (size_t)child_stack;
 	PUSH(user_stack, uint32_t, target_fn);
-	new_regs.esp = user_stack;
+	new_regs.useresp = user_stack;
 
 	make_task_ready(new_task);
 

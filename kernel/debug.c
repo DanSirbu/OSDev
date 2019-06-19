@@ -3,6 +3,7 @@
 #include "multiboot.h"
 #include "elf.h"
 #include "mmu.h"
+#include "trap.h"
 #include "coraxstd.h"
 
 extern size_t SYSCALL_NAMES_SIZE;
@@ -42,10 +43,11 @@ void get_func_info(uint32_t addr, char **name, char **file)
 }
 
 extern uint32_t *get_ebp();
-void dump_stack_trace()
+void dump_stack_trace(uint32_t *ebp)
 {
-	uint32_t *ebp = get_ebp();
-
+	if (ebp == NULL) {
+		ebp = get_ebp();
+	}
 	debug_print("Backtrace:\n");
 	int count = 0;
 	for (; ebp != 0; ebp = (uint32_t *)*ebp) {
@@ -62,6 +64,19 @@ void dump_stack_trace()
 		debug_print("%d: %s\n", count, func_name, func_file);
 		count++;
 	}
+}
+
+void dump_registers(int_regs_t *regs)
+{
+	print(LOG_ERROR, "Registers during interrupt:\n");
+	print(LOG_ERROR, "eax=0x%x  ebx=0x%x\n", regs->eax, regs->ebx);
+	print(LOG_ERROR, "ecx=0x%x  edx=0x%x\n", regs->ecx, regs->edx);
+	print(LOG_ERROR, "edi=0x%x  esi=0x%x\n", regs->edi, regs->esi);
+	print(LOG_ERROR, "ebp=0x%x  esp=0x%x\n", regs->ebp, regs->unused);
+	print(LOG_ERROR, "eflags=0x%x       \n", regs->eflags);
+	print(LOG_ERROR, "eip=0x%x          \n", regs->eip);
+	print(LOG_ERROR, "\n");
+	print(LOG_ERROR, "usereip=0x%x      \n", regs->useresp);
 }
 
 void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,
@@ -86,9 +101,9 @@ void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,
 			continue;
 		}
 		if (sections[x].sh_type == SHT_STRTAB &&
-		    strncmp(sectionStringTable + sections[x].sh_name, ".strtab",
-			    sizeof(".strtab")) == 0) {
-			stringTable = KERN_P2V(sections[x].sh_addr);
+		    strncmp((char *)(sectionStringTable + sections[x].sh_name),
+			    ".strtab", sizeof(".strtab")) == 0) {
+			stringTable = (Elf32_Addr)KERN_P2V(sections[x].sh_addr);
 		}
 	}
 

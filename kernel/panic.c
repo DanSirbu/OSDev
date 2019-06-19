@@ -37,6 +37,6 @@ void assert_failed(char *statement, char *file, uint32_t line, const char *func)
 	debug_print(ANSI_COLOR_RED "%s:%d: error in %s: %s" ANSI_COLOR_RESET
 				   "\n",
 		    file, line, func, statement);
-	dump_stack_trace();
+	dump_stack_trace(NULL);
 	halt();
 }

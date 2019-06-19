@@ -19,7 +19,8 @@
 
 typedef struct {
 	uint32_t gs, fs, es, ds; //Segments pushed
-	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; //pushad
+	uint32_t edi, esi, ebp, unused, ebx, edx, ecx,
+		eax; //pushad, note: unused is actually esp, but we don't want it to be modifiable
 	uint32_t interrupt_no, error_code; //Pushed by assembly code
 	uint32_t eip, cs, eflags, useresp, ss; //Pushed by CPU
 } __attribute__((packed)) int_regs_t;
