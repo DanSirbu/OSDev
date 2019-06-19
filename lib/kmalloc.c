@@ -155,7 +155,24 @@ void *kcalloc(size_t size)
 	memset(ptr, 0, size);
 	return ptr;
 }
-
+void *krealloc(void *ptr, size_t newSize)
+{
+	if (newSize == 0 && ptr != NULL) {
+		kfree(ptr);
+		return NULL;
+	}
+	void *new_ptr = kmalloc(newSize);
+	if (new_ptr == NULL) {
+		return NULL;
+	}
+	if (ptr == NULL) {
+		return new_ptr;
+	}
+	block_t *old_block = P2B(ptr);
+	memcpy(new_ptr, ptr, MIN(old_block->size, newSize));
+	kfree(ptr);
+	return new_ptr;
+}
 void kfree(void *ptr)
 {
 	if (ptr == 0) {
