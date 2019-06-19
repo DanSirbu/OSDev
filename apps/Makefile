@@ -29,4 +29,4 @@ $(OBJDIR)/ramfs.img: $(OBJFILES) ramfs/ramfs_gen
 	ramfs/ramfs_gen $@ $(filter-out %/ramfs.img, $(shell echo $(OBJDIR)/*))
 
 ramfs/ramfs_gen: ramfs/ramfs_gen.c
-	gcc $< -o $@
+	gcc $< -m32 -g -o $@

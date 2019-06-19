@@ -1,6 +1,7 @@
 #include "kmalloc.h"
 #include "serial.h"
 #include "sys/types.h"
+#include "debug.h"
 
 void sbrk_alignto(size_t alignment);
 
@@ -179,9 +180,10 @@ void kfree(void *ptr)
 		return;
 	}
 	if (ptr < (void *)heap_start) {
-		debug_print(
-			"Trying to free %p, which is before the heap_start (%p)\n",
-			ptr, (void *)heap_start);
+		print(LOG_ERROR,
+		      "Trying to free %p, which is before the heap_start (%p)\n",
+		      ptr, (void *)heap_start);
+		assert(ptr >= (void *)heap_start);
 		return;
 	}
 
