@@ -73,6 +73,14 @@ size_t sys_access(const char *path, int amode)
 	vfs_close(file);
 	return 0;
 }
+file_t *getProcessFile(size_t fd)
+{
+	if (fd > current->process->lastFileIndex) {
+		debug_print("FD %d does not exist\n", fd);
+		return NULL;
+	}
+	return current->process->files[fd];
+}
 size_t sys_open(const char *path)
 {
 	file_t *file = vfs_open(path);

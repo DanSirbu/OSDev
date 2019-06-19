@@ -59,6 +59,50 @@ void print_memory_map(size_t mmap_addr, size_t mmap_len)
 			    (uint32_t)mmap_cur->type);
 	}
 }
+void testramfs()
+{
+	inode_t *curInode = vfs_namei("/");
+	inode_t *cur = NULL;
+	uint32_t index = 0;
+	do {
+		cur = curInode->i_op->get_child(curInode, index);
+		index++;
+	} while (cur != NULL);
+
+	list_t *folderQueue = list_create();
+	list_enqueue(folderQueue, vfs_open("/"));
+
+	while (folderQueue->len != 0) {
+		file_t *currentFolder = list_dequeue(folderQueue);
+
+		ramfs_dir_t dir;
+		vfs_read(currentFolder, &dir, sizeof(dir), 0);
+		for (size_t x = 0; x < dir.num_dirs; x++) {
+			char concatstr[255];
+			if (currentFolder->path[strlen(currentFolder->path) -
+						1] != '/') {
+				strconcat(concatstr, currentFolder->path, "/");
+			} else {
+				strcpy(concatstr, currentFolder->path);
+			}
+			strconcat(concatstr, concatstr, dir.dirents[x].name);
+
+			file_t *curFile = vfs_open(concatstr);
+
+			debug_print("%s INO: %d\n", concatstr,
+				    curFile->f_inode->ino);
+			assert(curFile->f_inode->ino == dir.dirents[x].ino);
+
+			if (curFile->f_inode->type == FS_DIRECTORY) {
+				list_enqueue(folderQueue, curFile);
+			} else {
+				vfs_close(curFile);
+			}
+		}
+
+		vfs_close(currentFolder);
+	}
+}
 void err()
 {
 	__asm__("cli");
@@ -86,11 +130,9 @@ void test_process2(size_t args)
 //extern volatile process_t *current;
 
 extern void get_func_info(uint32_t addr, char **name, char **file);
-extern void dump_stack_trace();
-
 void test2()
 {
-	dump_stack_trace();
+	dump_stack_trace(NULL);
 }
 void test1()
 {
@@ -154,60 +196,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	kfree(test2);
 	kfree(test);
 
-	initramfs(ramfs_location);
-	inode_t *fs_root_inode = ramfs_getRoot();
-	mount("/", fs_root_inode);
-
-	kb_init();
-
-	inode_t *curInode = vfs_namei("/");
-	inode_t *cur = NULL;
-	uint32_t index = 0;
-	do {
-		cur = curInode->i_op->get_child(curInode, index);
-		index++;
-	} while (cur != NULL);
-
-	ramfs_dir_t dirs;
-	file_t *file = vfs_open("/");
-	int ret = vfs_read(file, &dirs, sizeof(dirs), 0);
-	if (ret < 0) {
-		debug_print("Read error\n");
-	}
-	debug_print("Files: ");
-	for (uint32_t x = 0; x < dirs.numDir; x++) {
-		debug_print(" %s", dirs.dirents[x].name);
-	}
-	debug_print("\n");
-
-	/*dirent_t file1;
-	dirent_t file2;
-	memcpy(&file1, ram_root->readdir(ram_root, 0), sizeof(dirent_t));
-	memcpy(&file2, ram_root->readdir(ram_root, 1), sizeof(dirent_t));
-
-	debug_print("File1: %s\n", file1.name);
-	debug_print("File2: %s\n", file2.name);
-
-	fs_node_t *hello = dirent_to_node(&file1);*/
-
-	//mmap(0x90000000, 0x4000);
-	//initrd_init(0x90000000, 0x4000);
-	//char *abc = "AAAAAAABBBBBCCCCC";
-	//device_write(0x1000, abc, 1);
-
-	/* kmalloc testing code
-	char *addr1 = kmalloc(10);
-	addr1[0] = 0xAA;
-	addr1[9] = 0xBB;
-	char *addr2 = kmalloc(4080);
-
-	kfree(addr1);
-	size_t addr3 = kvmalloc(PGSIZE);
-	kfree(addr3);
-	size_t test1 = kmalloc(1);
-	size_t test2 = kmalloc(1);
-	size_t addr4 = kvmalloc(PGSIZE);
-	*/
 	timer_init(1000);
 
 	int x = 0;
@@ -217,22 +205,21 @@ void kmain(multiboot_info_t *multiboot_info)
 	spinlock_release(&x);
 	debug_print("Lock released\n");
 
-	//Processes
-	//copy_process(test_process1);
-	//copy_process(test_process2);
-
-	//clone(test_process1, kmalloc(0x1000) + 0x1000);
-	//clone(test_process2, kmalloc(0x1000) + 0x1000);
-
 	syscalls_install();
 	tasking_install();
-	//sti();
 
-	/*task_t *task1 = copy_task((size_t)test_process1, (size_t)NULL);
-	task_t *task2 = copy_task((size_t)test_process2, (size_t)NULL);
-	*/
-	//make_task_ready(task1);
-	//make_task_ready(task2);
+	print(LOG_INFO, "Initializing ramfs\n");
+	initramfs(ramfs_location);
+	inode_t *fs_root_inode = ramfs_getRoot();
+	mount("/", fs_root_inode);
+
+	//Adding more folders
+	vfs_mkdir("/", "stdout");
+	vfs_mkdir("/stdout", "stdout1");
+	testramfs();
+
+	print(LOG_INFO, "Initializing keyboard\n");
+	kb_init();
 
 	debug_print("Starting Tests\n");
 	run_tests();

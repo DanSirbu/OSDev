@@ -25,6 +25,3 @@ typedef struct {
 	uint32_t max_inodes;
 	ramfs_inode_t *inodes;
 } __attribute__((packed)) ramfs_header_t; //Inodes
-
-void initramfs(ramfs_header_t *location);
-inode_t *ramfs_getRoot();

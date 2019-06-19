@@ -4,99 +4,113 @@
 #include <libgen.h>
 #include <stdint.h>
 
-#define FS_FILE 0x01
-#define FS_DIRECTORY 0x02
+#include "ramfs.h"
 
-typedef struct {
-	uint32_t ino;
-	char name[64];
-} __attribute__((packed)) ramfs_dirent_t;
+/*
+File format:
+header
+inodes
+files
+ */
 
-typedef struct {
-	uint32_t numDir;
-	ramfs_dirent_t dirents[6];
-} __attribute__((packed)) ramfs_dir_t;
+long getFileSize(char *file)
+{
+	FILE *stream = fopen(file, "r");
+	fseek(stream, 0, SEEK_END);
+	long size = ftell(stream);
+	fclose(stream);
 
-typedef struct file_info {
-	uint32_t ino;
-	uint8_t type;
-	uint32_t start;
-	uint32_t len;
-} __attribute__((packed)) file_info_t; //Inodes
-
-int main(int argc1, char const *argv1[])
+	return size;
+}
+int main(int argc, char const *argv[])
 {
 	//argv[0] = filename (ramfs_gen), we don't care
 	//argv[1] = output file name
 	//rest are programs
-	int argc = argc1 - 2;
-	char **argv = (char **)&argv1[2];
+	int numFiles = argc - 2;
+	char **files = (char **)&argv[2];
 
-	if (argc > 6) {
-		fprintf(stderr, "Can't have more than 6 files.");
+	size_t fileOffset = 0;
+
+	size_t numInodes = numFiles + 1; //numfiles + root inode
+
+	ramfs_header_t *ramfs_header = malloc(sizeof(ramfs_header_t));
+	fileOffset += sizeof(ramfs_header_t); //File: add header offset
+	ramfs_header->numInodes = numInodes;
+	ramfs_header->max_inodes = numInodes;
+	ramfs_header->inodes = (void *)fileOffset;
+	ramfs_inode_t *inodes = malloc(sizeof(ramfs_inode_t) * numInodes);
+	fileOffset +=
+		sizeof(ramfs_inode_t) * numInodes; //File: add inodes offset
+
+	int nextInode = 1;
+	for (int x = 0; x < numFiles; x++) {
+		long fileSize = getFileSize(files[x]);
+		inodes[nextInode].size = fileSize;
+		inodes[nextInode].max_size = fileSize;
+		inodes[nextInode].read_only = 1;
+		inodes[nextInode].address = fileOffset;
+		inodes[nextInode].type = FS_FILE;
+		inodes[nextInode].ino = nextInode;
+
+		nextInode++;
+		fileOffset += fileSize; //File: add individual file offset
 	}
-
-	uint32_t numFileInfos = argc + 1;
-	file_info_t *fileInfos = malloc(numFileInfos * sizeof(file_info_t));
-
-	uint32_t files_data_start =
-		sizeof(uint32_t) + numFileInfos * sizeof(file_info_t);
-
-	//INO 0 = tree root
-	fileInfos[0].len = sizeof(ramfs_dir_t);
-	fileInfos[0].start = files_data_start;
-	fileInfos[0].type = FS_DIRECTORY;
-	fileInfos[0].ino = 0;
-
-	files_data_start += sizeof(ramfs_dir_t);
-	for (int x = 1; x < numFileInfos; x++) {
-		FILE *stream = fopen(argv[x - 1], "r");
-		fseek(stream, 0, SEEK_END);
-		fileInfos[x].len = ftell(stream);
-		fileInfos[x].start = files_data_start;
-		fileInfos[x].type = FS_FILE;
-		fileInfos[x].ino = x;
-
-		files_data_start += fileInfos[x].len;
-	}
+	//INO 0 = tree root, place the inode contents last in the file
+	inodes[0].size = fileOffset;
+	inodes[0].max_size = fileOffset;
+	inodes[0].read_only = 1;
+	inodes[0].address = fileOffset;
+	inodes[0].type = FS_DIRECTORY;
+	inodes[0].ino = 0;
 
 	//Directory "file"
 	ramfs_dir_t *rootDir = malloc(sizeof(ramfs_dir_t));
-	rootDir->numDir = argc;
+	rootDir->dirents =
+		(void *)(fileOffset + sizeof(ramfs_dir_t)); //Add pointer offset
+	rootDir->num_dirs = numFiles;
+	ramfs_dirent_t *dirents = malloc(sizeof(ramfs_dirent_t) * numFiles);
+
 	printf("RAMFS Files:");
-	for (int x = 0; x < argc; x++) {
-		rootDir->dirents[x].ino = x + 1;
+	for (int x = 0; x < numFiles; x++) {
+		dirents[x].ino = x + 1;
 		char tmp[64];
-		strcpy(tmp, argv[x]);
+		strcpy(tmp, files[x]);
 		char *base = basename(tmp);
-		printf(" %s", base);
-		strcpy(rootDir->dirents[x].name, base);
+		printf(" %s", base); //Print out filename to terminal
+		strcpy(dirents[x].name, base);
 	}
 	printf("\n");
 
-	FILE *outFile = fopen(argv1[1], "w");
+	//Actually create the ramfs file
+	const char *outFileName = argv[1];
+	FILE *outFile = fopen(outFileName, "w");
 
-	//Write num inodes
-	fwrite(&numFileInfos, sizeof(numFileInfos), 1, outFile);
+	//Write header
+	fwrite(ramfs_header, sizeof(ramfs_header_t), 1, outFile);
 
 	//Write inodes
-	fwrite(fileInfos, ((argc + 1) * sizeof(file_info_t)), 1, outFile);
-
-	//Write root dir file
-	fwrite(rootDir, sizeof(ramfs_dir_t), 1, outFile);
+	fwrite(inodes, sizeof(ramfs_inode_t) * numInodes, 1, outFile);
 
 	//Write files
-	for (int x = 1; x < numFileInfos; x++) {
-		FILE *file = fopen(argv[x - 1], "r");
-		char *buf = malloc(fileInfos[x].len);
-		fread(buf, 1, fileInfos[x].len, file);
-		fwrite(buf, fileInfos[x].len, 1, outFile);
+	for (int x = 0; x < numFiles; x++) {
+		FILE *file = fopen(files[x], "r");
+		uint32_t filesize = inodes[x + 1].size;
+		char *buf = malloc(filesize);
+		fread(buf, 1, filesize, file);
+		fwrite(buf, filesize, 1, outFile);
 		fclose(file);
 
 		free(buf);
 	}
 
+	//Write root dir file
+	fwrite(rootDir, sizeof(ramfs_dir_t), 1, outFile);
+	fwrite(dirents, sizeof(ramfs_dirent_t) * numFiles, 1, outFile);
+
 	fclose(outFile);
-	free(fileInfos);
+
+	free(inodes);
+	free(ramfs_header);
 	return 0;
 }

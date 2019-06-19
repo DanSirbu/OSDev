@@ -3,35 +3,70 @@
 #include "assert.h"
 #include "ramfs.h"
 
-typedef struct file_info {
-	uint32_t ino;
-	uint8_t type;
-	uint32_t start;
-	uint32_t len;
-} __attribute__((packed)) file_info_t; //Inodes
+/* Prototypes */
+static inode_t *ramfs_find_child(struct inode *parent, char *name);
+static inode_t *getInode(uint32_t ino);
+static int ramfs_read(struct inode *node, void *buf, uint32_t offset,
+		      uint32_t size);
+static inode_t *ramfs_get_child(struct inode *parent, uint32_t index);
+static int ramfs_mkdir(struct inode *inode, struct dentry *dentry);
 
-file_info_t *headers;
-uint32_t numInodes;
+ramfs_header_t *ramfs_header;
 
-inode_operations_t *ramfs_ops;
+inode_operations_t ramfs_ops = { .find_child = ramfs_find_child,
+				 .read = ramfs_read,
+				 .get_child = ramfs_get_child,
+				 .mkdir = ramfs_mkdir };
 
-inode_t *ramfs_find_child(struct inode *parent, char *name);
-inode_t *getInode(uint32_t ino);
-int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size);
-inode_t *ramfs_get_child(struct inode *parent, uint32_t index);
-
-void initramfs(size_t location)
+void initramfs(ramfs_header_t *diskRamFSHeader)
 {
-	ramfs_ops = kcalloc(sizeof(inode_operations_t));
-	ramfs_ops->find_child = ramfs_find_child;
-	ramfs_ops->read = ramfs_read;
-	ramfs_ops->get_child = ramfs_get_child;
+	//OTV = offset to virtual
+#define RAMFS_OTV(addr) ((void *)(addr) + (size_t)diskRamFSHeader)
+	/*******************************/
+	//Convert file offset address to virtual address
+	//By adding diskRamFSHeader
+	/*******************************/
+	diskRamFSHeader->inodes = RAMFS_OTV(diskRamFSHeader->inodes);
+	for (uint32_t x = 0; x < diskRamFSHeader->numInodes; x++) {
+		diskRamFSHeader->inodes[x].address =
+			(uint32_t)RAMFS_OTV(diskRamFSHeader->inodes[x].address);
 
-	headers = (void *)location + sizeof(uint32_t);
-	numInodes = *((uint32_t *)location);
+		//Fix directory pointers
+		if (diskRamFSHeader->inodes[x].type == FS_DIRECTORY) {
+			ramfs_dir_t *dirHeader =
+				(void *)diskRamFSHeader->inodes[x].address;
+			dirHeader->dirents = RAMFS_OTV(dirHeader->dirents);
+		}
+	}
 
-	for (uint32_t x = 0; x < numInodes; x++) {
-		headers[x].start += location; //Transform to virtual
+	/*******************************/
+	//Copy file metadata to the heap
+	/*******************************/
+	ramfs_header = kmalloc(sizeof(ramfs_header_t));
+	memcpy(ramfs_header, diskRamFSHeader, sizeof(ramfs_header_t));
+
+	size_t inodes_size = sizeof(ramfs_inode_t) * ramfs_header->max_inodes;
+	ramfs_header->inodes = kmalloc(inodes_size);
+	memcpy(ramfs_header->inodes, diskRamFSHeader->inodes, inodes_size);
+
+	//Copy directories "file" to heap
+	for (uint32_t x = 0; x < ramfs_header->numInodes; x++) {
+		if (ramfs_header->inodes[x].type != FS_DIRECTORY) {
+			continue;
+		}
+		ramfs_dir_t *dirHeader =
+			(void *)diskRamFSHeader->inodes[x].address;
+		void *newDirHeader = kmalloc(sizeof(ramfs_dir_t));
+		assert(newDirHeader != NULL);
+		memcpy(newDirHeader, dirHeader, sizeof(ramfs_dir_t));
+		ramfs_header->inodes[x].address = newDirHeader;
+
+		size_t direntsSize =
+			sizeof(ramfs_dirent_t) * dirHeader->num_dirs;
+		ramfs_dirent_t *dirents = kmalloc(direntsSize);
+		memcpy(dirents, dirHeader->dirents, direntsSize);
+		ramfs_dir_t *newDir = newDirHeader;
+		newDir->dirents = dirents;
 	}
 }
 inode_t *ramfs_getRoot()
@@ -39,26 +74,27 @@ inode_t *ramfs_getRoot()
 	return getInode(0);
 }
 
-inode_t *getInode(uint32_t ino)
+static inode_t *getInode(uint32_t ino)
 {
 	inode_t *inode = kcalloc(sizeof(inode_t));
 	inode->ino = ino;
-	inode->size = headers[ino].len;
-	inode->type = headers[ino].type;
-	inode->i_op = ramfs_ops;
+	inode->size = ramfs_header->inodes[ino].size;
+	inode->type = ramfs_header->inodes[ino].type;
+	inode->i_op = &ramfs_ops;
 
 	return inode;
 }
 
-inode_t *ramfs_find_child(struct inode *parent, char *name)
+static inode_t *ramfs_find_child(struct inode *parent, char *name)
 {
-	if (headers[parent->ino].type != FS_DIRECTORY) {
+	if (ramfs_header->inodes[parent->ino].type != FS_DIRECTORY) {
 		return NULL;
 	}
 
-	ramfs_dir_t *dir = (ramfs_dir_t *)headers[parent->ino].start;
+	ramfs_dir_t *dir =
+		(ramfs_dir_t *)ramfs_header->inodes[parent->ino].address;
 
-	for (uint32_t x = 0; x < dir->numDir; x++) {
+	for (uint32_t x = 0; x < dir->num_dirs; x++) {
 		if (strncmp(dir->dirents[x].name, name, FS_NAME_MAX_LEN) == 0) {
 			return getInode(dir->dirents[x].ino);
 		}
@@ -66,14 +102,14 @@ inode_t *ramfs_find_child(struct inode *parent, char *name)
 
 	return NULL;
 }
-inode_t *ramfs_get_child(struct inode *parent, uint32_t index)
+static inode_t *ramfs_get_child(struct inode *parent, uint32_t index)
 {
-	if (headers[parent->ino].type != FS_DIRECTORY) {
+	if (ramfs_header->inodes[parent->ino].type != FS_DIRECTORY) {
 		return NULL;
 	}
-
-	ramfs_dir_t *dir = (ramfs_dir_t *)headers[parent->ino].start;
-	if (index >= dir->numDir) {
+	ramfs_dir_t *dir =
+		(ramfs_dir_t *)ramfs_header->inodes[parent->ino].address;
+	if (index >= dir->num_dirs) {
 		return NULL;
 	}
 
@@ -98,20 +134,84 @@ int (*write)(struct inode, void *, uint32_t offset, uint32_t size);
 	return &dirent;
 }*/
 
-int ramfs_read(struct inode *node, void *buf, uint32_t offset, uint32_t size)
+static int ramfs_read(struct inode *node, void *buf, uint32_t offset,
+		      uint32_t size)
 {
-	uint32_t file_start = headers[node->ino].start;
-	if (node->ino >= numInodes) {
+	if (node->ino >= ramfs_header->numInodes) {
 		return -1;
 	}
 
+	uint32_t file_start = ramfs_header->inodes[node->ino].address;
+
 	//Restrict to file length
-	if (offset + size > headers[node->ino].len) {
-		size = headers[node->ino].len - offset;
+	if (offset + size > ramfs_header->inodes[node->ino].size) {
+		size = ramfs_header->inodes[node->ino].size - offset;
 	}
 	file_start += offset;
 
 	memcpy(buf, (void *)file_start, size);
 
 	return size;
+}
+
+static int ramfs_mkdir(struct inode *inode, struct dentry *dentry)
+{
+	assert(inode == NULL); //inode must be null for now
+	assert(dentry != NULL);
+
+	//If the inodes array is full
+	if (ramfs_header->numInodes == ramfs_header->max_inodes) {
+		//Double the size every time
+		size_t newMaxInodes = ramfs_header->numInodes * 2;
+		void *newInodes =
+			krealloc(ramfs_header->inodes,
+				 sizeof(ramfs_inode_t) * newMaxInodes);
+		if (newInodes == NULL) {
+			return -1;
+		}
+
+		ramfs_header->inodes = newInodes;
+		ramfs_header->max_inodes = newMaxInodes;
+	}
+
+	/*******************************/
+	//Add directory as a child to dentry->parent
+	/*******************************/
+	ino_t parentIno = dentry->parent->ino;
+	ramfs_dir_t *dirHeader = ramfs_header->inodes[parentIno].address;
+	void *newDirents =
+		krealloc(dirHeader->dirents,
+			 sizeof(ramfs_dirent_t) * (dirHeader->num_dirs + 1));
+	if (newDirents == NULL) {
+		return -1;
+	}
+	dirHeader->dirents = newDirents;
+
+	//Create directory inode
+	ramfs_inode_t newDirInode;
+	newDirInode.ino = ramfs_header->numInodes;
+	newDirInode.type = FS_DIRECTORY;
+	newDirInode.size = 0;
+	newDirInode.max_size = 0;
+
+	//Create directory entry in parent
+	ramfs_dirent_t newDirEntry;
+	strncpy(newDirEntry.name, dentry->name, FS_NAME_MAX_LEN);
+	newDirEntry.ino = newDirInode.ino;
+
+	dirHeader->dirents[dirHeader->num_dirs] = newDirEntry;
+	dirHeader->num_dirs++;
+
+	//Add empty ramfs_dir_t to inode
+	ramfs_dir_t *newDirHeader = kmalloc(sizeof(ramfs_dir_t));
+	memset(newDirHeader, 0, sizeof(ramfs_dir_t));
+	newDirInode.size = sizeof(ramfs_dir_t);
+	newDirInode.max_size = newDirInode.size;
+	newDirInode.address = newDirHeader;
+
+	//Add the inode
+	ramfs_header->inodes[newDirInode.ino] = newDirInode;
+	ramfs_header->numInodes++;
+
+	return 0;
 }

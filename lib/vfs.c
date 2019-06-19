@@ -140,6 +140,7 @@ file_t *vfs_open(const char *path)
 	file_t *file = kmalloc(sizeof(file_t));
 	file->f_inode = inode;
 	file->offset = 0;
+	strncpy(file->path, path, sizeof(file->path));
 	//file->path = cur;
 
 	return file;
@@ -156,6 +157,22 @@ int vfs_read(file_t *file, void *buf, size_t count, size_t offset)
 	if (file->f_inode->i_op->read) {
 		return file->f_inode->i_op->read(file->f_inode, buf, offset,
 						 count);
+	} else {
+		return -1;
+	}
+}
+int vfs_mkdir(char *path, char *name)
+{
+	inode_t *parent = vfs_namei(path);
+	if (parent == NULL || parent->type != FS_DIRECTORY) {
+		return -1;
+	}
+	if (parent->i_op->mkdir) {
+		struct dentry newDir;
+		strncpy(newDir.name, name, 64);
+		newDir.parent = parent;
+
+		return parent->i_op->mkdir(NULL, &newDir);
 	} else {
 		return -1;
 	}
