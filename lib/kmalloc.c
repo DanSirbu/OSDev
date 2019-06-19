@@ -208,7 +208,7 @@ void sbrk_alignto(size_t alignment)
 		sbrk(alignment - (curOffset - alignment));
 	}
 }
-void *sbrk(uint32_t size)
+void *sbrk(ssize_t size)
 {
 	void *returnVal = (void *)heap_top;
 	heap_top += size;
