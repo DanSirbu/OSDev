@@ -69,6 +69,27 @@ char *strcpy(char *dst, char *src)
 
 	return dst;
 }
+char *strconcat(char *dst, char *str1, char *str2)
+{
+	strcpy(dst, str1);
+	strcpy(dst + strlen(str1), str2);
+	return dst;
+}
+char *strncpy(char *dest, const char *src, size_t n)
+{
+	size_t x;
+	for (x = 0; x < n; x++) {
+		dest[x] = src[x];
+		if (src[x] == '\0') {
+			break;
+		}
+	}
+	for (; x < n; x++) {
+		dest[x] = '\0';
+	}
+
+	return dest;
+}
 int strncmp(char *str1, char *str2, size_t max_len)
 {
 	int n = max_len;
