@@ -246,6 +246,12 @@ void kmain(multiboot_info_t *multiboot_info)
 		     multiboot_info->framebuffer_width,
 		     multiboot_info->framebuffer_height);
 
+	/*drawCharacter('1', 0, 0);
+	drawCharacter('2', 8, 0);
+	drawCharacter('3', 16, 0);
+	while (1)
+		; */
+
 	debug_print("Enabling Interrupts\n");
 	sti();
 

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "font8x8_basic.h"
 
 const uint32_t *framebuffer;
 size_t display_width, display_height;
@@ -23,5 +24,23 @@ void display_update(const uint32_t *src)
 			display_src++;
 		}
 		display_address += display_width;
+	}
+}
+
+//TODO, optimize this
+void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
+{
+	uint32_t *topLeft = framebuffer + xpos + ypos * display_width;
+
+	for (int y = 0; y < 8; y++) {
+		for (int x = 0; x < 8; x++) {
+			uint8_t pixelEnabled =
+				font8x8_basic[character][y] & (1 << x);
+			if (pixelEnabled) {
+				topLeft[x] = 0xFFFFFFFF;
+			}
+		}
+
+		topLeft += display_width;
 	}
 }
