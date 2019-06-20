@@ -26,6 +26,12 @@ struct dentry {
 	char name[64];
 };
 
+typedef struct {
+	struct inode *parent;
+	char name[64];
+	struct inode *inode;
+} cachedNode_t;
+
 typedef int (*read_file_t)(struct file *, uint8_t *buf, uint32_t size,
 			   uint32_t *offset);
 typedef int (*write_file_t)(struct file *, uint32_t, uint32_t, uint8_t *);

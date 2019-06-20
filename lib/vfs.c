@@ -3,6 +3,7 @@
 #include "string.h"
 #include "kmalloc.h"
 #include "assert.h"
+#include "list.h"
 
 inode_t *fs_root;
 
@@ -58,6 +59,8 @@ char **tokenize(char *path)
 	return tokens;
 }
 
+list_t *inode_cache;
+
 inode_t *vfs_find_child(inode_t *parent, char *name)
 {
 	if (parent->type != FS_DIRECTORY) {
@@ -67,7 +70,35 @@ inode_t *vfs_find_child(inode_t *parent, char *name)
 		parent = parent->mount;
 	}
 
-	return parent->i_op->find_child(parent, name);
+	if (inode_cache == NULL) {
+		inode_cache = list_create();
+	}
+
+	//Try to find it in the cache first
+	foreach_list(inode_cache, curInode)
+	{
+		cachedNode_t *cachedInode = (void *)curInode->value;
+
+		if (cachedInode->parent == parent &&
+		    strncmp(name, cachedInode->name,
+			    sizeof(cachedInode->name)) == 0) {
+			return cachedInode->inode;
+		}
+	}
+
+	struct inode *child = parent->i_op->find_child(parent, name);
+
+	//Add it to the cache
+	if (child != NULL) {
+		cachedNode_t *newInodeToCache = kmalloc(sizeof(cachedNode_t));
+		newInodeToCache->parent = parent;
+		strncpy(newInodeToCache->name, name,
+			sizeof(newInodeToCache->name));
+		newInodeToCache->inode = child;
+		list_enqueue(inode_cache, newInodeToCache);
+	}
+
+	return child;
 }
 inode_t *vfs_get_child(inode_t *inode, int index)
 {
@@ -166,7 +197,8 @@ int vfs_read(file_t *file, void *buf, size_t offset, size_t size)
 }
 int vfs_write(file_t *file, void *buf, uint32_t offset, uint32_t size)
 {
-	if (file->f_inode->i_op->write) {
+	if (file->f_inode && file->f_inode->i_op &&
+	    file->f_inode->i_op->write) {
 		return file->f_inode->i_op->write(file->f_inode, buf, offset,
 						  size);
 	} else {
@@ -189,6 +221,7 @@ int vfs_mkdir(char *path, char *name)
 		return -1;
 	}
 }
+
 inode_t *vfs_namei(char *path)
 {
 	char **tokens = tokenize(path);
@@ -207,5 +240,12 @@ inode_t *vfs_namei(char *path)
 		i++;
 	}
 	kfree_arr(tokens);
+
+	//TODO, is this right?
+	if (cur->mount != NULL) {
+		cur = cur->mount;
+	}
+	//ENDTODO
+
 	return cur;
 }
