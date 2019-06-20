@@ -39,6 +39,8 @@ extern void kprint_newline();
 uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
+extern inode_t *keyboard_pipe;
+
 void print_memory_map(size_t mmap_addr, size_t mmap_len)
 {
 	void *mmap = (void *)mmap_addr;
@@ -76,7 +78,7 @@ void testramfs()
 		file_t *currentFolder = list_dequeue(folderQueue);
 
 		ramfs_dir_t dir;
-		vfs_read(currentFolder, &dir, sizeof(dir), 0);
+		vfs_read(currentFolder, &dir, 0, sizeof(dir));
 		for (size_t x = 0; x < dir.num_dirs; x++) {
 			char concatstr[255];
 			if (currentFolder->path[strlen(currentFolder->path) -
@@ -214,12 +216,13 @@ void kmain(multiboot_info_t *multiboot_info)
 	mount("/", fs_root_inode);
 
 	//Adding more folders
-	vfs_mkdir("/", "stdout");
-	vfs_mkdir("/stdout", "stdout1");
+	vfs_mkdir("/", "dev");
 	testramfs();
 
 	print(LOG_INFO, "Initializing keyboard\n");
 	kb_init();
+	vfs_mkdir("/dev", "keyboard");
+	assert(mount("/dev/keyboard", keyboard_pipe) == 0);
 
 	debug_print("Starting Tests\n");
 	run_tests();

@@ -132,6 +132,9 @@ int umount(char *path)
 file_t *vfs_open(const char *path)
 {
 	inode_t *inode = vfs_namei((char *)path);
+	if (inode->mount != NULL) {
+		inode = inode->mount;
+	}
 
 	if (inode == NULL) {
 		return NULL;
@@ -152,11 +155,20 @@ int vfs_close(file_t *file)
 
 	return 0;
 }
-int vfs_read(file_t *file, void *buf, size_t count, size_t offset)
+int vfs_read(file_t *file, void *buf, size_t offset, size_t size)
 {
 	if (file->f_inode->i_op->read) {
 		return file->f_inode->i_op->read(file->f_inode, buf, offset,
-						 count);
+						 size);
+	} else {
+		return -1;
+	}
+}
+int vfs_write(file_t *file, void *buf, uint32_t offset, uint32_t size)
+{
+	if (file->f_inode->i_op->write) {
+		return file->f_inode->i_op->write(file->f_inode, buf, offset,
+						  size);
 	} else {
 		return -1;
 	}
@@ -167,7 +179,7 @@ int vfs_mkdir(char *path, char *name)
 	if (parent == NULL || parent->type != FS_DIRECTORY) {
 		return -1;
 	}
-	if (parent->i_op->mkdir) {
+	if (parent->i_op && parent->i_op->mkdir) {
 		struct dentry newDir;
 		strncpy(newDir.name, name, 64);
 		newDir.parent = parent;

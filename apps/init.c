@@ -56,9 +56,16 @@ int main(int argc, char *args[])
 		printf("I'm a parent process! Child pid: %d\n", y);
 	}*
 	*/
-	char *args1[] = { "/prboom", "-nosound", NULL };
+	int fd = sys_open("/dev/keyboard");
+	char character;
+	int ret = 0;
+	while (ret == 0 || ret == -1) {
+		ret = call_read(fd, &character, 1);
+	}
+	printf("Character %d\n", character);
+	/*char *args1[] = { "/prboom", "-nosound", NULL };
 	char **envs = (char **)environ;
-	execve("/prboom", args1, envs);
+	execve("/prboom", args1, envs);*/
 	//execve("/testApp", args1, envs);
 
 	return -1;

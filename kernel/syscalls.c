@@ -117,7 +117,7 @@ uint32_t sys_read(int fd, void *buf, size_t n)
 	if (file == NULL) {
 		return -1;
 	}
-	int readAmount = vfs_read(file, buf, n, file->offset);
+	int readAmount = vfs_read(file, buf, file->offset, n);
 	if (readAmount > 0) {
 		file->offset += readAmount;
 	}

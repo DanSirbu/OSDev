@@ -49,7 +49,7 @@ static bool CircularQueueDeQueueUnsafe(CircularQueue *obj)
 static int CircularQueueFrontUnsafe(CircularQueue *obj)
 {
 	if (CircularQueueIsEmpty(obj)) {
-		return -1;
+		return NULL;
 	}
 	return obj->data[obj->front];
 }

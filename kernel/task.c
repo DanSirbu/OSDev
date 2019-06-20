@@ -144,7 +144,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 
 	//Load ELF file
 	Elf32_Ehdr header;
-	vfs_read(file, &header, sizeof(header), 0);
+	vfs_read(file, &header, 0, sizeof(header));
 	if (!(header.e_ident[EI_MAG0] == ELFMAG0 &&
 	      header.e_ident[EI_MAG1] == ELFMAG1 &&
 	      header.e_ident[EI_MAG2] == ELFMAG2 &&
@@ -162,7 +162,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 		size_t ph_offset = x * header.e_phentsize + header.e_phoff;
 
 		Elf32_Phdr ph;
-		vfs_read(file, &ph, sizeof(ph), ph_offset);
+		vfs_read(file, &ph, ph_offset, sizeof(ph));
 
 		size_t segment_end = PG_ROUND_UP(ph.p_vaddr + ph.p_memsz);
 		size_t segment_size = segment_end - PG_ROUND_DOWN(ph.p_vaddr);
@@ -173,7 +173,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 		};
 		mmap(PG_ROUND_DOWN(ph.p_vaddr), segment_size, flags);
 
-		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_filesz, ph.p_offset);
+		vfs_read(file, (uint8_t *)ph.p_vaddr, ph.p_offset, ph.p_filesz);
 
 		//filesz = segment size in file
 		//memsz = segment size in memory, can be > filesz

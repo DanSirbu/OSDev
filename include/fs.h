@@ -122,6 +122,8 @@ typedef struct inode {
 
 	size_t size;
 
+	void *device;
+
 	inode_operations_t *i_op;
 
 	struct inode *mount;

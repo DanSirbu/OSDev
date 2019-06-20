@@ -13,14 +13,18 @@
 
 struct fs_node;
 
+typedef uint32_t ino_t;
 //The directory stores child files like this (directory entry):
 
 #define FS_NAME_MAX_LEN 64
 #define BLOCK_SIZE 512
 
 struct file;
-struct dentry;
 struct inode;
+struct dentry {
+	struct inode *parent;
+	char name[64];
+};
 
 typedef int (*read_file_t)(struct file *, uint8_t *buf, uint32_t size,
 			   uint32_t *offset);
@@ -117,6 +121,8 @@ typedef struct inode {
 	uint8_t type;
 
 	size_t size;
+
+	void *device;
 
 	inode_operations_t *i_op;
 
