@@ -4,6 +4,7 @@
 #include "serial.h"
 #include "trap.h"
 #include "asm.h"
+#include "debug.h"
 
 extern char _kernel_end;
 
@@ -219,7 +220,7 @@ void page_fault_handler(int_regs_t *regs)
 	debug_print("Page Fault Error: %s at 0x%x\n",
 		    page_fault_msgs[regs->error_code], cr2);
 	if (!IS_IN_USERSPACE(regs->eip)) { //We can dump kernel stack trace
-		dump_stack_trace(regs->ebp);
+		dump_stack_trace((void *)regs->ebp);
 	}
 	halt();
 }

@@ -2,6 +2,8 @@
 #include "sys/types.h"
 #include "sig.h"
 
+#define UNUSED __attribute__((unused))
+
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2

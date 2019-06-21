@@ -1,5 +1,6 @@
 #include "display.h"
 #include "font8x8_basic.h"
+#include "serial.h"
 
 const uint32_t *framebuffer;
 size_t display_width, display_height;
@@ -31,7 +32,8 @@ void display_update(const uint32_t *src)
 //TODO, optimize this
 void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 {
-	uint32_t *topLeft = framebuffer + xpos + ypos * display_width;
+	uint32_t *topLeft =
+		(uint32_t *)framebuffer + xpos + ypos * display_width;
 
 	for (int y = 0; y < 8; y++) {
 		for (int x = 0; x < 8; x++) {
@@ -49,6 +51,6 @@ void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 }
 void setPixel(size_t x, size_t y, uint32_t value)
 {
-	uint32_t *pixel = framebuffer + y * display_width + x;
+	uint32_t *pixel = (uint32_t *)framebuffer + y * display_width + x;
 	*pixel = value;
 }

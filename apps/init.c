@@ -65,7 +65,7 @@ int main(int argc, char *args[])
 		if (character < 0) {
 			break;
 		}
-		write(writeFD, &character, 1);
+		write(writeFD, (void *)&character, 1);
 	}
 
 	char *args1[] = { "/prboom", "-nosound", NULL };

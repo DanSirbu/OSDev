@@ -3,6 +3,7 @@
 #include "pci.h"
 #include "serial.h"
 #include "trap.h"
+#include "coraxstd.h"
 
 #define RLT_VENDOR_ID 0x10EC
 #define RTL_DEVICE_ID 0x8139
@@ -16,7 +17,7 @@
 #define REG_IMR 0x3C
 #define REG_ISR 0x3E
 
-void RTL8139_Interrupt(__attribute__((unused))int_regs_t *regs)
+void RTL8139_Interrupt(UNUSED int_regs_t *regs)
 {
 	uint16_t status = inw(RTL_IO_BASE + REG_ISR);
 

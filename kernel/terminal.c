@@ -1,5 +1,9 @@
 #include "fs.h"
 #include "coraxstd.h"
+#include "kmalloc.h"
+#include "string.h"
+#include "display.h"
+#include "terminal.h"
 
 extern size_t display_width, display_height;
 
@@ -7,12 +11,15 @@ size_t cursor_position = 0;
 size_t font_width = 8;
 size_t font_height = 8;
 
+/* Prototypes */
+void putchar(char c);
+
 static int pipe_noop()
 {
 	return 0;
 }
-static int display_write(struct inode *node, void *buf, uint32_t offset,
-			 uint32_t size)
+static int display_write(UNUSED struct inode *node, void *buf,
+			 UNUSED uint32_t offset, uint32_t size)
 {
 	if (size == 0) {
 		return 0;
@@ -47,7 +54,7 @@ void initialize_terminal()
 
 void printStrToScreen(char *str)
 {
-	for (int x = 0; x < strlen(str); x++) {
+	for (uint32_t x = 0; x < strlen(str); x++) {
 		putchar(str[x]);
 	}
 }

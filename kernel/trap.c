@@ -1,5 +1,6 @@
 #include "trap.h"
 #include "task.h"
+#include "debug.h"
 
 extern void sendEOI(uint32_t interrupt_no);
 

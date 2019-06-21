@@ -21,7 +21,7 @@ size_t strnlen(const char *s, size_t maxlen)
 }
 void reverse(const char *str)
 {
-	char *start = str;
+	char *start = (char *)str;
 	char *end = str + strlen(str) - 1;
 	char temp;
 
@@ -72,8 +72,8 @@ char *strcpy(char *dst, char *src)
 }
 int strcmp(const char *str1, const char *str2)
 {
-	char *p = str1;
-	char *q = str2;
+	char *p = (char*)str1;
+	char *q = (char*)str2;
 
 	while (*p && *p == *q) {
 		p++;

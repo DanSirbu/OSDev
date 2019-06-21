@@ -6,6 +6,7 @@
 #include "display.h"
 #include "coraxstd.h"
 #include "debug.h"
+#include "time.h"
 
 /*
  * Note: must be freed after done with it
@@ -48,12 +49,13 @@ size_t sys_sbrk(uint32_t size)
 	current->process->heap = old_heap_addr + size;
 	return old_heap_addr;
 }
-size_t sys_update_display(uint32_t w, uint32_t h, uint32_t *buffered_data)
+size_t sys_update_display(UNUSED uint32_t w, UNUSED uint32_t h,
+			  uint32_t *buffered_data)
 {
 	display_update(buffered_data);
 	return 0;
 }
-size_t sys_access(const char *path, int amode)
+size_t sys_access(const char *path, UNUSED int amode)
 {
 	print(LOG_INFO, "Access: %s\n", path);
 	//TODO use amode
@@ -72,7 +74,7 @@ file_t *getProcessFile(size_t fd)
 	}
 	return current->process->files[fd];
 }
-size_t sys_open(const char *path)
+int sys_open(const char *path)
 {
 	file_t *file = vfs_open(path);
 	if (file == NULL) {
@@ -82,7 +84,7 @@ size_t sys_open(const char *path)
 	if (current->process->lastFileIndex == 10) {
 		debug_print("Out of fd for process. Can't open %s\n", path);
 		kfree(file);
-		return NULL; //Out of file entries
+		return -1; //Out of file entries
 	}
 
 	size_t fd = current->process->lastFileIndex;
@@ -145,7 +147,8 @@ int sys_seek(int fd, long int offset, int whence)
 		file->offset = offset;
 	} else if (whence == SEEK_CUR) {
 		if (offset < 0) {
-			assert(-offset < file->offset); //TODO handle this case
+			assert(-offset <
+			       (ssize_t)file->offset); //TODO handle this case
 		}
 		file->offset += offset;
 	} else {
@@ -198,7 +201,7 @@ int sys_setitimer(int which, const struct itimerval *value,
 			memcpy(ovalue, &current->process->timer,
 			       sizeof(struct itimerval));
 		}
-		memcpy(&current->process->timer, value,
+		memcpy((void *)&current->process->timer, (void *)value,
 		       sizeof(struct itimerval));
 	} else {
 		print(LOG_ERROR, "setitimer: unsupported timer type: %d\n",
