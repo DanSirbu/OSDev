@@ -5,7 +5,6 @@
 
 DEF_SYSCALL1(__NR_exit, _exit, int, exitcode)
 DEF_SYSCALL0(__NR_fork, fork)
-DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
 
 DEF_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
 	     char **, envs);
@@ -17,7 +16,8 @@ DEF_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 DEF_SYSCALL1(__NR_open, sys_open, const char *, path);
 DEF_SYSCALL1(__NR_close, sys_close, int, fd);
 
-DEF_SYSCALL3(__NR_read, call_read, int, fd, void *, buf, size_t, n);
+DEF_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n);
+DEF_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)
 DEF_SYSCALL3(__NR_seek, call_seek, int, fd, long int, offset, int, whence);
 DEF_SYSCALL3(__NR_update_screen, update_display, size_t, w, size_t, h, void *,
 	     buffered_data);

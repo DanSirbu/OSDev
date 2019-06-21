@@ -1,21 +1,12 @@
 #include "trap.h"
 #include "task.h"
-#include "syscalls.h"
+#include "syscall.h"
 #include "fs.h"
 #include "vfs.h"
 #include "display.h"
 #include "coraxstd.h"
 #include "debug.h"
 
-int sys_write(int fd, char *buf, int size)
-{
-	if (fd != 1) {
-		print(LOG_INFO, "write->fd(%d) %s", fd, buf);
-	} else {
-		debug_print("%s", buf);
-	}
-	return 1;
-}
 /*
  * Note: must be freed after done with it
  */
@@ -123,6 +114,24 @@ uint32_t sys_read(int fd, void *buf, size_t n)
 	}
 
 	return readAmount;
+}
+ssize_t sys_write(int fd, void *buf, size_t n)
+{
+	//TODO, remove this when we get stdin, stdout, stderr
+	if (fd == 1) {
+		debug_print("%s", buf);
+		return n;
+	}
+	file_t *file = getProcessFile(fd);
+	if (file == NULL) {
+		return -1;
+	}
+	int writeAmount = vfs_write(file, buf, file->offset, n);
+	if (writeAmount > 0) {
+		file->offset += writeAmount;
+	}
+
+	return writeAmount;
 }
 int sys_seek(int fd, long int offset, int whence)
 {

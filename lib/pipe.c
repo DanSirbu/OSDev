@@ -19,6 +19,23 @@ inode_operations_t inode_pipe_ops = { .find_child = NULL,
 				      .write = pipe_write,
 				      .mkdir = NULL };
 
+inode_operations_t inode_pipe_noops = { .find_child = NULL,
+					.get_child = NULL,
+					.open = pipe_noop,
+					.close = pipe_noop,
+					.read = pipe_noop,
+					.write = pipe_noop,
+					.mkdir = NULL };
+
+inode_t *make_null_pipe()
+{
+	inode_t *inode = kcalloc(sizeof(inode_t));
+	inode->i_op = &inode_pipe_noops;
+	inode->device = NULL;
+
+	return inode;
+}
+
 inode_t *make_pipe(size_t size)
 {
 	CircularQueue *queue = CircularQueueCreate(size);

@@ -3,7 +3,6 @@
 
 void sigaction(void);
 char *getenv(const char *name);
-void raise(void);
 int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(const char *s1, const char *s2, size_t n);
 
@@ -15,8 +14,6 @@ char *fgets(char *s, int size, FILE *stream);
 int feof(FILE *stream);
 int getc(FILE *stream);
 int ungetc(int c, FILE *stream);
-ssize_t read(int fildes, void *buf, size_t nbyte);
-
 int __isoc99_sscanf(const char *str, const char *format, ...);
 char *strtok(char *str, const char *delim);
 void *memchr(const void *s, int c, size_t n);

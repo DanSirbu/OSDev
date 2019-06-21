@@ -159,6 +159,9 @@ static int ramfs_mkdir(struct inode *inode, struct dentry *dentry)
 	assert(inode == NULL); //inode must be null for now
 	assert(dentry != NULL);
 
+	assert(dentry->parent->ino < ramfs_header->numInodes); //Sanity check
+	assert(ramfs_header->inodes[dentry->parent->ino].type == FS_DIRECTORY);
+
 	//If the inodes array is full
 	if (ramfs_header->numInodes == ramfs_header->max_inodes) {
 		//Double the size every time
@@ -178,39 +181,45 @@ static int ramfs_mkdir(struct inode *inode, struct dentry *dentry)
 	//Add directory as a child to dentry->parent
 	/*******************************/
 	ino_t parentIno = dentry->parent->ino;
-	ramfs_dir_t *dirHeader = ramfs_header->inodes[parentIno].address;
-	void *newDirents =
-		krealloc(dirHeader->dirents,
-			 sizeof(ramfs_dirent_t) * (dirHeader->num_dirs + 1));
+	ramfs_dir_t *parentDirFile = ramfs_header->inodes[parentIno].address;
+
+	/*START: Increase parent directory "file" to support one more entry */
+	void *newDirents = krealloc(parentDirFile->dirents,
+				    sizeof(ramfs_dirent_t) *
+					    (parentDirFile->num_dirs + 1));
 	if (newDirents == NULL) {
 		return -1;
 	}
-	dirHeader->dirents = newDirents;
+	parentDirFile->dirents = newDirents;
+	/*END*/
 
 	//Create directory inode
-	ramfs_inode_t newDirInode;
-	newDirInode.ino = ramfs_header->numInodes;
-	newDirInode.type = FS_DIRECTORY;
-	newDirInode.size = 0;
-	newDirInode.max_size = 0;
+	ramfs_inode_t childInode;
+	childInode.ino = ramfs_header->numInodes;
+	childInode.type = FS_DIRECTORY;
+	childInode.size = 0;
+	childInode.max_size = 0;
 
 	//Create directory entry in parent
-	ramfs_dirent_t newDirEntry;
-	strncpy(newDirEntry.name, dentry->name, FS_NAME_MAX_LEN);
-	newDirEntry.ino = newDirInode.ino;
+	ramfs_dirent_t childDirEntry;
+	strncpy(childDirEntry.name, dentry->name, FS_NAME_MAX_LEN);
+	childDirEntry.ino = childInode.ino;
+	memcpy(&parentDirFile->dirents[parentDirFile->num_dirs], &childDirEntry,
+	       sizeof(childDirEntry));
+	parentDirFile->num_dirs++;
 
-	dirHeader->dirents[dirHeader->num_dirs] = newDirEntry;
-	dirHeader->num_dirs++;
+	//Create the new inode's "file"
+	ramfs_dir_t *childDirFile = kmalloc(sizeof(ramfs_dir_t));
+	memset(childDirFile, 0, sizeof(ramfs_dir_t));
 
-	//Add empty ramfs_dir_t to inode
-	ramfs_dir_t *newDirHeader = kmalloc(sizeof(ramfs_dir_t));
-	memset(newDirHeader, 0, sizeof(ramfs_dir_t));
-	newDirInode.size = sizeof(ramfs_dir_t);
-	newDirInode.max_size = newDirInode.size;
-	newDirInode.address = newDirHeader;
+	//Link it to the inode
+	childInode.address = childDirFile;
+	childInode.size = sizeof(ramfs_dir_t);
+	childInode.max_size = childInode.size;
 
-	//Add the inode
-	ramfs_header->inodes[newDirInode.ino] = newDirInode;
+	//Add the inode to the inodes array
+	memcpy(&ramfs_header->inodes[childInode.ino], &childInode,
+	       sizeof(childInode));
 	ramfs_header->numInodes++;
 
 	return 0;

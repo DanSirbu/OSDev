@@ -11,7 +11,7 @@ typedef struct block {
 	struct block *next_free;
 } __attribute__((packed)) block_t;
 
-#define B2P(mblock) (mblock + 1)
+#define B2P(mblock) ((block_t *)mblock + 1)
 #define P2B(mblock) (((block_t *)mblock) - 1)
 
 block_t *free_list;
@@ -47,8 +47,8 @@ static inline void mark_block_used(block_t *prev_block, block_t *cur_block)
 		free_list = NULL;
 	} else {
 		prev_block->next_free = cur_block->next_free;
-		cur_block->next_free = NULL;
 	}
+	cur_block->next_free = NULL;
 }
 void *kmalloc_align(size_t size, uint8_t alignment)
 {

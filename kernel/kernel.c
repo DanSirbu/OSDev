@@ -16,7 +16,7 @@
 #include "time.h"
 #include "spinlock.h"
 #include "task.h"
-#include "syscalls.h"
+#include "syscall.h"
 #include "display.h"
 #include "elf.h"
 
@@ -40,6 +40,7 @@ uint8_t PIC1_INT = 0x00;
 uint8_t PIC2_INT = 0x00;
 
 extern inode_t *keyboard_pipe;
+extern inode_t *display_pipe;
 
 void print_memory_map(size_t mmap_addr, size_t mmap_len)
 {
@@ -224,6 +225,16 @@ void kmain(multiboot_info_t *multiboot_info)
 	vfs_mkdir("/dev", "keyboard");
 	assert(mount("/dev/keyboard", keyboard_pipe) == 0);
 
+	print(LOG_INFO, "Initializing screen\n");
+	initialize_terminal();
+	vfs_mkdir("/dev", "screen");
+	assert(mount("/dev/screen", display_pipe) == 0);
+
+	print(LOG_INFO, "Initializing /dev/null\n");
+	vfs_mkdir("/dev", "null");
+	inode_t *null_pipe = make_null_pipe();
+	assert(mount("/dev/null", null_pipe) == 0);
+
 	debug_print("Starting Tests\n");
 	run_tests();
 	debug_print("\nTests complete!\n");
@@ -246,14 +257,23 @@ void kmain(multiboot_info_t *multiboot_info)
 		     multiboot_info->framebuffer_width,
 		     multiboot_info->framebuffer_height);
 
-	/*drawCharacter('1', 0, 0);
-	drawCharacter('2', 8, 0);
-	drawCharacter('3', 16, 0);
-	while (1)
-		; */
-
 	debug_print("Enabling Interrupts\n");
 	sti();
+
+	/*file_t *kb = vfs_open("/dev/keyboard");
+	while (true) {
+		char character;
+		while (vfs_read(kb, &character, 0, 1) <= 0)
+			;
+		putchar('0');
+	}*/
+	/*for (int i = 0; i < (80 * 40); i++) {
+		printStrToScreen("A");
+	}
+	while (1)
+		;*/
+	setPixel(multiboot_info->framebuffer_width - 1,
+		 multiboot_info->framebuffer_height - 1, 0xFF00FF00);
 
 	debug_print("Starting Init\n");
 

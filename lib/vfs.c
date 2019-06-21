@@ -100,15 +100,6 @@ inode_t *vfs_find_child(inode_t *parent, char *name)
 
 	return child;
 }
-inode_t *vfs_get_child(inode_t *inode, int index)
-{
-	if (inode->mount != NULL) {
-		inode = inode->mount;
-	}
-
-	return inode->i_op->get_child(inode, index);
-}
-
 int mount_root(inode_t *ino)
 {
 	assert(fs_root == NULL);
@@ -120,6 +111,7 @@ int mount_root(inode_t *ino)
 }
 int mount(char *path, inode_t *ino)
 {
+	assert(ino != NULL);
 	if (path[0] == '/' && path[1] == '\0') {
 		return mount_root(ino);
 	}
@@ -163,12 +155,11 @@ int umount(char *path)
 file_t *vfs_open(const char *path)
 {
 	inode_t *inode = vfs_namei((char *)path);
-	if (inode->mount != NULL) {
-		inode = inode->mount;
-	}
-
 	if (inode == NULL) {
 		return NULL;
+	}
+	if (inode->mount != NULL) {
+		inode = inode->mount;
 	}
 
 	file_t *file = kmalloc(sizeof(file_t));
@@ -208,7 +199,13 @@ int vfs_write(file_t *file, void *buf, uint32_t offset, uint32_t size)
 int vfs_mkdir(char *path, char *name)
 {
 	inode_t *parent = vfs_namei(path);
-	if (parent == NULL || parent->type != FS_DIRECTORY) {
+	if (parent == NULL) {
+		return -1;
+	}
+	if (parent->mount != NULL) {
+		parent = parent->mount;
+	}
+	if (parent->type != FS_DIRECTORY) {
 		return -1;
 	}
 	if (parent->i_op && parent->i_op->mkdir) {
@@ -240,12 +237,6 @@ inode_t *vfs_namei(char *path)
 		i++;
 	}
 	kfree_arr(tokens);
-
-	//TODO, is this right?
-	if (cur->mount != NULL) {
-		cur = cur->mount;
-	}
-	//ENDTODO
 
 	return cur;
 }

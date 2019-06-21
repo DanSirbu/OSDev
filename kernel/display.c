@@ -9,6 +9,7 @@ void display_init(const uint32_t *framebuffer_addr, size_t width, size_t height)
 	framebuffer = framebuffer_addr;
 	display_width = width;
 	display_height = height;
+	debug_print("Display width %dx%d\n", width, height);
 }
 
 //TODO, map framebuffer to userspace instead of copying it everytime
@@ -38,9 +39,16 @@ void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 				font8x8_basic[character][y] & (1 << x);
 			if (pixelEnabled) {
 				topLeft[x] = 0xFFFFFFFF;
+			} else {
+				topLeft[x] = 0x0;
 			}
 		}
 
 		topLeft += display_width;
 	}
+}
+void setPixel(size_t x, size_t y, uint32_t value)
+{
+	uint32_t *pixel = framebuffer + y * display_width + x;
+	*pixel = value;
 }

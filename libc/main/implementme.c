@@ -66,7 +66,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	assert(stream != NULL);
 	size_t numElementsRead =
-		(uint32_t)call_read(stream->fd, ptr, nmemb * size) / size;
+		(uint32_t)read(stream->fd, ptr, nmemb * size) / size;
 	return numElementsRead;
 }
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
@@ -174,10 +174,6 @@ int mkdir(const char *path, mode_t mode)
 {
 	printf("IMPLEMENT: mkdir\n");
 	return 0; //TODO
-}
-ssize_t read(int fildes, void *buf, size_t nbyte)
-{
-	return (int)call_read(fildes, buf, nbyte);
 }
 int ferror(FILE *stream)
 {

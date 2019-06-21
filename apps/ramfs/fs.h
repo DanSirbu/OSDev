@@ -13,7 +13,6 @@
 
 struct fs_node;
 
-typedef uint32_t ino_t;
 //The directory stores child files like this (directory entry):
 
 #define FS_NAME_MAX_LEN 64

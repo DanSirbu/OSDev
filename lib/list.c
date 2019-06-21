@@ -145,6 +145,7 @@ node_t *list_index(list_t *list, int target_index)
 void list_enqueue(list_t *list, void *item)
 {
 	assert(list != NULL);
+	assert(item != NULL);
 
 	node_t *node = calloc(sizeof(node_t));
 	node->value = item;
