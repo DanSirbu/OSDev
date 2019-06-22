@@ -50,6 +50,15 @@ static inline void mark_block_used(block_t *prev_block, block_t *cur_block)
 	}
 	cur_block->next_free = NULL;
 }
+static inline void mark_block_free(block_t *block)
+{
+	if (free_list != NULL) {
+		block->next_free = free_list;
+	} else {
+		block->next_free = NULL;
+	}
+	free_list = block;
+}
 void *kmalloc_align(size_t size, uint8_t alignment)
 {
 	if (size == 0) {
@@ -176,7 +185,7 @@ void *krealloc(void *ptr, size_t newSize)
 }
 void kfree(void *ptr)
 {
-	if (ptr == 0) {
+	if (ptr == NULL) {
 		return;
 	}
 	if (ptr < (void *)heap_start) {
@@ -194,17 +203,17 @@ void kfree(void *ptr)
 	if ((ptr + cur_block->size) == (void *)heap_top) {
 		sbrk(-(sizeof(block_t) + cur_block->size));
 	} else { //Append to free list
-		cur_block->next_free = free_list;
-		free_list = cur_block;
+		mark_block_free(cur_block);
 	}
 }
 void kfree_arr(char **ptr1)
 {
 	char **ptr = (char **)ptr1;
 
-	while (*ptr != NULL) {
-		kfree(*ptr);
-		ptr += 1;
+	int i = 0;
+	while (ptr[i] != NULL) {
+		kfree(ptr[i]);
+		i++;
 	}
 
 	kfree(ptr);
@@ -238,15 +247,41 @@ void *sbrk(ssize_t size)
 	return returnVal;
 }
 
-void memset(void *ptr, char value, size_t s)
+void *memset(void *ptr, int value, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
-		((char *)ptr)[x] = value;
+		((uint8_t *)ptr)[x] = (uint8_t)(value & 0xFF);
 	}
+	return ptr;
 }
-void memcpy(void *dst, void *src, size_t s)
+void *memcpy(void *dst, const void *src, size_t s)
 {
 	for (size_t x = 0; x < s; x++) {
 		((uint8_t *)dst)[x] = ((uint8_t *)src)[x];
 	}
+	return dst;
+}
+void *memmove(void *dest, const void *src, size_t n)
+{
+	//TODO IMPORTANT, implement without malloc
+	if (n == 0) {
+		return dest;
+	}
+	void *tempLocation = kmalloc(n);
+	memcpy(tempLocation, src, n);
+	memcpy(dest, tempLocation, n);
+	kfree(tempLocation);
+
+	return dest;
+}
+int memcmp(const void *s1, const void *s2, size_t n)
+{
+	uint8_t *p1 = (uint8_t *)s1;
+	uint8_t *p2 = (uint8_t *)s2;
+	for (size_t x = 0; x < n; x++) {
+		if (p2[x] != p1[x]) {
+			return p2[x] - p1[x];
+		}
+	}
+	return 0;
 }

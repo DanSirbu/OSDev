@@ -8,7 +8,7 @@ typedef struct block {
 	struct block *next_free;
 } __attribute__((packed)) block_t;
 
-#define B2P(mblock) (mblock + 1)
+#define B2P(mblock) ((block_t *)mblock + 1)
 #define P2B(mblock) (((block_t *)mblock) - 1)
 
 #define INITIAL_HEAP_SIZE 0x100000
@@ -19,7 +19,7 @@ size_t heap_top = 0;
 size_t heap_start = 0;
 size_t heap_end = 0;
 
-void *sbrk(uint32_t size);
+void *sbrk(ssize_t size);
 void sbrk_alignto(size_t alignment);
 
 /*
@@ -47,8 +47,17 @@ static inline void mark_block_used(block_t *prev_block, block_t *cur_block)
 		free_list = NULL;
 	} else {
 		prev_block->next_free = cur_block->next_free;
-		cur_block->next_free = NULL;
 	}
+	cur_block->next_free = NULL;
+}
+static inline void mark_block_free(block_t *block)
+{
+	if (free_list != NULL) {
+		block->next_free = free_list;
+	} else {
+		block->next_free = NULL;
+	}
+	free_list = block;
 }
 void *malloc_align(size_t size, uint8_t alignment)
 {
@@ -154,8 +163,7 @@ void free(void *ptr)
 	if ((ptr + cur_block->size) == (void *)heap_top) {
 		sbrk(-(sizeof(block_t) + cur_block->size));
 	} else { //Append to free list
-		cur_block->next_free = free_list;
-		free_list = cur_block;
+		mark_block_free(cur_block);
 	}
 }
 void free_arr(char **ptr1)
@@ -187,7 +195,7 @@ void sbrk_alignto(size_t alignment)
 		sbrk(alignment - (curOffset - alignment));
 	}
 }
-void *sbrk(uint32_t size)
+void *sbrk(ssize_t size)
 {
 	//Initialize heap if this is the first call to it
 	if (heap_top == (size_t)NULL) {

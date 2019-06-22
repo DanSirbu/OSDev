@@ -14,5 +14,6 @@ void kfree_arr(char **ptr);
 void *sbrk(ssize_t size);
 void kinit_malloc(size_t start, size_t end);
 
-void memset(void *ptr, char value, size_t s);
-void memcpy(void *dst, void *src, size_t s);
+void *memset(void *ptr, int value, size_t s);
+void *memcpy(void *dst, const void *src, size_t s);
+void *memmove(void *dest, const void *src, size_t n);

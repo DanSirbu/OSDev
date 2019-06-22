@@ -27,7 +27,7 @@ char **tokenize(char *path)
 		}
 		prevChar = path[x];
 	}
-	if (path[len - 1] != '/') {
+	if (len != 0 && path[len - 1] != '/') {
 		numTokens++; //To account for the last one
 	}
 

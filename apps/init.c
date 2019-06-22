@@ -62,8 +62,9 @@ int main(int argc, char *args[])
 
 	while (true) {
 		int character = getc(readFile);
-		if (character < 0) {
-			break;
+		if (character <= 0) {
+			//break;
+			continue; //TODO, make read call blocking
 		}
 		write(writeFD, (void *)&character, 1);
 	}
