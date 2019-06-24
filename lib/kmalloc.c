@@ -119,6 +119,7 @@ void *kmalloc(size_t size)
 	if (!heap_start) {
 		debug_print(
 			"ERROR: Trying to malloc before the heap is initialized.");
+		assert(1 == 2);
 		return NULL;
 	}
 

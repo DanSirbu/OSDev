@@ -7,6 +7,8 @@
 void init_serial();
 void serial_print(char *message, va_list args);
 
+void init_serial_pipe();
+
 #define fail(reason) assert(0 && (reason))
 
 #define assert(expr)                                                           \

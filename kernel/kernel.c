@@ -41,6 +41,7 @@ uint8_t PIC2_INT = 0x00;
 
 extern inode_t *keyboard_pipe;
 extern inode_t *display_pipe;
+extern inode_t *serial_pipe;
 
 void print_memory_map(size_t mmap_addr, size_t mmap_len)
 {
@@ -229,6 +230,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	initialize_terminal();
 	vfs_mkdir("/dev", "screen");
 	assert(mount("/dev/screen", display_pipe) == 0);
+
+	print(LOG_INFO, "Initializing serial file\n");
+	vfs_mkdir("/dev", "serial");
+	init_serial_pipe();
+	assert(mount("/dev/serial", serial_pipe) == 0);
 
 	print(LOG_INFO, "Initializing /dev/null\n");
 	vfs_mkdir("/dev", "null");

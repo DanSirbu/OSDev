@@ -3,11 +3,20 @@
 #include "string.h"
 #include "screen.h"
 #include "config.h"
+#include "pipe.h"
+#include "vfs.h"
+#include "coraxstd.h"
 
 #define COM1 0x3f8
 #define COM2 0x2F8
 
 #define HEX_PREFIX "0x"
+
+/* Serial "file" */
+inode_t *serial_pipe;
+
+/* Prototypes */
+static void serial_print_string(char *message);
 
 void initialize_serial_port(int port)
 {
@@ -19,10 +28,41 @@ void initialize_serial_port(int port)
 	outb(port + 2, 0xC7); // Enable FIFO, clear them, with 14-byte threshold
 	outb(port + 4, 0x0B); // IRQs enabled, RTS/DSR set
 }
+
+static int serial_write(UNUSED struct inode *node, void *buf,
+			UNUSED uint32_t offset, uint32_t size)
+{
+	if (size == 0) {
+		return 0;
+	}
+	char *strToPrint = kmalloc(size + 1);
+	memcpy(strToPrint, buf, size);
+	strToPrint[size] = '\0'; //Null terminate it
+
+	serial_print_string(strToPrint);
+
+	kfree(strToPrint);
+
+	return size;
+}
+
+inode_operations_t inode_serial_ops = { .find_child = NULL,
+					.get_child = NULL,
+					.open = pipe_noop,
+					.close = pipe_noop,
+					.read = NULL,
+					.write = serial_write,
+					.mkdir = NULL };
+
 void init_serial()
 {
 	initialize_serial_port(COM1);
 	initialize_serial_port(COM2);
+}
+void init_serial_pipe()
+{
+	serial_pipe = calloc(sizeof(inode_t));
+	serial_pipe->i_op = &inode_serial_ops;
 }
 /*int serial_received()
 {

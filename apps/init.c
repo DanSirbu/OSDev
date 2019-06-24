@@ -57,13 +57,13 @@ int main(int argc, char *args[])
 	}*
 	*/
 	FILE *readFile = fopen("/dev/keyboard", 0);
-	int writeFD = sys_open("/dev/screen");
+	int writeFD = sys_open("/dev/serial");
 	int errFD = sys_open("/dev/null");
 
-	while (true) {
+	/*while (true) {
 		int character = getc(readFile);
 		write(writeFD, (void *)&character, 1);
-	}
+	}*/
 
 	char *args1[] = { "/prboom", "-nosound", NULL };
 	char **envs = (char **)environ;

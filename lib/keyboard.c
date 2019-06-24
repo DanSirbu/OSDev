@@ -67,6 +67,7 @@ void keyboard_handler_main(__attribute__((unused)) int_regs_t *regs)
 			return;
 
 		keycode &= ~KEY_UP_MASK; //Remove uppercase
+		keycode = kbd_us[keycode];
 		keyboard_pipe->i_op->write(keyboard_pipe, &keycode, 0, 1);
 
 		status = inb(KEYBOARD_STATUS_PORT);

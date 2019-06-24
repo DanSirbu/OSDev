@@ -9,7 +9,6 @@ static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 		     uint32_t size);
 static int pipe_write(struct inode *inode, void *buf, uint32_t offset,
 		      uint32_t size);
-static int pipe_noop();
 
 inode_operations_t inode_pipe_ops = { .find_child = NULL,
 				      .get_child = NULL,
@@ -87,7 +86,7 @@ static int pipe_write(struct inode *node, void *buf, uint32_t offset,
 	}
 	return writeAmount;
 }
-static int pipe_noop()
+int pipe_noop()
 {
 	return 0;
 }

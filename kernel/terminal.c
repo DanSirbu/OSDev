@@ -4,6 +4,7 @@
 #include "string.h"
 #include "display.h"
 #include "terminal.h"
+#include "pipe.h"
 
 extern size_t display_width, display_height;
 
@@ -14,10 +15,6 @@ size_t font_height = 8;
 /* Prototypes */
 void putchar(char c);
 
-static int pipe_noop()
-{
-	return 0;
-}
 static int display_write(UNUSED struct inode *node, void *buf,
 			 UNUSED uint32_t offset, uint32_t size)
 {
@@ -48,7 +45,7 @@ inode_operations_t inode_display_ops = { .find_child = NULL,
 
 void initialize_terminal()
 {
-	display_pipe = kmalloc(sizeof(inode_t));
+	display_pipe = kcalloc(sizeof(inode_t));
 	display_pipe->i_op = &inode_display_ops;
 }
 
@@ -61,6 +58,12 @@ void printStrToScreen(char *str)
 
 void putchar(char c)
 {
+	if (c == '\n') {
+		cursor_position =
+			(cursor_position - (cursor_position % display_width)) +
+			font_height * display_width;
+		return;
+	}
 	drawCharacter(c, cursor_position % display_width,
 		      cursor_position / display_height);
 
