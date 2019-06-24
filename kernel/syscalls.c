@@ -68,7 +68,7 @@ size_t sys_access(const char *path, UNUSED int amode)
 }
 file_t *getProcessFile(size_t fd)
 {
-	if (fd > current->process->lastFileIndex) {
+	if (fd > MAX_FD_INDEX) {
 		debug_print("FD %d does not exist\n", fd);
 		return NULL;
 	}
@@ -78,20 +78,20 @@ int sys_open(const char *path)
 {
 	file_t *file = vfs_open(path);
 	if (file == NULL) {
+		set_userspace_errno(ENOENT);
 		return -1;
 	}
 
-	if (current->process->lastFileIndex == 10) {
+	int nextFD = getNextFD(current->process);
+	if (nextFD == -1) {
 		debug_print("Out of fd for process. Can't open %s\n", path);
-		kfree(file);
+		vfs_close(file);
+		set_userspace_errno(ENFILE);
 		return -1; //Out of file entries
 	}
+	current->process->files[nextFD] = file;
 
-	size_t fd = current->process->lastFileIndex;
-	current->process->files[fd] = file;
-	current->process->lastFileIndex++;
-
-	return fd;
+	return nextFD;
 }
 int sys_close(int fd)
 {

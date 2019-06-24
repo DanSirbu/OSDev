@@ -428,6 +428,16 @@ void set_int_regs(int_regs_t *regs)
 	current->int_regs = regs;
 }
 
+int getNextFD(process_t *proc)
+{
+	for (int i = 0; i < MAX_FD; i++) {
+		if (proc->files[i] == NULL) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 void wakeup_queue(threaded_list_t *queue)
 {
 	task_t *task = list_safe_dequeue(queue);

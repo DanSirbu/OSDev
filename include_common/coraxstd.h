@@ -1,6 +1,7 @@
 #pragma once
 #include "sys/types.h"
 #include "sig.h"
+#include "errno.h"
 
 #define UNUSED __attribute__((unused))
 

@@ -42,6 +42,8 @@ fork(task) = copy everything = analogous to process
 */
 
 //Oh and idle task exists because there is no task left to run
+#define MAX_FD 10
+#define MAX_FD_INDEX (MAX_FD - 1)
 
 typedef struct {
 	page_directory_t *page_directory;
@@ -50,8 +52,7 @@ typedef struct {
 
 	list_t *threads;
 
-	file_t *files[10];
-	size_t lastFileIndex;
+	file_t *files[MAX_FD];
 	list_t *signals;
 
 	struct userspace_vars userspace_variables;
@@ -117,3 +118,5 @@ uint32_t sys_clone(void *fn, void *target_fn, void *child_stack);
 
 void wakeup_queue(threaded_list_t *queue);
 void sleep_on(threaded_list_t *queue);
+
+int getNextFD(process_t *proc);
