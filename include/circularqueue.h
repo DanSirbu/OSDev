@@ -1,5 +1,6 @@
 #pragma once
 #include "sys/types.h"
+#include "list.h"
 
 typedef struct {
 	uint32_t *data;
@@ -8,6 +9,9 @@ typedef struct {
 	int rear; //last item
 	int front_lock;
 	int rear_lock;
+
+	threaded_list_t *write_queue;
+	threaded_list_t *read_queue;
 } CircularQueue;
 
 CircularQueue *CircularQueueCreate(int k);

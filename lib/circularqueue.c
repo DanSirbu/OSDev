@@ -1,6 +1,8 @@
 #include "spinlock.h"
 #include "circularqueue.h"
 #include "kmalloc.h"
+#include "list.h"
+#include "assert.h"
 
 /** Checks whether the circular queue is empty or not. */
 //Only visible to the circularqueue.c file to make it thread safe
@@ -74,11 +76,19 @@ CircularQueue *CircularQueueCreate(int k)
 
 	queue->front_lock = 0;
 	queue->rear_lock = 0;
+
+	//TODO, move this out of queue?
+	queue->write_queue = list_safe_create();
+	queue->read_queue = list_safe_create();
 	return queue;
 }
 
 void CircularQueueFree(CircularQueue *obj)
 {
+	assert(obj->write_queue->len == 0);
+	assert(obj->read_queue->len == 0);
+	list_safe_free(obj->write_queue);
+	list_safe_free(obj->read_queue);
 	kfree(obj->data);
 	kfree(obj);
 }

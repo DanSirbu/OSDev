@@ -98,6 +98,7 @@ void list_free(list_t *list)
 		free(n);
 		n = tmp;
 	}
+	list->len = 0;
 	free(list);
 }
 

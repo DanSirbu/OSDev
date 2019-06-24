@@ -17,3 +17,7 @@ void kinit_malloc(size_t start, size_t end);
 void *memset(void *ptr, int value, size_t s);
 void *memcpy(void *dst, const void *src, size_t s);
 void *memmove(void *dest, const void *src, size_t n);
+
+#define free kfree
+#define malloc kmalloc
+#define calloc kcalloc

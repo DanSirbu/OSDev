@@ -32,3 +32,19 @@ void *list_pop(list_t *list);
 
 #define foreach_list(list, n)                                                  \
 	for (node_t *n = (list)->head; n != NULL; n = n->next)
+
+/* Thread safe list below */
+typedef struct {
+	int lock;
+	node_t *head;
+	node_t *tail;
+	size_t len;
+} threaded_list_t;
+
+threaded_list_t *list_safe_create(void);
+void list_safe_free(threaded_list_t *list);
+
+void list_safe_enqueue(threaded_list_t *list, void *item);
+void *list_safe_dequeue(threaded_list_t *list);
+/*void list_safe_push(threaded_list_t *list, void *item);
+void *list_safe_pop(threaded_list_t *list);*/

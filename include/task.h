@@ -23,7 +23,7 @@ struct cpu {
 enum STATES {
 	STATE_INIT = 0,
 	STATE_READY = 1,
-	STATE_RUNNING = 2,
+	STATE_SLEEPING = 2,
 	STATE_FINISHED = 3
 };
 
@@ -114,3 +114,6 @@ task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 int execve(const char *filename, char *argv[], char *envp[]);
 uint32_t sys_clone(void *fn, void *target_fn, void *child_stack);
+
+void wakeup_queue(threaded_list_t *queue);
+void sleep_on(threaded_list_t *queue);

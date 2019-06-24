@@ -36,6 +36,7 @@ void exit_task()
 void idle_task()
 {
 	while (1) {
+		sti();
 		schedule();
 	}
 }
@@ -44,7 +45,7 @@ task_t *spawn_init()
 {
 	task_t *init_task = create_task(NULL);
 
-	init_task->state = STATE_RUNNING;
+	init_task->state = STATE_INIT;
 
 	//TODO, reuse kernel stack?
 	init_task->stack = (size_t)kmalloc(STACK_SIZE);
@@ -376,7 +377,10 @@ void schedule()
 }
 void schedule_task(task_t *next_task)
 {
-	make_task_ready(current);
+	if (current->state != STATE_FINISHED &&
+	    current->state != STATE_SLEEPING) {
+		make_task_ready(current);
+	}
 
 	//If the task is the same, we don't need to load it again
 	if (next_task == current) {
@@ -422,4 +426,20 @@ void handle_signals()
 void set_int_regs(int_regs_t *regs)
 {
 	current->int_regs = regs;
+}
+
+void wakeup_queue(threaded_list_t *queue)
+{
+	task_t *task = list_safe_dequeue(queue);
+	while (task != NULL) {
+		make_task_ready(task);
+		task = list_safe_dequeue(queue);
+	}
+}
+void sleep_on(threaded_list_t *queue)
+{
+	assert(current != kernel_idle_task);
+	current->state = STATE_SLEEPING;
+	list_safe_enqueue(queue, current);
+	schedule();
 }

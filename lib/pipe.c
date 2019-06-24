@@ -57,7 +57,9 @@ static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 	while (readAmount < size) {
 		int ret = CircularQueueFront(queue);
 		if (ret == NULL) { //TODO, what if we enqueue 0?
-			break;
+			wakeup_queue(queue->write_queue);
+			sleep_on(queue->read_queue);
+			continue;
 		}
 		buffer[readAmount] = ret;
 		CircularQueueDeQueue(queue);
@@ -76,8 +78,11 @@ static int pipe_write(struct inode *node, void *buf, uint32_t offset,
 	while (writeAmount < size) {
 		bool ret = CircularQueueEnQueue(queue, buffer[writeAmount]);
 		if (!ret) {
-			break;
+			wakeup_queue(queue->read_queue);
+			sleep_on(queue->write_queue);
+			continue;
 		}
+		wakeup_queue(queue->read_queue);
 		writeAmount++;
 	}
 	return writeAmount;

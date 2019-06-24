@@ -1,4 +1,4 @@
-global LoadNewPageDirectory, DisablePSE, tss_flush, load_idt, asm_lgdt,get_ebp, switch_context, update_segment_registers
+global LoadNewPageDirectory, DisablePSE, tss_flush, load_idt, asm_lgdt,get_ebp, get_flags, switch_context, update_segment_registers
 
 section .text
 ; asm_lgdt - load global descriptor table
@@ -111,4 +111,9 @@ switch_context_old:
 	
 get_ebp:
 	mov eax, ebp
+	ret
+
+get_flags:
+	pushf
+	pop eax
 	ret
