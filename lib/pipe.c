@@ -48,7 +48,9 @@ inode_t *make_pipe(size_t size)
 static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 		     uint32_t size)
 {
+	assert(node != NULL);
 	assert(node->device != NULL);
+
 	CircularQueue *queue = node->device;
 	uint8_t *buffer = buf;
 
@@ -56,12 +58,16 @@ static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 	while (readAmount < size) {
 		int ret = CircularQueueFront(queue);
 		if (ret == NULL) { //TODO, what if we enqueue 0?
-			wakeup_queue(queue->write_queue);
-			sleep_on(queue->read_queue);
-			continue;
+			if (node->flags & O_NONBLOCK) {
+				return readAmount;
+			} else {
+				wakeup_queue(queue->write_queue);
+				sleep_on(queue->read_queue);
+				continue;
+			}
 		}
 		buffer[readAmount] = ret;
-		CircularQueueDeQueue(queue);
+		assert(CircularQueueDeQueue(queue) == true);
 		readAmount++;
 	}
 	return readAmount;
@@ -76,12 +82,18 @@ static int pipe_write(struct inode *node, void *buf, uint32_t offset,
 	int writeAmount = 0;
 	while (writeAmount < size) {
 		bool ret = CircularQueueEnQueue(queue, buffer[writeAmount]);
-		if (!ret) {
-			wakeup_queue(queue->read_queue);
-			sleep_on(queue->write_queue);
-			continue;
+		if (ret == false) { //TODO, what if we enqueue 0?
+			if (node->flags & O_NONBLOCK) {
+				return writeAmount;
+			} else {
+				wakeup_queue(queue->read_queue);
+				sleep_on(queue->write_queue);
+				continue;
+			}
 		}
-		wakeup_queue(queue->read_queue);
+		if (!(node->flags & O_NONBLOCK)) {
+			wakeup_queue(queue->read_queue);
+		}
 		writeAmount++;
 	}
 	return writeAmount;

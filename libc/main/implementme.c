@@ -101,8 +101,8 @@ int fgetc(FILE *stream)
 		&buf, 1, 1,
 		stream); //TODO, this is highly inefficient, create a buffer in FILE
 
-	if (ret < 0) {
-		return ret;
+	if (ret <= 0) {
+		return EOF;
 	}
 	return buf;
 }
