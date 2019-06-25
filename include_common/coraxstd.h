@@ -437,3 +437,24 @@ struct userspace_vars {
 	int *errno_addr;
 	void *SignalHandler;
 };
+
+struct stat {
+	/*uint16_t st_dev;
+	uint16_t st_ino;
+	uint32_t st_mode;
+	uint16_t st_nlink;
+	uint16_t st_uid;
+	uint16_t st_gid;
+	uint16_t st_rdev;*/
+	uint32_t st_size;
+	/*uint32_t st_atime;
+	uint32_t __unused1;
+	uint32_t st_mtime;
+	uint32_t __unused2;
+	uint32_t st_ctime;
+	uint32_t __unused3;
+	uint32_t st_blksize;
+	uint32_t st_blocks;*/
+};
+
+#define O_NONBLOCK 1

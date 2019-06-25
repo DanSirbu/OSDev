@@ -224,17 +224,11 @@ int __xstat(int vers, const char *name, struct stat *buf)
 	printf("IMPLEMENT: xstat\n");
 	return -1;
 }
-int fstat(int fildes, struct stat *buf)
-{
-	printf("IMPLEMENT: fstat\n");
-	return -1;
-}
 int stat(const char *restrict path, struct stat *restrict buf)
 {
 	printf("IMPLEMENT: stat\n");
 	return -1;
 }
-
 typedef unsigned long sigset_t;
 int sigemptyset(sigset_t *set)
 {

@@ -15,6 +15,8 @@ DECL_SYSCALL3(__NR_clone, clone2, void *, fn, void *, target_fn, void *,
 DECL_SYSCALL1(NULL, syscall_sbrk, uint32_t, size)
 DECL_SYSCALL2(__NR_access, access, const char *, path, int, amode)
 
+DECL_SYSCALL2(__NR_fstat, fstat, int, fd, void *, stat)
+
 DECL_SYSCALL1(__NR_open, sys_open, const char *, path)
 DECL_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n)
 DECL_SYSCALL3(__NR_write, write, int, fd, char *, buf, int, size)

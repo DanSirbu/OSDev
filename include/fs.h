@@ -130,6 +130,8 @@ typedef struct inode {
 
 	void *device;
 
+	uint8_t flags;
+
 	inode_operations_t *i_op;
 
 	struct inode *mount;

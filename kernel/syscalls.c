@@ -104,6 +104,20 @@ int sys_close(int fd)
 
 	return 0;
 }
+
+int sys_fstat(int fildes, struct stat *buf)
+{
+	file_t *file = getProcessFile(fildes);
+	if (file == NULL) {
+		set_userspace_errno(ENOMEM); //TODO, find better errno
+		return -1;
+	}
+
+	memset(buf, 0, sizeof(struct stat));
+	buf->st_size = file->f_inode->size;
+
+	return 0;
+}
 uint32_t sys_read(int fd, void *buf, size_t n)
 {
 	file_t *file = getProcessFile(fd);
@@ -205,6 +219,19 @@ int sys_setitimer(int which, const struct itimerval *value,
 	}
 	return 0;
 }
+int sys_fcntl(int fd, int cmd, int flags)
+{
+	file_t *file = getProcessFile(fd);
+	if (file == NULL) {
+		return -1;
+	}
+	//TODO, handle cmd parameter
+
+	file->f_inode->flags =
+		flags; //TODO, we should set flags on file_t not the inode
+
+	return 0;
+}
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {
@@ -229,6 +256,9 @@ void syscall(int_regs_t *regs)
 			     size_t, h, void *, buffered_data);
 		DEF_SYSCALL2(__NR_access, access, const char *, path, int,
 			     amode);
+
+		DEF_SYSCALL3(__NR_fcntl, fcntl, int, fd, int, cmd, int, flags);
+		DEF_SYSCALL2(__NR_fstat, fstat, int, fd, void *, stat);
 
 		DEF_SYSCALL1(__NR_open, open, const char *, path);
 		DEF_SYSCALL1(__NR_close, close, int, fd);
