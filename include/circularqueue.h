@@ -16,6 +16,7 @@ typedef struct {
 
 CircularQueue *CircularQueueCreate(int k);
 int CircularQueueFront(CircularQueue *obj);
+int CircularQueueBack(CircularQueue *obj);
 bool CircularQueueEnQueue(CircularQueue *obj, int value);
 bool CircularQueueDeQueue(CircularQueue *obj);
 void CircularQueueFree(CircularQueue *obj);

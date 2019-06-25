@@ -55,6 +55,13 @@ static int CircularQueueFrontUnsafe(CircularQueue *obj)
 	}
 	return obj->data[obj->front];
 }
+static int CircularQueueBackUnsafe(CircularQueue *obj)
+{
+	if (CircularQueueIsEmpty(obj)) {
+		return NULL;
+	}
+	return obj->data[obj->rear];
+}
 
 /** Get the last item from the queue. */
 /*static int CircularQueueRearUnsafe(CircularQueue *obj)
@@ -97,6 +104,13 @@ int CircularQueueFront(CircularQueue *obj)
 {
 	spinlock_acquire(&obj->front_lock);
 	int ret = CircularQueueFrontUnsafe(obj);
+	spinlock_release(&obj->front_lock);
+	return ret;
+}
+int CircularQueueBack(CircularQueue *obj)
+{
+	spinlock_acquire(&obj->front_lock);
+	int ret = CircularQueueBackUnsafe(obj);
 	spinlock_release(&obj->front_lock);
 	return ret;
 }
