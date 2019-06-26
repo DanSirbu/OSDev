@@ -7,8 +7,7 @@ typedef struct {
 	uint32_t size;
 	int front; //First item
 	int rear; //last item
-	int front_lock;
-	int rear_lock;
+	int lock;
 
 	threaded_list_t *write_queue;
 	threaded_list_t *read_queue;

@@ -21,6 +21,7 @@ static bool CircularQueueIsFull(CircularQueue *obj)
 /** Insert an element into the circular queue. Return true if the operation is successful. */
 static bool CircularQueueEnQueueUnsafe(CircularQueue *obj, int value)
 {
+	assert(value != NULL);
 	if (CircularQueueIsFull(obj)) {
 		return false;
 	}
@@ -81,8 +82,7 @@ CircularQueue *CircularQueueCreate(int k)
 	queue->front = -1;
 	queue->rear = -1;
 
-	queue->front_lock = 0;
-	queue->rear_lock = 0;
+	queue->lock = 0;
 
 	//TODO, move this out of queue?
 	queue->write_queue = list_safe_create();
@@ -102,31 +102,31 @@ void CircularQueueFree(CircularQueue *obj)
 
 int CircularQueueFront(CircularQueue *obj)
 {
-	spinlock_acquire(&obj->front_lock);
+	spinlock_acquire(&obj->lock);
 	int ret = CircularQueueFrontUnsafe(obj);
-	spinlock_release(&obj->front_lock);
+	spinlock_release(&obj->lock);
 	return ret;
 }
 int CircularQueueBack(CircularQueue *obj)
 {
-	spinlock_acquire(&obj->front_lock);
+	spinlock_acquire(&obj->lock);
 	int ret = CircularQueueBackUnsafe(obj);
-	spinlock_release(&obj->front_lock);
+	spinlock_release(&obj->lock);
 	return ret;
 }
 bool CircularQueueEnQueue(CircularQueue *obj, int value)
 {
-	spinlock_acquire(&obj->rear_lock);
+	spinlock_acquire(&obj->lock);
 	bool ret = CircularQueueEnQueueUnsafe(obj, value);
-	spinlock_release(&obj->rear_lock);
+	spinlock_release(&obj->lock);
 
 	return ret;
 }
 bool CircularQueueDeQueue(CircularQueue *obj)
 {
-	spinlock_acquire(&obj->front_lock);
+	spinlock_acquire(&obj->lock);
 	bool ret = CircularQueueDeQueueUnsafe(obj);
-	spinlock_release(&obj->front_lock);
+	spinlock_release(&obj->lock);
 
 	return ret;
 }
