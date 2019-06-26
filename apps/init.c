@@ -57,8 +57,8 @@ int main(int argc, char *args[])
 	}*
 	*/
 	FILE *readFile = fopen("/dev/keyboard", 0);
-	int writeFD = sys_open("/dev/serial");
-	int errFD = sys_open("/dev/null");
+	int writeFD = open("/dev/serial", 0);
+	int errFD = open("/dev/null", 0);
 
 	/*while (true) {
 		int character = getc(readFile);

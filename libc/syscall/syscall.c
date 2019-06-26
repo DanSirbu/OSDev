@@ -13,7 +13,7 @@ DEF_SYSCALL3(__NR_clone, clone2, void *, fn, void *, target_fn, void *,
 DEF_SYSCALL1(__NR_sbrk, syscall_sbrk, uint32_t, size);
 DEF_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 
-DEF_SYSCALL1(__NR_open, sys_open, const char *, path);
+DEF_SYSCALL2(__NR_open, sys_open, const char *, path, int, oflags);
 DEF_SYSCALL1(__NR_close, sys_close, int, fd);
 
 DEF_SYSCALL2(__NR_fstat, fstat, int, fd, void *, stat);

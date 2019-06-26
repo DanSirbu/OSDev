@@ -52,7 +52,8 @@ int strncasecmp(const char *s1, const char *s2, size_t n)
 
 FILE *fopen(const char *pathname, const char *mode)
 {
-	int fd = sys_open(pathname);
+	//TODO, handle mode
+	int fd = open(pathname, 0);
 	if (fd < 0) {
 		return NULL;
 	}
@@ -197,7 +198,7 @@ off_t lseek(int fildes, off_t offset, int whence)
 int open(const char *path, int oflag, ...)
 {
 	//TODO handle oflag and mode
-	return sys_open(path);
+	return sys_open(path, oflag);
 }
 void __assert_fail(char *expr, char *file, int line, char *assert_fn)
 {

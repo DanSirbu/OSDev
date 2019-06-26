@@ -74,7 +74,7 @@ file_t *getProcessFile(size_t fd)
 	}
 	return current->process->files[fd];
 }
-int sys_open(const char *path)
+int sys_open(const char *path, int oflags)
 {
 	file_t *file = vfs_open(path);
 	if (file == NULL) {
@@ -90,6 +90,8 @@ int sys_open(const char *path)
 		return -1; //Out of file entries
 	}
 	current->process->files[nextFD] = file;
+	//TODO, we should set flags on file_t not the inode
+	file->f_inode->flags = oflags;
 
 	return nextFD;
 }
@@ -227,8 +229,9 @@ int sys_fcntl(int fd, int cmd, int flags)
 	}
 	//TODO, handle cmd parameter
 
-	file->f_inode->flags =
-		flags; //TODO, we should set flags on file_t not the inode
+	//TODO, we should set flags on file_t not the inode
+	//Also modify sys_open when the above TODO is done
+	file->f_inode->flags = flags;
 
 	return 0;
 }
@@ -260,7 +263,7 @@ void syscall(int_regs_t *regs)
 		DEF_SYSCALL3(__NR_fcntl, fcntl, int, fd, int, cmd, int, flags);
 		DEF_SYSCALL2(__NR_fstat, fstat, int, fd, void *, stat);
 
-		DEF_SYSCALL1(__NR_open, open, const char *, path);
+		DEF_SYSCALL2(__NR_open, open, const char *, path, int, oflags);
 		DEF_SYSCALL1(__NR_close, close, int, fd);
 		DEF_SYSCALL3(__NR_read, read, int, fd, void *, buf, size_t, n);
 		DEF_SYSCALL3(__NR_seek, seek, int, fd, long int, offset, int,
