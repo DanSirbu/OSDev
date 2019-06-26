@@ -63,6 +63,11 @@ void dump_stack_trace(uint32_t *ebp)
 
 		debug_print("%d: %s\n", count, func_name, func_file);
 		count++;
+
+		if (strncmp(func_name, "interrupt_handler",
+			    sizeof("interrupt_handler")) == 0) {
+			break; //Stop stack trace when we get to the interrupt handler
+		}
 	}
 }
 
