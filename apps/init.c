@@ -65,7 +65,7 @@ int main(int argc, char *args[])
 		write(writeFD, (void *)&character, 1);
 	}*/
 
-	char *args1[] = { "/prboom", "-nosound", NULL };
+	char *args1[] = { "/prboom", NULL };
 	char **envs = (char **)environ;
 	execve("/prboom", args1, envs);
 	//execve("/testApp", args1, envs);
