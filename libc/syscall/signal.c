@@ -38,8 +38,7 @@ void (*signal_handlers[SIGRTMAX])(int);
 
 pid_t getpid()
 {
-	printf("IMPLEMENT: GETPID\n");
-	return 1;
+	return call_getpid();
 }
 int sigaction(int sig, const struct sigaction *restrict act,
 	      struct sigaction *restrict oact)

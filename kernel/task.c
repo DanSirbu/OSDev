@@ -8,6 +8,7 @@
 #include "trap.h"
 #include "vfs.h"
 #include "debug.h"
+#include "spinlock.h"
 
 /* Prototypes */
 void handle_signals();
@@ -29,6 +30,17 @@ uint32_t last_process = 0;
 	stack -= sizeof(type);                                                 \
 	*((type *)stack) = value
 
+pid_t NEXT_PID = 0;
+int NEXT_PID_LOCK = 0;
+
+pid_t getNextPID()
+{
+	int ret;
+	spinlock_acquire(&NEXT_PID_LOCK);
+	ret = NEXT_PID++;
+	spinlock_release(&NEXT_PID_LOCK);
+	return ret;
+}
 void exit_task()
 {
 	sys_exit(0);
@@ -59,6 +71,7 @@ task_t *create_task(process_t *process)
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
 		process->signals = list_create();
+		process->pid = getNextPID();
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
@@ -359,8 +372,7 @@ void update_timer(uint32_t timeDelta)
 	    procTimer->it_value.tv_sec >= procTimer->it_interval.tv_sec) {
 		//memset(procTimer, 0, sizeof(struct itimerval));
 		procTimer->it_value = procTimer->it_interval;
-		//TODO IMPORTANT, use current process pid
-		sys_kill(1, SIGALRM);
+		sys_kill(sys_getPID(), SIGALRM);
 	}
 }
 void schedule()
@@ -452,4 +464,29 @@ void sleep_on(threaded_list_t *queue)
 	current->state = STATE_SLEEPING;
 	list_safe_enqueue(queue, current);
 	schedule();
+}
+
+int sys_kill(pid_t pid, int sig)
+{
+	//TODO if pid == 0, send to process group
+	//TODO if error, return -1
+	if (pid == 0) {
+		return -1;
+	}
+	foreach_list(task_list, curTask)
+	{
+		task_t *task = curTask->value;
+		if (task->process->pid == pid) {
+			list_enqueue(task->process->signals, (void *)sig);
+			break;
+		}
+	}
+	schedule();
+
+	return 0;
+}
+
+pid_t sys_getPID()
+{
+	return current->process->pid;
 }

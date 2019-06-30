@@ -46,6 +46,8 @@ fork(task) = copy everything = analogous to process
 #define MAX_FD_INDEX (MAX_FD - 1)
 
 typedef struct {
+	pid_t pid;
+
 	page_directory_t *page_directory;
 
 	size_t heap;
@@ -103,6 +105,8 @@ edi
 */
 void tasking_install();
 void switch_context(context_t *cur_context, context_t *new_context);
+
+pid_t getNextPID();
 uint32_t sys_exit(int exitcode);
 uint32_t sys_fork(int_regs_t *regs);
 void schedule();

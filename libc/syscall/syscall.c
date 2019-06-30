@@ -6,6 +6,8 @@
 DEF_SYSCALL1(__NR_exit, _exit, int, exitcode)
 DEF_SYSCALL0(__NR_fork, fork)
 
+DEF_SYSCALL0(__NR_getpid, call_getpid);
+
 DEF_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
 	     char **, envs);
 DEF_SYSCALL3(__NR_clone, clone2, void *, fn, void *, target_fn, void *,
