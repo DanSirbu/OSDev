@@ -3,10 +3,6 @@ DEP-LIBS = ../obj/libc/libcorax.a
 INCS = -I ../libc/include -I ../include_common
 OBJDIR = ../obj/apps
 
-CROSS-COMPILER-DIR=/home/admin/opt/cross/bin
-CC:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
-CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
-
 
 SRC = $(wildcard *.c)
 OBJFILES = $(patsubst %.c, $(OBJDIR)/%, $(SRC))

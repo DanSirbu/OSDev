@@ -1,9 +1,10 @@
-# Change these variables to match your configuration
-CROSS-COMPILER-DIR=/home/admin/opt/cross/bin
+export ROOTDIR=$(shell pwd)
 
+export CROSS-DIR=$(ROOTDIR)/toolchain/local/bin
 
-CC:=$(CROSS-COMPILER-DIR)/i686-elf-gcc
-CROSS-LINKER:=$(CROSS-COMPILER-DIR)/i686-elf-ld
+export CC=$(CROSS-DIR)/i686-pc-corax-gcc
+export LD=$(CROSS-DIR)/i686-pc-corax-ld
+
 QEMU := qemu-system-i386
 
 
@@ -42,7 +43,7 @@ apps:
 	$(MAKE) -C $@
 
 $(OBJDIR)/kernel.elf: ${OBJFILES}
-	$(CROSS-LINKER) -T link.ld $^ -o $@
+	$(LD) -T link.ld $^ -o $@
 
 $(OBJDIR)/%.o: %.c
 	$(CC) $(ARGS) $< -c -o $@ -I include/ -I tests/
