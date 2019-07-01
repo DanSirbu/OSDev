@@ -20,7 +20,7 @@
 #include "display.h"
 #include "elf.h"
 
-#include "test.h"
+#include "../tests/test.h"
 #include "ramfs.h"
 #include "fs.h"
 #include "vfs.h"
