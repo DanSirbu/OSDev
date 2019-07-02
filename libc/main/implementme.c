@@ -11,7 +11,7 @@ FILE *stdin = &stdin_f;
 FILE *stdout = &stdout_f;
 FILE *stderr = &stderr_f;
 
-extern char **environ;
+extern char **environ; //in crt0.s
 char *getenv(const char *name)
 {
 	assert(environ != NULL);

@@ -1,5 +1,3 @@
-# CMakefile from https://github.com/phaser/phOS/blob/master/CMakeLists.txt
-
 cmake_minimum_required (VERSION 3.14.5)
 PROJECT (kernel)
 
@@ -25,5 +23,4 @@ add_library(kernel.elf STATIC
 			${kernel_ASM_SOURCES})
 
 message("Kernel Binary bin ${PROJECT_BINARY_DIR}")
-
-#add_custom_command(TARGET kernel.elf POST_BUILD COMMAND ${CMAKE_C_LINKER} -ffreestanding -fno-rtti -fno-exceptions -nostdlib -T${CMAKE_CURRENT_LIST_DIR}/link.ld -o kernel.elf ${PROJECT_BINARY_DIR}/libkernel.elf.a)
+add_custom_command(TARGET kernel.elf POST_BUILD COMMAND ${CMAKE_C_LINKER} -ffreestanding -fno-rtti -fno-exceptions -nostdlib -T${CMAKE_CURRENT_LIST_DIR}/link.ld -o kernel.elf ${PROJECT_BINARY_DIR}/libkernel.elf.a)
