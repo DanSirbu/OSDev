@@ -23,9 +23,24 @@ add_custom_target(os.iso ALL
                   COMMAND bash make-iso.sh
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+
+set(QEMUARGS -no-shutdown -no-reboot -s -m 512M -serial file:serial.log -drive format=raw,file=os.iso -vga std)
+
 add_custom_target(run
-                 COMMAND qemu-system-i386 -no-shutdown -no-reboot -s -m 512M -serial file:serial.log -drive format=raw,file=os.iso -vga std
+                 COMMAND qemu-system-i386 ${QEMUARGS}
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                 )
+
+add_custom_target(run-debug
+                 COMMAND qemu-system-i386 -S ${QEMUARGS}
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                 )
+
+add_custom_target(debug
+                 COMMAND gdb isofiles/boot/kernel.elf
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                  )
 
 add_dependencies(run os.iso)
+add_dependencies(run-debug os.iso)
+add_dependencies(debug os.iso)
