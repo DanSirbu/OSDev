@@ -6,11 +6,9 @@
 #include "terminal.h"
 #include "pipe.h"
 
-extern size_t display_width, display_height;
-
 size_t cursor_position = 0;
-size_t font_width = 8;
-size_t font_height = 8;
+
+size_t terminal_width = 80;
 
 /* Prototypes */
 void putchar(char c);
@@ -59,19 +57,32 @@ void printStrToScreen(char *str)
 void putchar(char c)
 {
 	if (c == '\n') {
-		cursor_position =
-			(cursor_position - (cursor_position % display_width)) +
-			font_height * display_width;
+		cursor_position = cursor_position -
+				  (cursor_position % terminal_width) +
+				  terminal_width;
+		update_cursor();
+		return;
+	} else if (c == '\b') {
+		if (cursor_position == 0) {
+			return;
+		}
+		drawCharacter(' ', cursor_position % terminal_width,
+			      cursor_position / terminal_width);
+		cursor_position -= 1;
+		update_cursor();
 		return;
 	}
-	drawCharacter(c, cursor_position % display_width,
-		      cursor_position / display_height);
 
-	cursor_position += font_width;
-	if (cursor_position % display_width == 0) {
-		cursor_position += font_height * display_width;
-	}
-	if (cursor_position > display_width * display_height) {
-		cursor_position = 0;
-	}
+	drawCharacter(c, cursor_position % terminal_width,
+		      cursor_position / terminal_width);
+
+	cursor_position += 1;
+
+	update_cursor();
+}
+
+void update_cursor()
+{
+	drawCharacter('\xdb', cursor_position % terminal_width,
+		      cursor_position / terminal_width);
 }

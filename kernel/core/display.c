@@ -5,12 +5,19 @@
 const uint32_t *framebuffer;
 size_t display_width, display_height;
 
+size_t character_width;
+size_t character_scale;
+
 void display_init(const uint32_t *framebuffer_addr, size_t width, size_t height)
 {
 	framebuffer = framebuffer_addr;
 	display_width = width;
 	display_height = height;
 	debug_print("Display width %dx%d\n", width, height);
+
+	//Default to 80 characters per line
+	character_width = display_width / 80;
+	character_scale = character_width / 8; //We use 8 bit characters
 }
 
 //TODO, map framebuffer to userspace instead of copying it everytime
@@ -32,13 +39,22 @@ void display_update(const uint32_t *src)
 //TODO, optimize this
 void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 {
-	uint32_t *topLeft =
-		(uint32_t *)framebuffer + xpos + ypos * display_width;
+	uint32_t *topLeft = (uint32_t *)framebuffer + (xpos * character_width) +
+			    (ypos * display_width);
 
-	for (int y = 0; y < 8; y++) {
-		for (int x = 0; x < 8; x++) {
-			uint8_t pixelEnabled =
-				font8x8_basic[character][y] & (1 << x);
+	for (int y = 0; y < character_width; y++) {
+		for (int x = 0; x < character_width; x++) {
+			uint8_t pixelEnabled;
+
+			if (character == (uint8_t)'\xdb') {
+				pixelEnabled = true;
+			} else {
+				pixelEnabled =
+					font8x8_basic[character]
+						     [y / character_scale] &
+					(1 << (x / character_scale));
+			}
+
 			if (pixelEnabled) {
 				topLeft[x] = 0xFFFFFFFF;
 			} else {
