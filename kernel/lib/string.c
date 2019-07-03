@@ -126,3 +126,12 @@ size_t array_length(char *arr[])
 		;
 	return i;
 }
+char *strdup(const char *s)
+{
+	size_t len = strlen(s) + 1;
+
+	char *new_str = kmalloc(len);
+	memcpy(new_str, s, len);
+
+	return new_str;
+}

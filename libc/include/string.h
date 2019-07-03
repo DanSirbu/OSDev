@@ -13,6 +13,8 @@ int atoi(const char *nptr);
 char *strncpy(char *dest, const char *src, size_t n);
 char *strcat(char *dest, const char *src);
 int strncmp(const char *s1, const char *s2, size_t n);
+char *strsep(char **stringp, const char *delim);
+char **tokenize(char *str, char *delim);
 
 int fprintf(FILE *stream, const char *format, ...);
 

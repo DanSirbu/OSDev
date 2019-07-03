@@ -17,9 +17,7 @@ char **copy_arr(char *arr[])
 	size_t numItems = array_length(arr);
 	char **newArray = kmalloc((numItems + 1) * sizeof(char *));
 	for (size_t x = 0; x < numItems; x++) {
-		size_t strLen = strlen(arr[x]) + 1; //Include null terminator
-		newArray[x] = kmalloc(strLen);
-		memcpy(newArray[x], arr[x], strLen);
+		newArray[x] = strdup(arr[x]);
 	}
 	newArray[numItems] = NULL;
 
@@ -27,7 +25,8 @@ char **copy_arr(char *arr[])
 }
 int sys_execve(const char *filename, char *args1[], char *envs1[])
 {
-	char **args = { filename, NULL };
+	char **args = { strdup(filename), NULL };
+	//TODO MEMORY LEAK: how to free strdup(filename) after?
 	char **envs = { NULL };
 
 	if (args1 != NULL) {
