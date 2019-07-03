@@ -6,5 +6,6 @@ set pagination off
 set print repeats 0
 set print elements 0
 
-add-symbol-file obj/apps/prboom
-#add-symbol-file obj/apps/init
+#add-symbol-file build/built_apps/prboom
+#add-symbol-file build/built_apps/init
+#add-symbol-file build/built_apps/shell
