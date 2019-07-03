@@ -36,6 +36,8 @@ DECL_SYSCALL3(__NR_setitimer, setitimer, int, which, const struct itimerval *,
 	      value, struct itimerval *, ovalue)
 DECL_SYSCALL1(__NR_close, sys_close, int, fd)
 
+DECL_SYSCALL1(__NR_pipe, pipe, int, fildes[2])
+
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));
 void exit(uint32_t exitcode);

@@ -7,6 +7,7 @@
 #include "coraxstd.h"
 #include "debug.h"
 #include "time.h"
+#include "pipe.h"
 
 /*
  * Note: must be freed after done with it
@@ -222,6 +223,23 @@ int sys_fcntl(int fd, int cmd, int flags)
 
 	return 0;
 }
+int sys_pipe(int fildes[2])
+{
+	int fd1 = getNextFD(current);
+	int fd2 = getNextFD(current);
+	if (fd1 == -1 || fd2 == -1) {
+		return -1;
+	}
+	unix_pipe_t unix_pipe;
+	make_unix_pipe(100, &unix_pipe);
+
+	//TODO, vfs open
+
+	current->process->files[fd1] = unix_pipe.read_pipe;
+	current->process->files[fd1] = unix_pipe.write_pipe;
+
+	return 0;
+}
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {
@@ -264,6 +282,8 @@ void syscall(int_regs_t *regs)
 			     struct itimerval *, ovalue);
 
 		DEF_SYSCALL0(__NR_getpid, getPID);
+
+		DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

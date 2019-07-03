@@ -45,6 +45,13 @@ inode_t *make_pipe(size_t size)
 
 	return inode;
 }
+void make_unix_pipe(size_t size, unix_pipe_t *unixpipe)
+{
+	inode_t *pipe = make_pipe(size);
+	unixpipe->read_pipe = pipe;
+	unixpipe->write_pipe = pipe;
+}
+
 static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 		     uint32_t size)
 {

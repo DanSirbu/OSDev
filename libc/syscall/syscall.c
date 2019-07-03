@@ -32,6 +32,8 @@ DEF_SYSCALL2(__NR_kill, kill, pid_t, pid, int, sig);
 DEF_SYSCALL3(__NR_setitimer, setitimer, int, which, const struct itimerval *,
 	     value, struct itimerval *, ovalue);
 
+DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
+
 void (*exit_funcs[10])(void);
 
 int atexit(void (*function)(void))
