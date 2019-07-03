@@ -458,3 +458,7 @@ struct stat {
 };
 
 #define O_NONBLOCK 1
+
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;

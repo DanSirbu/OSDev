@@ -2,6 +2,7 @@
 #include "signal.h"
 #include "coraxstd.h"
 #include "implementme.h"
+#include "assert.h"
 
 /*void testFunc()
 {
@@ -57,7 +58,8 @@ int main(int argc, char *args[])
 	}*
 	*/
 	FILE *readFile = fopen("/dev/keyboard", 0);
-	int writeFD = open("/dev/serial", 0);
+	//int writeFD = open("/dev/serial", 0);
+	int writeFD = open("/dev/screen", 0);
 	int errFD = open("/dev/null", 0);
 
 	/*while (true) {
@@ -65,10 +67,13 @@ int main(int argc, char *args[])
 		write(writeFD, (void *)&character, 1);
 	}*/
 
-	char *args1[] = { "/prboom", NULL };
+	/*char *args1[] = { "/prboom", NULL };
 	char **envs = (char **)environ;
-	execve("/prboom", args1, envs);
-	//execve("/testApp", args1, envs);
+	execve("/prboom", args1, envs);*/
+
+	char *args1[] = { "/shell", NULL };
+	char **envs = (char **)environ;
+	execve("/shell", args1, envs);
 
 	return -1;
 }
