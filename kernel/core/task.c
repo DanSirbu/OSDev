@@ -304,7 +304,7 @@ uint32_t sys_fork(int_regs_t *regs)
 
 	int_regs_t new_regs;
 	memcpy(&new_regs, regs, sizeof(int_regs_t));
-	new_regs.eax = 0;
+	new_regs.eax = 0; //Child pid returned value
 
 	size_t stack = new_task->stack + STACK_SIZE;
 	PUSH(stack, int_regs_t, new_regs);
@@ -317,7 +317,7 @@ uint32_t sys_fork(int_regs_t *regs)
 
 	make_task_ready(new_task);
 
-	return 999; //TODO return child PID
+	return new_task->process->pid;
 }
 uint32_t sys_exit(int exitcode)
 {
