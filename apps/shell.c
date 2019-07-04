@@ -73,6 +73,11 @@ char *read_line()
 void run_process(char *command)
 {
 	char **args = tokenize(command, " ");
+	if (access(args[0], 0) != 0) {
+		printf("%s: command not found\n", args[0]);
+		free_arr(args);
+		return;
+	}
 
 	int pid = fork();
 
@@ -91,6 +96,12 @@ void run_process(char *command)
 	assert(waitpid(pid, NULL, NULL) == 0);
 }
 
+void clear()
+{
+	for (int x = 0; x < 60; x++) {
+		printf("%*s", 80, " ");
+	}
+}
 int main(int argc, char *args[])
 {
 	int buf[1024];
@@ -98,7 +109,20 @@ int main(int argc, char *args[])
 	while (true) {
 		printf("corax$");
 		char *line = read_line();
-		run_process(line);
+		if (strncasecmp(line, "clear", sizeof("clear")) == 0) {
+			clear();
+		} else if (strncasecmp(line, "help", sizeof("help")) == 0) {
+			puts("\n");
+			puts("Welcome to coraxOS!\n");
+			puts("help - display this message\n");
+			puts("clear - clear the terminal\n");
+			puts("filename [arguments] - run program with the specified arguments\n");
+			puts("\n");
+		} else if (strlen(line) == 0) {
+			//Do nothing
+		} else {
+			run_process(line);
+		}
 
 		free(line);
 	}

@@ -196,6 +196,14 @@ int vfs_write(file_t *file, void *buf, uint32_t offset, uint32_t size)
 		return -1;
 	}
 }
+dir_dirent_t *vfs_get_child(file_t *file, uint32_t index)
+{
+	if (file->f_inode && file->f_inode->i_op->get_child) {
+		return file->f_inode->i_op->get_child(file->f_inode, index);
+	} else {
+		return NULL;
+	}
+}
 int vfs_mkdir(char *path, char *name)
 {
 	inode_t *parent = vfs_namei(path);

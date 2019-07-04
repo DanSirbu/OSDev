@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "time.h"
 #include "pipe.h"
+#include "dirent.h"
 
 /*
  * Note: must be freed after done with it
@@ -239,6 +240,24 @@ int sys_pipe(int fildes[2])
 
 	return 0;
 }
+int sys_getdents(uint32_t fd, dir_dirent_t *dirp, uint32_t count)
+{
+	file_t *file = getProcessFile(fd);
+	if (file == NULL) {
+		return -1;
+	}
+
+	for (uint32_t x = 0; x < count; x++) {
+		dir_dirent_t *dirent = vfs_get_child(file, x);
+		if (dirent == NULL) {
+			return -1;
+		}
+		memcpy(dirp, dirent, sizeof(dir_dirent_t));
+		dirp += 1;
+	}
+
+	return 0;
+}
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {
@@ -285,6 +304,9 @@ void syscall(int_regs_t *regs)
 		DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
 		DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc,
 			     int, options);
+
+		DEF_SYSCALL3(__NR_getdents, getdents, uint32_t, fd,
+			     dir_dirent_t *, dirp, uint32_t, count);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

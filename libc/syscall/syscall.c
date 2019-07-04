@@ -2,6 +2,7 @@
 #include "syscalls.h"
 #include "sys/types.h"
 #include "coraxstd.h"
+#include "dirent.h"
 
 DEF_SYSCALL1(__NR_exit, _exit, int, exitcode)
 DEF_SYSCALL0(__NR_fork, fork)
@@ -34,6 +35,8 @@ DEF_SYSCALL3(__NR_setitimer, setitimer, int, which, const struct itimerval *,
 
 DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
 DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc, int, options);
+DEF_SYSCALL3(__NR_getdents, getdents, uint32_t, fd, dir_dirent_t *, dirp,
+	     uint32_t, count);
 
 void (*exit_funcs[10])(void);
 

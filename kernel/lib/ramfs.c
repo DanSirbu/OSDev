@@ -2,13 +2,14 @@
 #include "mmu.h"
 #include "assert.h"
 #include "ramfs.h"
+#include "dirent.h"
 
 /* Prototypes */
 static inode_t *ramfs_find_child(struct inode *parent, char *name);
 static inode_t *getInode(uint32_t ino);
 static int ramfs_read(struct inode *node, void *buf, uint32_t offset,
 		      uint32_t size);
-static inode_t *ramfs_get_child(struct inode *parent, uint32_t index);
+static dir_dirent_t *ramfs_get_child(struct inode *parent, uint32_t index);
 static int ramfs_mkdir(struct inode *inode, struct dentry *dentry);
 
 ramfs_header_t *ramfs_header;
@@ -102,7 +103,7 @@ static inode_t *ramfs_find_child(struct inode *parent, char *name)
 
 	return NULL;
 }
-static inode_t *ramfs_get_child(struct inode *parent, uint32_t index)
+static dir_dirent_t *ramfs_get_child(struct inode *parent, uint32_t index)
 {
 	if (ramfs_header->inodes[parent->ino].type != FS_DIRECTORY) {
 		return NULL;
@@ -113,7 +114,8 @@ static inode_t *ramfs_get_child(struct inode *parent, uint32_t index)
 		return NULL;
 	}
 
-	return getInode(dir->dirents[index].ino);
+	return (dir_dirent_t *)&dir
+		->dirents[index]; //getInode(dir->dirents[index].ino);
 }
 
 /*int (*close)(struct inode);

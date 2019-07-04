@@ -84,6 +84,10 @@ int fseek(FILE *stream, long offset, int whence)
 	}
 	return 0;
 }
+int close(int fd)
+{
+	return sys_close(fd);
+}
 int fclose(FILE *stream)
 {
 	assert(stream != NULL);

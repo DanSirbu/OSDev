@@ -25,6 +25,7 @@
 #include "fs.h"
 #include "vfs.h"
 #include "vga.h"
+#include "dirent.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -66,12 +67,6 @@ void print_memory_map(size_t mmap_addr, size_t mmap_len)
 void testramfs()
 {
 	inode_t *curInode = vfs_namei("/");
-	inode_t *cur = NULL;
-	uint32_t index = 0;
-	do {
-		cur = curInode->i_op->get_child(curInode, index);
-		index++;
-	} while (cur != NULL);
 
 	list_t *folderQueue = list_create();
 	list_enqueue(folderQueue, vfs_open("/"));
@@ -262,24 +257,6 @@ void kmain(multiboot_info_t *multiboot_info)
 	display_init((const uint32_t *)KERN_IO_BASE,
 		     multiboot_info->framebuffer_width,
 		     multiboot_info->framebuffer_height);
-
-	debug_print("Enabling Interrupts\n");
-	sti();
-
-	/*file_t *kb = vfs_open("/dev/keyboard");
-	while (true) {
-		char character;
-		while (vfs_read(kb, &character, 0, 1) <= 0)
-			;
-		putchar('0');
-	}*/
-	/*for (int i = 0; i < (80 * 40); i++) {
-		printStrToScreen("A");
-	}
-	while (1)
-		;*/
-	setPixel(multiboot_info->framebuffer_width - 1,
-		 multiboot_info->framebuffer_height - 1, 0xFF00FF00);
 
 	debug_print("Starting Init\n");
 

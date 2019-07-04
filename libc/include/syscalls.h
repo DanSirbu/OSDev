@@ -1,6 +1,7 @@
 #pragma once
 #include "sys/types.h"
 #include "coraxstd.h"
+#include "dirent.h"
 
 #define DECL_SYSCALL0(unused, name) int name();
 #define DECL_SYSCALL1(unused, name, P1, p1) int name(P1 p1);
@@ -38,6 +39,9 @@ DECL_SYSCALL1(__NR_close, sys_close, int, fd)
 
 DECL_SYSCALL1(__NR_pipe, pipe, int, fildes[2])
 DECL_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc, int, options)
+
+DECL_SYSCALL3(__NR_getdents, getdents, uint32_t, fd, dir_dirent_t *, dirp,
+	      uint32_t, count)
 
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));
