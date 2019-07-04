@@ -221,9 +221,16 @@ int vfs_mkdir(char *path, char *name)
 
 inode_t *vfs_namei(char *path)
 {
+	if (path[0] == '/' && path[1] == '\0') {
+		return fs_root;
+	}
+
 	char **tokens = tokenize(path);
 
 	inode_t *cur = fs_root;
+	if (tokens[0] == NULL) {
+		cur = NULL;
+	}
 
 	int i = 0;
 	while (tokens[i] != NULL) {
