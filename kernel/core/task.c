@@ -71,6 +71,8 @@ task_t *create_task(process_t *process)
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
 		process->signals = list_create();
+		process->exit_waiting_threads = list_create();
+
 		process->pid = getNextPID();
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
@@ -155,6 +157,7 @@ int execve(const char *filename, char *argv[], char *envp[])
 	if (file == NULL) {
 		return -1;
 	}
+	print(LOG_INFO, "Running %s\n", filename);
 
 	//Load ELF file
 	Elf32_Ehdr header;
@@ -298,6 +301,10 @@ uint32_t sys_fork(int_regs_t *regs)
 	assert(current != NULL && "Current process does not exist, can't fork");
 
 	task_t *new_task = create_task(NULL);
+	//copy fds
+	memcpy(new_task->process->files, current->process->files,
+	       sizeof(new_task->process->files));
+
 	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
@@ -330,10 +337,13 @@ uint32_t sys_exit(int exitcode)
 }
 void free_process(process_t *process)
 {
+	assert(process->exit_waiting_threads->len == 0);
+
 	free_page_directory(process->page_directory);
 	assert(process->threads->len == 0);
 
 	list_free(process->threads);
+	list_safe_free(process->exit_waiting_threads);
 	kfree(process);
 }
 void free_task(task_t *task)
@@ -346,6 +356,7 @@ void free_task(task_t *task)
 
 	//Last thread in the process, we can clean the process
 	if (process->threads->len == 0) {
+		wakeup_queue(process->exit_waiting_threads);
 		free_process(process);
 	}
 }
@@ -392,6 +403,8 @@ void schedule_task(task_t *next_task)
 	if (current->state != STATE_FINISHED &&
 	    current->state != STATE_SLEEPING) {
 		make_task_ready(current);
+	} else if (current->state == STATE_FINISHED) {
+		list_enqueue(ready_queue, current); //Enqueue for cleanup
 	}
 
 	//If the task is the same, we don't need to load it again
@@ -489,4 +502,31 @@ int sys_kill(pid_t pid, int sig)
 pid_t sys_getPID()
 {
 	return current->process->pid;
+}
+process_t *getProcess(pid_t pid)
+{
+	foreach_list(task_list, curTask)
+	{
+		task_t *task = curTask->value;
+		if (task->process->pid == pid) {
+			return task->process;
+		}
+	}
+
+	return NULL;
+}
+pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
+{
+	if (stat_loc != NULL || options != NULL || pid <= 0) {
+		return -1; //TODO, handle these cases
+	}
+	process_t *proc = getProcess(pid);
+	if (proc == NULL) {
+		return -1;
+	}
+	list_safe_enqueue(proc->exit_waiting_threads, current);
+	current->state = STATE_SLEEPING;
+	schedule();
+
+	return 0;
 }

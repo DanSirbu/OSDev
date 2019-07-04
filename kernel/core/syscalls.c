@@ -283,6 +283,8 @@ void syscall(int_regs_t *regs)
 		DEF_SYSCALL0(__NR_getpid, getPID);
 
 		DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
+		DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc,
+			     int, options);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

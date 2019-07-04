@@ -51,6 +51,7 @@ char *read_line()
 
 		if (character == '\n') {
 			buf[bufIndex] = '\0';
+			printf("%s", "\n");
 			return buf;
 		} else if (character == '\b') {
 			if (bufIndex > 0) {
@@ -87,9 +88,7 @@ void run_process(char *command)
 	}
 
 	free_arr(args);
-	//waitpid()
-	while (1)
-		;
+	assert(waitpid(pid, NULL, NULL) == 0);
 }
 
 int main(int argc, char *args[])

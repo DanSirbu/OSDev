@@ -33,6 +33,7 @@ DEF_SYSCALL3(__NR_setitimer, setitimer, int, which, const struct itimerval *,
 	     value, struct itimerval *, ovalue);
 
 DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
+DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc, int, options);
 
 void (*exit_funcs[10])(void);
 

@@ -60,6 +60,9 @@ typedef struct {
 	struct userspace_vars userspace_variables;
 
 	struct itimerval timer;
+
+	//Other threads that are waiting for this process to exit
+	threaded_list_t *exit_waiting_threads;
 } process_t;
 
 typedef struct {

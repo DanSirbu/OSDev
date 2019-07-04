@@ -1,16 +1,11 @@
 #include <stdio.h>
 
-int test(int y)
-{
-	return y + 10;
-}
 int main(int argc, char *argv[])
 {
-	int x = 1;
-	x = test(x) * 0x222;
+	printf("Test!\n");
 	for (int i = 0; i < argc; i++) {
-		printf("Param: %d=%s\n", i, argv[x]);
+		printf("Param: %d=%s\n", i, argv[i]);
 	}
 
-	return x;
+	return 0;
 }
