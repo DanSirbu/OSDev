@@ -43,7 +43,7 @@ pid_t getpid()
 int sigaction(int sig, const struct sigaction *restrict act,
 	      struct sigaction *restrict oact)
 {
-	printf("IMPLEMENT: SIGACTION\n");
+	fprintf(stderr, "IMPLEMENT: SIGACTION\n");
 
 	return 0;
 }

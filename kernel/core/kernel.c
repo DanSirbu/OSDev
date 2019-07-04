@@ -286,7 +286,7 @@ void kmain(multiboot_info_t *multiboot_info)
 	const char *filename = "/init";
 	char *args[] = { filename, NULL };
 	char *envs[] = { "HOME", "/", NULL };
-	execve(filename, args, envs);
+	assert(execve(filename, args, envs) == 0);
 
 	/*task_t *proc1 = &task[1];
 	void *tmpStack = kmalloc(0x100) + 0x100;

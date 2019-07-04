@@ -113,7 +113,7 @@ int getc(FILE *stream)
 }
 int ungetc(int c, FILE *stream)
 {
-	printf("IMPLEMENT: ungetc\n");
+	fprintf(stderr, "IMPLEMENT: ungetc\n");
 	return -1;
 }
 char *fgets(char *s, int size, FILE *stream)
@@ -142,7 +142,7 @@ char *fgets(char *s, int size, FILE *stream)
 }
 int feof(FILE *stream)
 {
-	printf("IMPLEMENT: feof\n");
+	fprintf(stderr, "IMPLEMENT: feof\n");
 }
 void *memchr(const void *s, int c, size_t n)
 {
@@ -156,16 +156,16 @@ void *memchr(const void *s, int c, size_t n)
 }
 int isatty(int fd)
 {
-	printf("IMPLEMENT: isatty\n");
+	fprintf(stderr, "IMPLEMENT: isatty\n");
 	return 0; //1 if terminal or 0
 }
 void setbuf(FILE *stream, char *buf)
 {
-	printf("IMPLEMENT: setbuf\n");
+	fprintf(stderr, "IMPLEMENT: setbuf\n");
 }
 int remove(const char *pathname)
 {
-	printf("IMPLEMENT: remove\n");
+	fprintf(stderr, "IMPLEMENT: remove\n");
 	//unlink for files
 	//rmdir for directories
 	//todo
@@ -173,22 +173,22 @@ int remove(const char *pathname)
 }
 int mkdir(const char *path, mode_t mode)
 {
-	printf("IMPLEMENT: mkdir\n");
+	fprintf(stderr, "IMPLEMENT: mkdir\n");
 	return 0; //TODO
 }
 int ferror(FILE *stream)
 {
-	printf("IMPLEMENT: isatty\n");
+	fprintf(stderr, "IMPLEMENT: isatty\n");
 	return 0;
 }
 char *strerror(int errnum)
 {
-	printf("IMPLEMENT: strerror\n");
+	fprintf(stderr, "IMPLEMENT: strerror\n");
 	return "";
 }
 long ftell(FILE *stream)
 {
-	printf("IMPLEMENT: ftell\n");
+	fprintf(stderr, "IMPLEMENT: ftell\n");
 	return 0;
 }
 off_t lseek(int fildes, off_t offset, int whence)
@@ -215,25 +215,25 @@ int *__errno_location()
 /* Get information about the file descriptor FD in BUF.  */
 int __fxstat(int vers, int fd, struct stat *buf)
 {
-	printf("IMPLEMENT: fxstat\n");
+	fprintf(stderr, "IMPLEMENT: fxstat\n");
 	return 0;
 }
 //From glibc
 /* Get information about the file NAME in BUF.  */
 int __xstat(int vers, const char *name, struct stat *buf)
 {
-	printf("IMPLEMENT: xstat\n");
+	fprintf(stderr, "IMPLEMENT: xstat\n");
 	return -1;
 }
 int stat(const char *restrict path, struct stat *restrict buf)
 {
-	printf("IMPLEMENT: stat\n");
+	fprintf(stderr, "IMPLEMENT: stat\n");
 	return -1;
 }
 typedef unsigned long sigset_t;
 int sigemptyset(sigset_t *set)
 {
-	printf("IMPLEMENT: sigemptyset\n");
+	fprintf(stderr, "IMPLEMENT: sigemptyset\n");
 	return 0;
 }
 typedef struct {
@@ -242,7 +242,7 @@ typedef struct {
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
 	   struct timeval *timeout)
 {
-	printf("IMPLEMENT: select\n");
-	return 0; //TODO
+	fprintf(stderr, "IMPLEMENT: select\n");
+	return 0;
 }
 weak_alias(sqrtf, __sqrt_finite);

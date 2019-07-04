@@ -1,5 +1,6 @@
 #include "syscalls.h"
 #include "sys/types.h"
+#include "implementme.h"
 #include "string.h"
 #include "assert.h"
 
@@ -21,13 +22,12 @@ int vsnprintf(char *s, size_t n, const char *message, va_list args);
 
 int fprintf(FILE *stream, const char *format, ...)
 {
-	assert(stream != NULL);
-	//TODO handle other than stdout
-	assert_msg(stream->fd == 1 || stream->fd == 2, "FD: %d\n", stream->fd);
-
 	va_list args;
 	va_start(args, format);
-	int ret = vprintf(format, args);
+	vsnprintf(print_buffer, sizeof(print_buffer) / sizeof(print_buffer[0]),
+		  format, args);
+
+	int ret = fwrite(print_buffer, 1, strlen(print_buffer) + 1, stream);
 	va_end(args);
 	return ret;
 }
@@ -49,8 +49,7 @@ int sprintf(char *s, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	int ret = vsnprintf(s, INT_MAX, format,
-			    args); //TODO maybe? unbounded sprintf
+	int ret = vsnprintf(s, INT_MAX, format, args);
 	va_end(args);
 
 	return ret;
@@ -66,8 +65,7 @@ int snprintf(char *s, size_t n, const char *format, ...)
 }
 int vsprintf(char *str, const char *format, va_list ap)
 {
-	return vsnprintf(str, INT_MAX, format,
-			 ap); //TODO maybe make infinite print
+	return vsnprintf(str, INT_MAX, format, ap);
 }
 int vsnprintf(char *s, size_t n, const char *format, va_list args)
 {
@@ -174,7 +172,7 @@ int vprintf(const char *format, va_list args)
 	int ret = vsnprintf(print_buffer,
 			    sizeof(print_buffer) / sizeof(print_buffer[0]),
 			    format, args);
-	write(1, print_buffer, strlen(print_buffer) + 1);
+	write(STDOUT_FILENO, print_buffer, strlen(print_buffer) + 1);
 
 	return ret;
 }

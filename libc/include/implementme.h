@@ -19,3 +19,5 @@ char *strtok(char *str, const char *delim);
 void *memchr(const void *s, int c, size_t n);
 char *strchr(const char *s, int c);
 int access(const char *path, int amode);
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
