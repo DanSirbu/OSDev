@@ -57,6 +57,8 @@ void printStrToScreen(char *str)
 void putchar(char c)
 {
 	if (c == '\n') {
+		drawCharacter(' ', cursor_position % terminal_width,
+			      cursor_position / terminal_width);
 		cursor_position = cursor_position -
 				  (cursor_position % terminal_width) +
 				  terminal_width;

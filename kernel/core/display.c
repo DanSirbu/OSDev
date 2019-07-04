@@ -40,7 +40,7 @@ void display_update(const uint32_t *src)
 void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 {
 	uint32_t *topLeft = (uint32_t *)framebuffer + (xpos * character_width) +
-			    (ypos * display_width);
+			    (ypos * display_width * character_width);
 
 	for (int y = 0; y < character_width; y++) {
 		for (int x = 0; x < character_width; x++) {
