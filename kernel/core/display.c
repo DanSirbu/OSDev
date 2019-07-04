@@ -39,6 +39,7 @@ void display_update(const uint32_t *src)
 //TODO, optimize this
 void drawCharacter(uint8_t character, size_t xpos, size_t ypos)
 {
+	ypos %= display_height / character_width;
 	uint32_t *topLeft = (uint32_t *)framebuffer + (xpos * character_width) +
 			    (ypos * display_width * character_width);
 
