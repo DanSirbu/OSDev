@@ -14,7 +14,9 @@ char *read_line()
 	int buf_size = 1024;
 	char *buf = malloc(buf_size);
 	int bufIndex = 0;
+	int validCharacter;
 	while (true) {
+		validCharacter = false;
 		uint8_t character = getc(stdin);
 		if (character == KEY_PRESSED) {
 			getc(stdin);
@@ -28,19 +30,28 @@ char *read_line()
 		switch (character) {
 		case KEY_RETURN:
 			character = '\n';
+			validCharacter = true;
 			break;
 		case KEY_SLASH:
 			character = '/';
+			validCharacter = true;
 			break;
 		case KEY_BACKSLASH:
 			character = '\\';
+			validCharacter = true;
 			break;
 		case KEY_DELETE:
 			character = '\b';
+			validCharacter = true;
 			break;
 		case KEY_SPACE:
 			character = ' ';
+			validCharacter = true;
 			break;
+		}
+		if (character >= 'a' && character <= 'z' ||
+		    character >= '1' && character <= '9') {
+			validCharacter = true;
 		}
 
 		//Grow buffer if full
@@ -59,15 +70,17 @@ char *read_line()
 			} else {
 				continue;
 			}
-		} else {
+		} else if (validCharacter) {
 			buf[bufIndex] = character;
 			bufIndex++;
 		}
 
-		char charBuf[2];
-		charBuf[0] = character;
-		charBuf[1] = '\0';
-		printf("%s", charBuf);
+		if (validCharacter) {
+			char charBuf[2];
+			charBuf[0] = character;
+			charBuf[1] = '\0';
+			printf("%s", charBuf);
+		}
 	}
 }
 void run_process(char *command)
@@ -98,9 +111,7 @@ void run_process(char *command)
 
 void clear()
 {
-	for (int x = 0; x < 60; x++) {
-		printf("%*s", 80, " ");
-	}
+	//sys_clear?
 }
 int main(int argc, char *args[])
 {
