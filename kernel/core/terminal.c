@@ -54,6 +54,7 @@ void printStrToScreen(char *str)
 	}
 }
 
+int prevAnsii = false;
 void putchar(char c)
 {
 	if (c == '\n') {
@@ -73,14 +74,19 @@ void putchar(char c)
 		cursor_position -= 1;
 		update_cursor();
 		return;
+	} else if (c == '\033') { //TODO, actually use ansii escape codes
+		prevAnsii = true;
 	}
+	if (!prevAnsii) {
+		drawCharacter(c, cursor_position % terminal_width,
+			      cursor_position / terminal_width);
 
-	drawCharacter(c, cursor_position % terminal_width,
-		      cursor_position / terminal_width);
+		cursor_position += 1;
 
-	cursor_position += 1;
-
-	update_cursor();
+		update_cursor();
+	} else if (c == 'm') {
+		prevAnsii = false;
+	}
 }
 
 void update_cursor()
