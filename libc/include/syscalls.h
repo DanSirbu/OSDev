@@ -42,6 +42,7 @@ DECL_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc, int, options)
 
 DECL_SYSCALL3(__NR_getdents, getdents, uint32_t, fd, dir_dirent_t *, dirp,
 	      uint32_t, count)
+DECL_SYSCALL0(__NR_reboot, reboot)
 
 int printf(const char *fmt, ...);
 int atexit(void (*function)(void));

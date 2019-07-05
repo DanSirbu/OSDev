@@ -258,6 +258,29 @@ int sys_getdents(uint32_t fd, dir_dirent_t *dirp, uint32_t count)
 
 	return 0;
 }
+int __attribute__((noreturn)) sys_reboot()
+{
+	//Taken from wiki.osdev.org/Reboot
+
+#define KBRD_BIT_KDATA 0x1 //keyboard data in buffer
+#define KBRD_BIT_UDATA 0x2 //user data in buffer
+
+	uint8_t temp;
+	cli();
+
+	//Empty buffers
+	do {
+		temp = inb(0x64); //empty user data from buffers
+		if (temp & KBRD_BIT_KDATA) {
+			inb(0x60);
+		}
+	} while (temp & KBRD_BIT_UDATA);
+
+	outb(0x64, 0xFE); //Actually reset the cpu command
+
+	while (1)
+		; //Should not get here
+}
 void syscall(int_regs_t *regs)
 {
 	if (getSyscallName(regs->eax) != NULL) {
@@ -307,6 +330,8 @@ void syscall(int_regs_t *regs)
 
 		DEF_SYSCALL3(__NR_getdents, getdents, uint32_t, fd,
 			     dir_dirent_t *, dirp, uint32_t, count);
+
+		DEF_SYSCALL0(__NR_reboot, reboot);
 	default:
 		print(LOG_ERROR, "Unhandled syscall 0x%x\n", regs->eax);
 	}

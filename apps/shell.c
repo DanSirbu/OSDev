@@ -127,8 +127,11 @@ int main(int argc, char *args[])
 			puts("Welcome to coraxOS!\n");
 			puts("help - display this message\n");
 			puts("clear - clear the terminal\n");
+			puts("reboot - restarts the computer\n");
 			puts("filename [arguments] - run program with the specified arguments\n");
 			puts("\n");
+		} else if (strncasecmp(line, "reboot", sizeof("reboot")) == 0) {
+			reboot();
 		} else if (strlen(line) == 0) {
 			//Do nothing
 		} else {
