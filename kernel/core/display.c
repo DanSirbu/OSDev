@@ -71,3 +71,12 @@ void setPixel(size_t x, size_t y, uint32_t value)
 	uint32_t *pixel = (uint32_t *)framebuffer + y * display_width + x;
 	*pixel = value;
 }
+
+void display_clear()
+{
+	for (size_t x = 0; x < display_width; x++) {
+		for (size_t y = 0; y < display_height; y++) {
+			setPixel(x, y, 0);
+		}
+	}
+}

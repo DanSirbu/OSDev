@@ -49,8 +49,13 @@ void initialize_terminal()
 
 void printStrToScreen(char *str)
 {
-	for (uint32_t x = 0; x < strlen(str); x++) {
-		putchar(str[x]);
+	if (strncmp(str, "\033[H\033[2J", sizeof("\033[H\033[2J")) == 0) {
+		display_clear();
+		cursor_position = 0;
+	} else {
+		for (uint32_t x = 0; x < strlen(str); x++) {
+			putchar(str[x]);
+		}
 	}
 }
 

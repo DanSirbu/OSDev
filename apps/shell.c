@@ -111,7 +111,7 @@ void run_process(char *command)
 
 void clear()
 {
-	//sys_clear?
+	printf("\033[H\033[2J");
 }
 int main(int argc, char *args[])
 {
