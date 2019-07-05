@@ -290,7 +290,8 @@ char **tokenize(char *str, char *delim)
 
 	strCopy2 = strCopy;
 	strSepCur = &strCopy2;
-	char **arr = malloc(numTokens + 1); //+ 1 for null terminator token
+	char **arr = malloc(sizeof(char *) *
+			    (numTokens + 1)); //+ 1 for null terminator token
 	int i = 0;
 	while ((token = strsep(strSepCur, delim)) != NULL) {
 		arr[i] = strdup(token);
