@@ -13,8 +13,7 @@ DECL_SYSCALL1(NULL, _exit, int, exitcode)
 DECL_SYSCALL0(NULL, fork)
 DECL_SYSCALL0(__NR_getpid, call_getpid)
 
-DECL_SYSCALL3(__NR_clone, clone2, void *, fn, void *, target_fn, void *,
-	      child_stack)
+DECL_SYSCALL2(__NR_clone, clone, void *, fn, void *, child_stack)
 DECL_SYSCALL1(NULL, syscall_sbrk, uint32_t, size)
 DECL_SYSCALL2(__NR_access, access, const char *, path, int, amode)
 

@@ -58,7 +58,7 @@ enter_userspace:
     ; 0x18 + 3 = 0x1B
     ; 0x20 + 3 = 0x20
     
-    mov ax,0x23
+    mov eax,0x23
     mov ds,ax
     mov es,ax
     mov fs,ax

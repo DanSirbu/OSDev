@@ -81,7 +81,7 @@ void dump_registers(int_regs_t *regs)
 	print(LOG_ERROR, "eflags=0x%x       \n", regs->eflags);
 	print(LOG_ERROR, "eip=0x%x          \n", regs->eip);
 	print(LOG_ERROR, "\n");
-	print(LOG_ERROR, "usereip=0x%x      \n", regs->useresp);
+	print(LOG_ERROR, "useresp=0x%x      \n", regs->useresp);
 }
 
 void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,

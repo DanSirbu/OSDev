@@ -3,6 +3,8 @@
 
 extern void OnSignal(void);
 extern int errno;
+extern void run_clone(void (*fn)());
+
 void initialize_libc()
 {
 	//TODO syscall register SignalReceived
@@ -10,5 +12,6 @@ void initialize_libc()
 
 	vars.errno_addr = &errno;
 	vars.SignalHandler = OnSignal;
+	vars.clone_func_caller = run_clone;
 	register_vars(&vars);
 }

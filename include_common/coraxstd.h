@@ -436,6 +436,7 @@ struct itimerval {
 struct userspace_vars {
 	int *errno_addr;
 	void *SignalHandler;
+	void *clone_func_caller;
 };
 
 struct stat {

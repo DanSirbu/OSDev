@@ -264,32 +264,35 @@ task_t *pick_next_task()
 	return task;
 }
 extern void *_start;
-uint32_t sys_clone(void *fn, void *target_fn, void *child_stack)
+uint32_t sys_clone(void *fn, void *child_stack)
 {
 	assert(current != NULL &&
 	       "Current process does not exist, can't clone");
+	assert(current->process->userspace_variables.clone_func_caller != NULL);
 
 	task_t *new_task = create_task(current->process);
 	list_enqueue(task_list, new_task);
 
-	new_task->stack = (size_t)kmalloc(STACK_SIZE);
-
-	int_regs_t new_regs;
-	memset(&new_regs, 0, sizeof(new_regs));
-	new_regs.eip = fn;
-
-	size_t kernel_stack = new_task->stack + STACK_SIZE;
-	PUSH(kernel_stack, int_regs_t, new_regs);
-
-	new_task->context.eip = (size_t)&interrupt_return;
-	new_task->context.esp = kernel_stack;
-
 	//Page directory remains the same
 	new_task->process->page_directory = current->process->page_directory;
 
-	size_t user_stack = (size_t)child_stack;
-	PUSH(user_stack, uint32_t, target_fn);
-	new_regs.useresp = user_stack;
+	//Parameters for the clone userspace handler
+	size_t user_stack_top = (size_t)child_stack;
+	PUSH(user_stack_top, uint32_t, fn);
+	PUSH(user_stack_top, void *, 0x99999); //Bogus function return address
+
+	//Kernel stack
+	new_task->stack = (size_t)kmalloc(STACK_SIZE);
+	size_t kernel_stack_top = new_task->stack + STACK_SIZE;
+	//enter_userspace(func, userstack) parameters
+	PUSH(kernel_stack_top, void *, user_stack_top); //userstack
+	PUSH(kernel_stack_top, void *,
+	     current->process->userspace_variables.clone_func_caller); //func
+	PUSH(kernel_stack_top, void *, 0x99999); //Bogus function return address
+
+	//Kernel "saved" context
+	new_task->context.esp = kernel_stack_top;
+	new_task->context.eip = (size_t)&enter_userspace;
 
 	make_task_ready(new_task);
 
@@ -309,12 +312,12 @@ uint32_t sys_fork(int_regs_t *regs)
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 
-	int_regs_t new_regs;
-	memcpy(&new_regs, regs, sizeof(int_regs_t));
-	new_regs.eax = 0; //Child pid returned value
+	int_regs_t userspace_regs;
+	memcpy(&userspace_regs, regs, sizeof(userspace_regs));
+	userspace_regs.eax = 0; //Child pid returned value
 
 	size_t stack = new_task->stack + STACK_SIZE;
-	PUSH(stack, int_regs_t, new_regs);
+	PUSH(stack, int_regs_t, userspace_regs);
 
 	new_task->context.eip = (size_t)&interrupt_return;
 	new_task->context.esp = stack;
