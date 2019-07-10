@@ -83,7 +83,7 @@ char *read_line()
 		}
 	}
 }
-void run_process(char *command)
+int run_process(char *command)
 {
 	char **args = tokenize(command, " ");
 	if (access(args[0], 0) != 0) {
@@ -106,36 +106,57 @@ void run_process(char *command)
 	}
 
 	free_arr(args);
-	assert(waitpid(pid, NULL, NULL) == 0);
+
+	int processExitCode;
+	waitpid(pid, &processExitCode, NULL);
+	return processExitCode;
 }
 
 void clear()
 {
 	printf("\033[H\033[2J");
 }
+void printWelcomeMessage()
+{
+	puts("                                 ____    _____  \n");
+	puts("                                / __ \\  / ____| \n");
+	puts("   ___  ___   _ __  __ _ __  __| |  | || (___   \n");
+	puts("  / __|/ _ \\ | '__|/ _` |\\ \\/ /| |  | | \\___ \\  \n");
+	puts(" | (__| (_) || |  | (_| | >  < | |__| | ____) | \n");
+	puts("  \\___|\\___/ |_|   \\__,_|/_/\\_\\ \\____/ |_____/  \n");
+	puts("\n");
+	puts("\n");
+	puts("\n");
+}
 int main(int argc, char *args[])
 {
 	int buf[1024];
+	int lastProcExitcode = 0;
+
+	printWelcomeMessage();
 
 	while (true) {
 		printf("corax$");
 		char *line = read_line();
 		if (strncasecmp(line, "clear", sizeof("clear")) == 0) {
 			clear();
+		} else if (strncasecmp(line, "reboot", sizeof("reboot")) == 0) {
+			reboot();
+		} else if (strncasecmp(line, "exitcode", sizeof("exitcode")) ==
+			   0) {
+			printf("%d\n", lastProcExitcode);
 		} else if (strncasecmp(line, "help", sizeof("help")) == 0) {
 			puts("\n");
-			puts("Welcome to coraxOS!\n");
 			puts("help - display this message\n");
 			puts("clear - clear the terminal\n");
 			puts("reboot - restarts the computer\n");
+			puts("exitcode - prints the last process exitcode\n");
 			puts("filename [arguments] - run program with the specified arguments\n");
 			puts("\n");
-		} else if (strncasecmp(line, "reboot", sizeof("reboot")) == 0) {
-			reboot();
 		} else if (strlen(line) == 0) {
 			//Do nothing
 		} else {
-			run_process(line);
+			lastProcExitcode = run_process(line);
 		}
 
 		free(line);

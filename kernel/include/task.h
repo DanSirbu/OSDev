@@ -74,6 +74,8 @@ typedef struct {
 
 	//Other threads that are waiting for this thread to exit
 	threaded_list_t *exit_waiting_threads;
+
+	int exitcode;
 } task_t; //task = thread
 
 /*

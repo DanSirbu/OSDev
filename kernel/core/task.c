@@ -330,12 +330,14 @@ uint32_t sys_fork(int_regs_t *regs)
 }
 uint32_t sys_exit(int exitcode)
 {
-	debug_print("Exitcode %d\n", exitcode);
 	current->state = STATE_FINISHED;
+	current->exitcode = exitcode;
+	wakeup_queue(current->exit_waiting_threads);
 
 	schedule();
 
-	return 0; //Never happens but must do it because of macro setup
+	print(LOG_ERROR, "Exited process (pid: %d) continued\n", current->id);
+	assert(1 == 2); //Should never get here
 }
 void free_process(process_t *process)
 {
@@ -347,11 +349,12 @@ void free_process(process_t *process)
 }
 void free_task(task_t *task)
 {
+	assert(task->state == STATE_FINISHED);
+
 	process_t *process = task->process;
 	list_remove_item(process->threads, (size_t)task);
 
 	//Free task
-	wakeup_queue(task->exit_waiting_threads);
 	assert(task->exit_waiting_threads->len == 0);
 	list_safe_free(task->exit_waiting_threads);
 	kfree((void *)task->stack);
@@ -519,9 +522,9 @@ task_t *getTask(pid_t pid)
 }
 pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 {
-	if (stat_loc != NULL || options != NULL || pid <= 0) {
-		return -1; //TODO, handle these cases
-	}
+	assert(options == NULL &&
+	       pid > 0); //TODO, make sys_waitpid handle options
+
 	task_t *task = getTask(pid);
 	if (task == NULL) {
 		return -1;
@@ -529,6 +532,9 @@ pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 	list_safe_enqueue(task->exit_waiting_threads, current);
 	current->state = STATE_SLEEPING;
 	schedule();
+	if (stat_loc != NULL) {
+		*stat_loc = task->exitcode;
+	}
 
-	return 0;
+	return task->id;
 }
