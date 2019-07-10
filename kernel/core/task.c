@@ -71,12 +71,11 @@ task_t *create_task(process_t *process)
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
 		process->signals = list_create();
-		process->exit_waiting_threads = list_create();
-
-		process->pid = getNextPID();
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
+	new_task->id = getNextPID();
+	new_task->exit_waiting_threads = list_create();
 	list_enqueue(process->threads, new_task);
 
 	return new_task;
@@ -296,7 +295,7 @@ uint32_t sys_clone(void *fn, void *child_stack)
 
 	make_task_ready(new_task);
 
-	return 0;
+	return new_task->id;
 }
 
 uint32_t sys_fork(int_regs_t *regs)
@@ -327,7 +326,7 @@ uint32_t sys_fork(int_regs_t *regs)
 
 	make_task_ready(new_task);
 
-	return new_task->process->pid;
+	return new_task->id;
 }
 uint32_t sys_exit(int exitcode)
 {
@@ -340,26 +339,26 @@ uint32_t sys_exit(int exitcode)
 }
 void free_process(process_t *process)
 {
-	assert(process->exit_waiting_threads->len == 0);
-
 	free_page_directory(process->page_directory);
 	assert(process->threads->len == 0);
 
 	list_free(process->threads);
-	list_safe_free(process->exit_waiting_threads);
 	kfree(process);
 }
 void free_task(task_t *task)
 {
 	process_t *process = task->process;
-	//Cleanup
 	list_remove_item(process->threads, (size_t)task);
+
+	//Free task
+	wakeup_queue(task->exit_waiting_threads);
+	assert(task->exit_waiting_threads->len == 0);
+	list_safe_free(task->exit_waiting_threads);
 	kfree((void *)task->stack);
 	kfree(task);
 
 	//Last thread in the process, we can clean the process
 	if (process->threads->len == 0) {
-		wakeup_queue(process->exit_waiting_threads);
 		free_process(process);
 	}
 }
@@ -492,7 +491,7 @@ int sys_kill(pid_t pid, int sig)
 	foreach_list(task_list, curTask)
 	{
 		task_t *task = curTask->value;
-		if (task->process->pid == pid) {
+		if (task->id == pid) {
 			list_enqueue(task->process->signals, (void *)sig);
 			break;
 		}
@@ -504,15 +503,15 @@ int sys_kill(pid_t pid, int sig)
 
 pid_t sys_getPID()
 {
-	return current->process->pid;
+	return current->id;
 }
-process_t *getProcess(pid_t pid)
+task_t *getTask(pid_t pid)
 {
 	foreach_list(task_list, curTask)
 	{
 		task_t *task = curTask->value;
-		if (task->process->pid == pid) {
-			return task->process;
+		if (task->id == pid) {
+			return task;
 		}
 	}
 
@@ -523,11 +522,11 @@ pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 	if (stat_loc != NULL || options != NULL || pid <= 0) {
 		return -1; //TODO, handle these cases
 	}
-	process_t *proc = getProcess(pid);
-	if (proc == NULL) {
+	task_t *task = getTask(pid);
+	if (task == NULL) {
 		return -1;
 	}
-	list_safe_enqueue(proc->exit_waiting_threads, current);
+	list_safe_enqueue(task->exit_waiting_threads, current);
 	current->state = STATE_SLEEPING;
 	schedule();
 

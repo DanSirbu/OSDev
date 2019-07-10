@@ -46,8 +46,6 @@ fork(task) = copy everything = analogous to process
 #define MAX_FD_INDEX (MAX_FD - 1)
 
 typedef struct {
-	pid_t pid;
-
 	page_directory_t *page_directory;
 
 	size_t heap;
@@ -60,12 +58,11 @@ typedef struct {
 	struct userspace_vars userspace_variables;
 
 	struct itimerval timer;
-
-	//Other threads that are waiting for this process to exit
-	threaded_list_t *exit_waiting_threads;
 } process_t;
 
 typedef struct {
+	pid_t id;
+
 	process_t *process;
 
 	int_regs_t *int_regs;
@@ -74,6 +71,9 @@ typedef struct {
 	size_t stack; //Kernel stack
 
 	enum STATES state;
+
+	//Other threads that are waiting for this thread to exit
+	threaded_list_t *exit_waiting_threads;
 } task_t; //task = thread
 
 /*
