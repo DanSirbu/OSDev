@@ -22,3 +22,7 @@ char *strchr(const char *s, int c);
 int access(const char *path, int amode);
 
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+char *strerror(int errnum);
+long ftell(FILE *stream);
+int ferror(FILE *stream);

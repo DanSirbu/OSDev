@@ -3,6 +3,7 @@
 #include "kmalloc.h"
 #include "assert.h"
 #include "pipe.h"
+#include "task.h"
 
 /* Prototypes */
 static int pipe_read(struct inode *node, void *buf, uint32_t offset,
@@ -12,18 +13,18 @@ static int pipe_write(struct inode *inode, void *buf, uint32_t offset,
 
 inode_operations_t inode_pipe_ops = { .find_child = NULL,
 				      .get_child = NULL,
-				      .open = pipe_noop,
-				      .close = pipe_noop,
+				      .open = open_noop,
+				      .close = close_noop,
 				      .read = pipe_read,
 				      .write = pipe_write,
 				      .mkdir = NULL };
 
 inode_operations_t inode_pipe_noops = { .find_child = NULL,
 					.get_child = NULL,
-					.open = pipe_noop,
-					.close = pipe_noop,
-					.read = pipe_noop,
-					.write = pipe_noop,
+					.open = open_noop,
+					.close = close_noop,
+					.read = read_noop,
+					.write = write_noop,
 					.mkdir = NULL };
 
 inode_t *make_null_pipe()
@@ -64,7 +65,7 @@ static int pipe_read(struct inode *node, void *buf, uint32_t offset,
 	int readAmount = 0;
 	while (readAmount < size) {
 		int ret = CircularQueueFront(queue);
-		if (ret == NULL) { //TODO, what if we enqueue 0?
+		if (ret == (int)NULL) { //TODO, what if we enqueue 0?
 			if (node->flags & O_NONBLOCK) {
 				return readAmount;
 			} else {
@@ -108,4 +109,20 @@ static int pipe_write(struct inode *node, void *buf, uint32_t offset,
 int pipe_noop()
 {
 	return 0;
+}
+int open_noop(UNUSED struct inode inode, UNUSED uint32_t options)
+{
+	return 0;
+}
+int close_noop(UNUSED struct inode inode)
+{
+	return 0;
+}
+int read_noop(struct inode *inode, void *buf, uint32_t offset, uint32_t size)
+{
+	return size;
+}
+int write_noop(struct inode *inode, void *buf, uint32_t offset, uint32_t size)
+{
+	return size;
 }

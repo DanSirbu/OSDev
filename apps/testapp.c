@@ -29,8 +29,8 @@ int main()
 
 	int *iret1Ptr = &iret1;
 	int *iret2Ptr = &iret2;
-	pthread_join(thread1, &iret1Ptr);
-	pthread_join(thread2, &iret2Ptr);
+	pthread_join(thread1, (void **)&iret1Ptr);
+	pthread_join(thread2, (void **)&iret2Ptr);
 
 	printf("Thread 1 returns: %d\n", iret1);
 	printf("Thread 2 returns: %d\n", iret2);

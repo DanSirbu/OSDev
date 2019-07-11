@@ -1,4 +1,5 @@
 #include "string.h"
+#include "kmalloc.h"
 
 size_t strlen(const char *str)
 {
@@ -121,9 +122,10 @@ int strcmp(const char *str1, const char *str2)
 
 size_t array_length(char *arr[])
 {
-	size_t i;
-	for (i = 0; arr[i] != NULL; i++)
-		;
+	size_t i = 0;
+	while (arr[i] != NULL) {
+		i++;
+	}
 	return i;
 }
 char *strdup(const char *s)

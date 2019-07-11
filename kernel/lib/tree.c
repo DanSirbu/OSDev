@@ -38,8 +38,7 @@ void tree_remove_reparent_root(tree_node_t *child)
 	tree_node_t *parent = child->parent;
 	assert(parent != NULL);
 
-	list_remove(parent->children,
-		    list_find(parent->children, (size_t)child));
+	list_remove(parent->children, list_find(parent->children, child));
 
 	foreach_list(child->children, list_node)
 	{
@@ -76,7 +75,6 @@ void tree_break_off(tree_node_t *node)
 	if (!parent)
 		return;
 
-	list_remove(parent->children,
-		    list_find(parent->children, (size_t)node));
+	list_remove(parent->children, list_find(parent->children, node));
 	node->parent = NULL;
 }

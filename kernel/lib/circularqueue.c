@@ -21,7 +21,7 @@ static bool CircularQueueIsFull(CircularQueue *obj)
 /** Insert an element into the circular queue. Return true if the operation is successful. */
 static bool CircularQueueEnQueueUnsafe(CircularQueue *obj, int value)
 {
-	assert(value != NULL);
+	assert(value != 0);
 	if (CircularQueueIsFull(obj)) {
 		return false;
 	}
@@ -52,14 +52,14 @@ static bool CircularQueueDeQueueUnsafe(CircularQueue *obj)
 static int CircularQueueFrontUnsafe(CircularQueue *obj)
 {
 	if (CircularQueueIsEmpty(obj)) {
-		return NULL;
+		return (int)NULL;
 	}
 	return obj->data[obj->front];
 }
 static int CircularQueueBackUnsafe(CircularQueue *obj)
 {
 	if (CircularQueueIsEmpty(obj)) {
-		return NULL;
+		return (int)NULL;
 	}
 	return obj->data[obj->rear];
 }

@@ -3,6 +3,7 @@
 #include "implementme.h"
 #include "string.h"
 #include "assert.h"
+#include "standalone_printf.h"
 
 char print_buffer[2048];
 
@@ -193,5 +194,5 @@ void assert_failed(char *statement, char *file, uint32_t line, const char *func,
 }
 int fputc(int c, FILE *stream)
 {
-	return write(stream->fd, &c, 1);
+	return write(stream->fd, (char *)&c, 1);
 }

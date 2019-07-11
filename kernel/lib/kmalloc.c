@@ -207,10 +207,22 @@ void kfree(void *ptr)
 		mark_block_free(cur_block);
 	}
 }
-void kfree_arr(char **ptr1)
+char **copy_arr(char *arr[])
 {
-	char **ptr = (char **)ptr1;
+	if (arr == NULL) {
+		return NULL;
+	}
+	size_t numItems = array_length(arr);
+	char **newArray = kmalloc((numItems + 1) * sizeof(char *));
+	for (size_t x = 0; x < numItems; x++) {
+		newArray[x] = strdup(arr[x]);
+	}
+	newArray[numItems] = NULL;
 
+	return newArray;
+}
+void kfree_arr(char **ptr)
+{
 	int i = 0;
 	while (ptr[i] != NULL) {
 		kfree(ptr[i]);

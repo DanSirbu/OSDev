@@ -6,7 +6,7 @@
 typedef struct node {
 	struct node *next;
 	struct node *prev;
-	size_t value;
+	void *value;
 } __attribute__((packed)) node_t;
 
 typedef struct {
@@ -18,11 +18,11 @@ typedef struct {
 list_t *list_create(void);
 void list_merge(list_t *dst, list_t *src);
 void list_remove(list_t *list, node_t *node);
-void list_remove_item(list_t *list, size_t item);
+void list_remove_item(list_t *list, void *item);
 void list_free_contents(list_t *list);
 void list_free(list_t *list);
-node_t *list_find(list_t *list, size_t value);
-int list_index_of(list_t *list, size_t value);
+node_t *list_find(list_t *list, void *value);
+int list_index_of(list_t *list, void *value);
 node_t *list_index(list_t *list, int item_index);
 
 void list_enqueue(list_t *list, void *item);

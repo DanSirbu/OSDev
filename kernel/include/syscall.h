@@ -22,3 +22,5 @@ void syscalls_install();
 		regs->eax =                                                    \
 			sys_##fn((P1)regs->ebx, (P2)regs->ecx, (P3)regs->edx); \
 		break;
+
+void set_userspace_errno(int errno);

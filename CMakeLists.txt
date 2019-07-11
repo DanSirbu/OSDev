@@ -3,6 +3,7 @@
 cmake_minimum_required (VERSION 3.14.5)
 
 set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-Werror)
 
 set(CMAKE_C_COMPILER ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/local/bin/i686-pc-corax-gcc)
 set(CMAKE_C_LINKER ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/local/bin/i686-pc-corax-gcc)

@@ -35,8 +35,8 @@ inode_t *display_pipe;
 
 inode_operations_t inode_display_ops = { .find_child = NULL,
 					 .get_child = NULL,
-					 .open = pipe_noop,
-					 .close = pipe_noop,
+					 .open = open_noop,
+					 .close = close_noop,
 					 .read = NULL,
 					 .write = display_write,
 					 .mkdir = NULL };

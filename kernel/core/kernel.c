@@ -26,6 +26,9 @@
 #include "vfs.h"
 #include "vga.h"
 #include "dirent.h"
+#include "debug.h"
+#include "terminal.h"
+#include "pipe.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -129,14 +132,7 @@ void test_process2(size_t args)
 //extern volatile process_t *current;
 
 extern void get_func_info(uint32_t addr, char **name, char **file);
-void test2()
-{
-	dump_stack_trace(NULL);
-}
-void test1()
-{
-	test2();
-}
+
 extern char _kernel_end;
 extern inode_t *(*dummy_find_child)();
 
@@ -151,7 +147,7 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	assert(multiboot_info->mods_count == 1);
 	multiboot_module_t *modules = KERN_P2V(multiboot_info->mods_addr);
-	size_t ramfs_location = (size_t)KERN_P2V(modules[0].mod_start);
+	void *ramfs_location = KERN_P2V(modules[0].mod_start);
 
 	debug_print("Module start: 0x%x\n", modules[0].mod_start);
 	debug_print("Module end: 0x%x\n", modules[0].mod_end);
@@ -159,12 +155,12 @@ void kmain(multiboot_info_t *multiboot_info)
 	debug_print("Kernel ends at 0x%x\n", &_kernel_end);
 
 	if (multiboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
-		size_t sections_end;
-		parse_elf_sections(&multiboot_info->u.elf_sec, sections_end);
+		size_t elf_end_address;
+		parse_elf_sections(&multiboot_info->u.elf_sec,
+				   &elf_end_address);
 		//Update kernel end pointer
-		kern_max_address = MAX(kern_max_address, sections_end);
+		kern_max_address = MAX(kern_max_address, elf_end_address);
 	}
-	//test1();
 	//Update kernel end pointer
 	kern_max_address = MAX(kern_max_address, modules[0].mod_end);
 	kern_max_address =
@@ -260,33 +256,11 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	debug_print("Starting Init\n");
 
-	const char *filename = "/init";
-	char *args[] = { filename, NULL };
-	char *envs[] = { "HOME", "/", NULL };
+	char *filename = "/init";
+	char **args = copy_arr((char *[]){ filename, NULL });
+	char **envs = copy_arr((char *[]){ "HOME", "/", NULL });
+
 	assert(execve(filename, args, envs) == 0);
-
-	/*task_t *proc1 = &task[1];
-	void *tmpStack = kmalloc(0x100) + 0x100;
-	current->context =
-		(context_t *)tmpStack; //Does not matter, we won't return here
-	current->state = 100;
-	schedule();*/
-	//switch_context((context_t **)&current->context, proc1->context);
-
-	/*while (1) {
-		schedule();
-	}*/
-
-	//char *test = (char *)0xA0000000;
-	//char asd = *test; //Page fault
-
-	//assert(1 == 2); //Test assert
-
-	//Testing
-	/*frame_set_used(0x0);
-	frame_set_used(0x00700000);
-	frame_set_used(0x0efdffff);
-	frame_set_used(0x0ffe0000);*/
 
 	// acpi_init();
 	//pci_find_devices(); // PCI init

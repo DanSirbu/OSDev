@@ -1,10 +1,12 @@
 #include "sys/types.h"
 #include "serial.h"
-#include "multiboot.h"
 #include "elf.h"
 #include "mmu.h"
 #include "trap.h"
 #include "coraxstd.h"
+#include "debug.h"
+
+#define SHT_STRINGAT(table, offset) ((char *)(table) + (offset))
 
 extern size_t SYSCALL_NAMES_SIZE;
 extern char *syscall_names[];
@@ -35,7 +37,8 @@ void get_func_info(uint32_t addr, char **name, char **file)
 			size_t highAddress = lowAddress + symTbl[i].st_size;
 
 			if (addr >= lowAddress && addr < highAddress) {
-				*name = stringTable + symTbl[i].st_name;
+				*name = (char *)(stringTable +
+						 symTbl[i].st_name);
 				*file = "";
 			}
 		}
@@ -85,20 +88,20 @@ void dump_registers(int_regs_t *regs)
 }
 
 void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,
-			size_t *max_address)
+			size_t *elf_end_address)
 {
 	assert(sectionsHeader->num != 0);
 
 	size_t sections_end = sectionsHeader->addr +
 			      (sectionsHeader->num * sectionsHeader->size);
-	if (max_address != NULL) {
-		*max_address = sections_end;
+	if (elf_end_address != NULL) {
+		*elf_end_address = sections_end;
 	}
 	debug_print("Section start: 0x%x\n", sectionsHeader->addr);
 	debug_print("Section end: 0x%x\n", sections_end);
 
 	Elf32_Shdr *sections = KERN_P2V(sectionsHeader->addr);
-	Elf32_Addr sectionStringTable =
+	Elf32_Addr *sectionStringTable =
 		KERN_P2V(sections[sectionsHeader->shndx].sh_addr);
 
 	for (size_t x = 0; x < sectionsHeader->num; x++) {
@@ -106,7 +109,8 @@ void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,
 			continue;
 		}
 		if (sections[x].sh_type == SHT_STRTAB &&
-		    strncmp((char *)(sectionStringTable + sections[x].sh_name),
+		    strncmp(SHT_STRINGAT(sectionStringTable,
+					 sections[x].sh_name),
 			    ".strtab", sizeof(".strtab")) == 0) {
 			stringTable = (Elf32_Addr)KERN_P2V(sections[x].sh_addr);
 		}
@@ -117,7 +121,7 @@ void parse_elf_sections(multiboot_elf_section_header_table_t *sectionsHeader,
 			continue;
 		}
 		if (sections[x].sh_type == SHT_SYMTAB && symTbl == NULL) {
-			assert(sections[x].sh_addr != NULL);
+			assert(sections[x].sh_addr != 0);
 			symTbl = KERN_P2V(sections[x].sh_addr);
 			symTblNumEntries =
 				sections[x].sh_size / sections[x].sh_entsize;

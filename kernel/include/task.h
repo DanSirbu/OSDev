@@ -129,3 +129,9 @@ void wakeup_queue(threaded_list_t *queue);
 void sleep_on(threaded_list_t *queue);
 
 int getNextFD(process_t *proc);
+
+task_t *getTask(pid_t pid);
+
+pid_t sys_getPID();
+int sys_kill(pid_t pid, int sig);
+pid_t sys_waitpid(pid_t pid, int *stat_loc, int options);

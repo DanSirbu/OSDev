@@ -2,6 +2,9 @@
 #include "syscalls.h"
 #include "assert.h"
 #include "coraxstd.h"
+#include "string.h"
+#include "ctype.h"
+#include "malloc.h"
 
 FILE stdin_f = { .fd = STDIN_FILENO };
 FILE stdout_f = { .fd = STDOUT_FILENO };
@@ -27,8 +30,8 @@ char *getenv(const char *name)
 }
 int strcasecmp(const char *s1, const char *s2)
 {
-	char *p1 = s1;
-	char *p2 = s2;
+	char *p1 = (char *)s1;
+	char *p2 = (char *)s2;
 	while (tolower(*p1) == tolower(*p2)) {
 		if (*p1 == '\0') {
 			return 0;
@@ -73,7 +76,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	assert(stream != NULL);
-	return write(stream->fd, ptr, size * nmemb) / size;
+	return write(stream->fd, (char *)ptr, size * nmemb) / size;
 }
 int fseek(FILE *stream, long offset, int whence)
 {
@@ -150,10 +153,10 @@ int feof(FILE *stream)
 }
 void *memchr(const void *s, int c, size_t n)
 {
-	uint8_t *cur = s;
+	const uint8_t *cur = s;
 	for (size_t i = 0; i < n; i++) {
 		if (cur[i] == (uint8_t)c) {
-			return &cur[i];
+			return (void *)&cur[i];
 		}
 	}
 	return NULL;
@@ -249,4 +252,3 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
 	fprintf(stderr, "IMPLEMENT: select\n");
 	return 0;
 }
-weak_alias(sqrtf, __sqrt_finite);

@@ -69,7 +69,7 @@ extern void update_timer(uint32_t timeDeltaMillis);
 void timer_interrupt(__attribute__((unused)) int_regs_t *regs)
 {
 	//debug_print("Timer!\n");
-	if (boot_time == NULL) {
+	if (boot_time == (uint32_t)NULL) {
 		boot_time = read_rtc_sec_from_epoch();
 	}
 
@@ -80,7 +80,7 @@ void timer_interrupt(__attribute__((unused)) int_regs_t *regs)
 	}
 
 	uint32_t newTime = ticks_seconds * 1000 + ticks_millis;
-	if (lastTimerUpdate == NULL) {
+	if (lastTimerUpdate == (uint32_t)NULL) {
 		lastTimerUpdate = newTime;
 	}
 	update_timer(newTime - lastTimerUpdate);

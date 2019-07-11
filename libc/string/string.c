@@ -23,7 +23,7 @@ size_t strnlen(const char *s, size_t maxlen)
 void reverse(const char *str)
 {
 	char *start = (char *)str;
-	char *end = str + strlen(str) - 1;
+	char *end = (char *)str + strlen(str) - 1;
 	char temp;
 
 	while (end > start) {
@@ -152,8 +152,8 @@ char *strncat(char *dest, const char *src, size_t n)
 int strncmp(const char *s1, const char *s2, size_t max_len)
 {
 	int n = max_len;
-	char *p = s1;
-	char *q = s2;
+	char *p = (char *)s1;
+	char *q = (char *)s2;
 
 	while (n > 0 && *p && *p == *q) {
 		n--;
@@ -170,7 +170,7 @@ char *strchr(const char *s, int c)
 	size_t len = strlen(s) + 1; //include '\0' at end of the string
 	for (size_t x = 0; x < len; x++) {
 		if (s[x] == c) {
-			return &s[x];
+			return (char *)&s[x];
 		}
 	}
 	return NULL;
@@ -228,7 +228,7 @@ char *strtok(char *s, const char *delim)
 {
 	//NOTE: TAKEN FROM MUSL
 	static char *strtok_ptr;
-	if (s == '\0' && !(s = strtok_ptr))
+	if (!s && !(s = strtok_ptr))
 		return NULL;
 
 	s += strspn(s, delim);

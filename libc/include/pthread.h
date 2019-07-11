@@ -4,7 +4,7 @@
 #include "syscalls.h"
 
 typedef struct {
-	size_t *stack;
+	void *stack;
 	int id;
 } pthread_t;
 

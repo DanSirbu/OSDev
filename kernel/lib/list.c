@@ -74,7 +74,7 @@ void list_remove(list_t *list, node_t *node)
 	free(node);
 	list->len--;
 }
-void list_remove_item(list_t *list, size_t item)
+void list_remove_item(list_t *list, void *item)
 {
 	node_t *node_item = list_find(list, item);
 	assert(node_item !=
@@ -102,7 +102,7 @@ void list_free(list_t *list)
 	free(list);
 }
 
-node_t *list_find(list_t *list, size_t value)
+node_t *list_find(list_t *list, void *value)
 {
 	foreach_list(list, cur)
 	{
@@ -113,7 +113,7 @@ node_t *list_find(list_t *list, size_t value)
 
 	return NULL;
 }
-int list_index_of(list_t *list, size_t value)
+int list_index_of(list_t *list, void *value)
 {
 	int index = 0;
 	foreach_list(list, cur)
@@ -157,7 +157,7 @@ void *list_dequeue(list_t *list)
 	if (list->head == NULL || list->len == 0) {
 		return NULL;
 	}
-	void *item = list->head->value;
+	void *item = (void *)list->head->value;
 	list_remove(list, list->head);
 
 	return item;

@@ -206,8 +206,8 @@ void *sbrk(ssize_t size)
 	//Increase size if not big enough
 	if (heap_top + size > heap_end) {
 		syscall_sbrk(size);
-		void *newEnd = syscall_sbrk(0);
-		kinit_malloc(NULL, newEnd);
+		size_t newEnd = (size_t)syscall_sbrk(0);
+		kinit_malloc((size_t)NULL, newEnd);
 	}
 	void *returnVal = (void *)heap_top;
 	heap_top += size;

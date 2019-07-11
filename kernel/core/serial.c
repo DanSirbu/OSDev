@@ -48,8 +48,8 @@ static int serial_write(UNUSED struct inode *node, void *buf,
 
 inode_operations_t inode_serial_ops = { .find_child = NULL,
 					.get_child = NULL,
-					.open = pipe_noop,
-					.close = pipe_noop,
+					.open = open_noop,
+					.close = close_noop,
 					.read = NULL,
 					.write = serial_write,
 					.mkdir = NULL };

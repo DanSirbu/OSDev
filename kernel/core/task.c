@@ -75,7 +75,7 @@ task_t *create_task(process_t *process)
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
 	new_task->id = getNextPID();
-	new_task->exit_waiting_threads = list_create();
+	new_task->exit_waiting_threads = list_safe_create();
 	list_enqueue(process->threads, new_task);
 
 	return new_task;
@@ -141,7 +141,7 @@ size_t push_array_to_stack(size_t stacktop, char *arr[])
 	}
 
 	//Push string pointers in reverse order
-	PUSH(stack, size_t, NULL); //Don't forget terminating null pointer
+	PUSH(stack, void *, NULL); //Don't forget terminating null pointer
 	for (int x = num_items - 1; x >= 0; x--) {
 		PUSH(stack, char *, envs_ptr[x]);
 	}
@@ -225,12 +225,14 @@ int execve(const char *filename, char *argv[], char *envp[])
 	stack += sizeof(char **);
 
 	//main(argc, argv, envp)
-	PUSH(stack, char **, envp_pointer_value);
-	PUSH(stack, char **, argv_pointer_value);
+	PUSH(stack, char **, (char **)envp_pointer_value);
+	PUSH(stack, char **, (char **)argv_pointer_value);
 	PUSH(stack, int, array_length(argv));
 
 	//Cleanup
 	vfs_close(file);
+	kfree_arr(argv);
+	kfree_arr(envp);
 
 	//Start user process
 	enter_userspace(header.e_entry, stack);
@@ -278,17 +280,17 @@ uint32_t sys_clone(void *fn, void *child_stack, void *arg)
 	//Parameters for the clone userspace handler
 	size_t user_stack_top = (size_t)child_stack;
 	PUSH(user_stack_top, void *, arg);
-	PUSH(user_stack_top, uint32_t, fn);
-	PUSH(user_stack_top, void *, 0x99999); //Bogus function return address
+	PUSH(user_stack_top, void *, fn);
+	PUSH(user_stack_top, size_t, 0x99999); //Bogus function return address
 
 	//Kernel stack
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
 	size_t kernel_stack_top = new_task->stack + STACK_SIZE;
 	//enter_userspace(func, userstack) parameters
-	PUSH(kernel_stack_top, void *, user_stack_top); //userstack
+	PUSH(kernel_stack_top, void *, (void *)user_stack_top); //userstack
 	PUSH(kernel_stack_top, void *,
 	     current->process->userspace_variables.clone_func_caller); //func
-	PUSH(kernel_stack_top, void *, 0x99999); //Bogus function return address
+	PUSH(kernel_stack_top, size_t, 0x99999); //Bogus function return address
 
 	//Kernel "saved" context
 	new_task->context.esp = kernel_stack_top;
@@ -353,7 +355,7 @@ void free_task(task_t *task)
 	assert(task->state == STATE_FINISHED);
 
 	process_t *process = task->process;
-	list_remove_item(process->threads, (size_t)task);
+	list_remove_item(process->threads, task);
 
 	//Free task
 	assert(task->exit_waiting_threads->len == 0);
@@ -372,8 +374,8 @@ void update_timer(uint32_t timeDelta)
 	timeDelta *= 1000; //Change timedelta from millisecond to microseconds
 	struct itimerval *procTimer = &current->process->timer;
 
-	if (procTimer->it_interval.tv_sec == NULL &&
-	    procTimer->it_interval.tv_usec == NULL) {
+	if (procTimer->it_interval.tv_sec == 0 &&
+	    procTimer->it_interval.tv_usec == 0) {
 		return;
 	}
 
@@ -389,7 +391,7 @@ void update_timer(uint32_t timeDelta)
 	    procTimer->it_value.tv_sec >= procTimer->it_interval.tv_sec) {
 		//memset(procTimer, 0, sizeof(struct itimerval));
 		procTimer->it_value = procTimer->it_interval;
-		sys_kill(sys_getPID(), SIGALRM);
+		assert(sys_kill(sys_getPID(), SIGALRM) == 0);
 	}
 }
 void schedule()
@@ -437,7 +439,7 @@ void handle_signals()
 		size_t userSigHandler =
 			(size_t)current->process->userspace_variables
 				.SignalHandler;
-		assert(userSigHandler != NULL);
+		assert(userSigHandler != 0);
 		assert(current->int_regs != NULL);
 
 		int sig = (int)list_dequeue(current->process->signals);
@@ -492,14 +494,12 @@ int sys_kill(pid_t pid, int sig)
 	if (pid == 0) {
 		return -1;
 	}
-	foreach_list(task_list, curTask)
-	{
-		task_t *task = curTask->value;
-		if (task->id == pid) {
-			list_enqueue(task->process->signals, (void *)sig);
-			break;
-		}
+	task_t *task = getTask(pid);
+	if (task == NULL) {
+		return -1;
 	}
+	list_enqueue(task->process->signals, (void *)sig);
+
 	schedule();
 
 	return 0;
@@ -513,7 +513,7 @@ task_t *getTask(pid_t pid)
 {
 	foreach_list(task_list, curTask)
 	{
-		task_t *task = curTask->value;
+		task_t *task = (void *)curTask->value;
 		if (task->id == pid) {
 			return task;
 		}
@@ -523,8 +523,7 @@ task_t *getTask(pid_t pid)
 }
 pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 {
-	assert(options == NULL &&
-	       pid > 0); //TODO, make sys_waitpid handle options
+	assert(options == 0 && pid > 0); //TODO, make sys_waitpid handle options
 
 	task_t *task = getTask(pid);
 	if (task == NULL) {

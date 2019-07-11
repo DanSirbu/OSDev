@@ -8,6 +8,9 @@
 #include <float.h>
 
 #include "scanf.h"
+#include "coraxstd.h"
+#include "implementme.h"
+#include "malloc.h"
 
 typedef struct {
 	int use_strtox_behavior;

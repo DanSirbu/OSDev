@@ -44,6 +44,7 @@ DECL_SYSCALL3(__NR_getdents, getdents, uint32_t, fd, dir_dirent_t *, dirp,
 DECL_SYSCALL0(__NR_reboot, reboot)
 
 int printf(const char *fmt, ...);
+int fprintf(FILE *stream, const char *format, ...);
 int atexit(void (*function)(void));
 void exit(uint32_t exitcode);
 int open(const char *path, int oflag, ...);

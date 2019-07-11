@@ -8,6 +8,8 @@ void *kmalloc_align(size_t size, uint8_t alignment);
 void *kvmalloc(size_t size);
 void *krealloc(void *ptr, size_t newSize);
 
+char **copy_arr(char *arr[]);
+
 void kfree(void *ptr);
 void kfree_arr(char **ptr);
 

@@ -162,12 +162,14 @@ file_t *vfs_open(const char *path)
 		inode = inode->mount;
 	}
 
+	return vfs_open_inode(inode, (char *)path);
+}
+file_t *vfs_open_inode(inode_t *inode, char *path)
+{
 	file_t *file = kmalloc(sizeof(file_t));
 	file->f_inode = inode;
 	file->offset = 0;
 	strncpy(file->path, path, sizeof(file->path));
-	//file->path = cur;
-
 	return file;
 }
 int vfs_close(file_t *file)

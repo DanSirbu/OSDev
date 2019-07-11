@@ -60,7 +60,7 @@ void initramfs(ramfs_header_t *diskRamFSHeader)
 		void *newDirHeader = kmalloc(sizeof(ramfs_dir_t));
 		assert(newDirHeader != NULL);
 		memcpy(newDirHeader, dirHeader, sizeof(ramfs_dir_t));
-		ramfs_header->inodes[x].address = newDirHeader;
+		ramfs_header->inodes[x].address = (uint32_t)newDirHeader;
 
 		size_t direntsSize =
 			sizeof(ramfs_dirent_t) * dirHeader->num_dirs;
@@ -183,7 +183,8 @@ static int ramfs_mkdir(struct inode *inode, struct dentry *dentry)
 	//Add directory as a child to dentry->parent
 	/*******************************/
 	ino_t parentIno = dentry->parent->ino;
-	ramfs_dir_t *parentDirFile = ramfs_header->inodes[parentIno].address;
+	ramfs_dir_t *parentDirFile =
+		(ramfs_dir_t *)ramfs_header->inodes[parentIno].address;
 
 	/*START: Increase parent directory "file" to support one more entry */
 	void *newDirents = krealloc(parentDirFile->dirents,
@@ -215,7 +216,7 @@ static int ramfs_mkdir(struct inode *inode, struct dentry *dentry)
 	memset(childDirFile, 0, sizeof(ramfs_dir_t));
 
 	//Link it to the inode
-	childInode.address = childDirFile;
+	childInode.address = (uint32_t)childDirFile;
 	childInode.size = sizeof(ramfs_dir_t);
 	childInode.max_size = childInode.size;
 

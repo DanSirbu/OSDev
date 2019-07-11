@@ -5,10 +5,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
-
-#define __USE_ISOC99 1
-#define __GLIBC_FLT_EVAL_METHOD 1
-#define _XOPEN_SOURCE 1
+#include "features.h"
 
 //#define __cplusplus //So boolean isn't redefined
 
@@ -37,8 +34,3 @@ typedef float float_t;
 typedef double double_t;
 
 #define EOF (-1)
-
-/*#define weak_alias(name, aliasname) _weak_alias(name, aliasname)
-#define _weak_alias(name, aliasname)                                           \
-	extern __typeof(name) aliasname __attribute__((weak, alias(#name)));
-*/

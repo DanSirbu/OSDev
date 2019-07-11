@@ -89,7 +89,7 @@ int run_process(char *command)
 	if (access(args[0], 0) != 0) {
 		printf("%s: command not found\n", args[0]);
 		free_arr(args);
-		return;
+		return -1;
 	}
 
 	int pid = fork();
@@ -108,7 +108,7 @@ int run_process(char *command)
 	free_arr(args);
 
 	int processExitCode;
-	waitpid(pid, &processExitCode, NULL);
+	waitpid(pid, &processExitCode, 0);
 	return processExitCode;
 }
 

@@ -82,7 +82,7 @@ typedef struct super_operations {
 typedef struct inode_operations {
 	//struct dentry *(*lookup)(struct inode *, struct dentry *, unsigned int);
 	struct inode *(*find_child)(struct inode *parent, char *name);
-	struct dir_dirent_t *(*get_child)(struct inode *parent, uint32_t index);
+	dir_dirent_t *(*get_child)(struct inode *parent, uint32_t index);
 
 	int (*open)(struct inode, uint32_t);
 	int (*close)(struct inode);

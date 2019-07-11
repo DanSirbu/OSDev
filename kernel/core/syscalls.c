@@ -9,34 +9,20 @@
 #include "time.h"
 #include "pipe.h"
 #include "dirent.h"
+#include "kmalloc.h"
 
-/*
- * Note: must be freed after done with it
- */
-char **copy_arr(char *arr[])
+int sys_execve(const char *filename, char *user_args[], char *user_envs[])
 {
-	size_t numItems = array_length(arr);
-	char **newArray = kmalloc((numItems + 1) * sizeof(char *));
-	for (size_t x = 0; x < numItems; x++) {
-		newArray[x] = strdup(arr[x]);
-	}
-	newArray[numItems] = NULL;
+	char **args = copy_arr(user_args);
+	char **envs = copy_arr(user_envs);
 
-	return newArray;
-}
-int sys_execve(const char *filename, char *args1[], char *envs1[])
-{
-	char **args = { strdup(filename), NULL };
-	//TODO MEMORY LEAK: how to free strdup(filename) after?
-	char **envs = { NULL };
+	if (args == NULL) {
+		args = copy_arr((char *[]){ (char *)filename, NULL });
+	}
+	if (envs == NULL) {
+		envs = copy_arr((char *[]){ NULL });
+	}
 
-	if (args1 != NULL) {
-		//TODO MEMORY LEAK: how to free this after easily?
-		args = copy_arr(args1);
-	}
-	if (envs1 != NULL) {
-		envs = copy_arr(envs1);
-	}
 	return execve((const char *)filename, args, envs);
 }
 extern task_t *current;
@@ -225,8 +211,8 @@ int sys_fcntl(int fd, int cmd, int flags)
 }
 int sys_pipe(int fildes[2])
 {
-	int fd1 = getNextFD(current);
-	int fd2 = getNextFD(current);
+	int fd1 = getNextFD(current->process);
+	int fd2 = getNextFD(current->process);
 	if (fd1 == -1 || fd2 == -1) {
 		return -1;
 	}
@@ -235,8 +221,10 @@ int sys_pipe(int fildes[2])
 
 	//TODO, vfs open
 
-	current->process->files[fd1] = unix_pipe.read_pipe;
-	current->process->files[fd1] = unix_pipe.write_pipe;
+	current->process->files[fd1] =
+		vfs_open_inode(unix_pipe.read_pipe, "/read_pipe");
+	current->process->files[fd1] =
+		vfs_open_inode(unix_pipe.write_pipe, "/write_pipe");
 
 	return 0;
 }
@@ -324,7 +312,7 @@ void syscall(int_regs_t *regs)
 
 		DEF_SYSCALL0(__NR_getpid, getPID);
 
-		DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
+		DEF_SYSCALL1(__NR_pipe, pipe, void *, fildes);
 		DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc,
 			     int, options);
 

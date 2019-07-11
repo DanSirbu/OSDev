@@ -13,6 +13,11 @@
 #include "errno.h"
 #include "assert.h"
 
+#include "implementme.h"
+#include "string.h"
+#include "coraxstd.h"
+#include "malloc.h"
+
 typedef struct {
 	void (*out_cb)(void *state, const char *s, size_t l);
 	void *cb_state;

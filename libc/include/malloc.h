@@ -4,6 +4,7 @@
 void *malloc(size_t size);
 void *realloc(void *ptr, size_t size);
 void free(void *ptr);
+void free_arr(char **ptr1);
 
 void *memset(void *ptr, int value, size_t s);
 void *memcpy(void *dst, const void *src, size_t s);

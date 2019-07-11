@@ -13,8 +13,8 @@ void test_circularqueue()
 	assert(CircularQueueBack(queue) == 1);
 	assert(CircularQueueDeQueue(queue) == true);
 	assert(CircularQueueDeQueue(queue) == false);
-	assert(CircularQueueFront(queue) == NULL);
-	assert(CircularQueueBack(queue) == NULL);
+	assert(CircularQueueFront(queue) == (int)NULL);
+	assert(CircularQueueBack(queue) == (int)NULL);
 
 	assert(CircularQueueEnQueue(queue, 1) == true);
 	assert(CircularQueueEnQueue(queue, 2) == true);
@@ -27,12 +27,12 @@ void test_circularqueue()
 	assert(CircularQueueEnQueue(queue, 4) == true); //2, 3, 4 left
 	assert(CircularQueueEnQueue(queue, 5) == false);
 
-	assert(CircularQueueDeQueue(queue) == true);//3, 4 left
+	assert(CircularQueueDeQueue(queue) == true); //3, 4 left
 	assert(CircularQueueFront(queue) == 3);
 	assert(CircularQueueDeQueue(queue) == true); //4 left
 	assert(CircularQueueFront(queue) == 4);
 	assert(CircularQueueDeQueue(queue) == true);
-	assert(CircularQueueFront(queue) == NULL);
+	assert(CircularQueueFront(queue) == (int)NULL);
 	assert(CircularQueueDeQueue(queue) == false);
 
 	CircularQueueFree(queue);

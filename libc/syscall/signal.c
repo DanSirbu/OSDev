@@ -1,6 +1,7 @@
 #include "coraxstd.h"
 #include "signal.h"
 #include "assert.h"
+#include "syscalls.h"
 
 #define sa_handler _signal_handlers._handler
 #define sa_sigaction _signal_handlers._sigaction
