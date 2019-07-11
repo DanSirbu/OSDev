@@ -105,32 +105,6 @@ void testramfs()
 		vfs_close(currentFolder);
 	}
 }
-void err()
-{
-	__asm__("cli");
-}
-/*
-void test_process1(size_t args)
-{
-	while (1) {
-		cli();
-		debug_print("a");
-		sti();
-		//schedule();
-		//exec(NULL, (size_t)err);
-	}
-}
-
-void test_process2(size_t args)
-{
-	while (1) {
-		debug_print("b");
-		schedule();
-	}
-}*/
-//extern process_t task[];
-//extern volatile process_t *current;
-
 extern void get_func_info(uint32_t addr, char **name, char **file);
 
 extern char _kernel_end;
@@ -172,7 +146,6 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	idt_init();
 
-	screen_init();
 	print_memory_map((size_t)KERN_P2V(multiboot_info->mmap_addr),
 			 multiboot_info->mmap_length);
 
