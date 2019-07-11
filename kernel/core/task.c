@@ -529,9 +529,14 @@ pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 	if (task == NULL) {
 		return -1;
 	}
-	list_safe_enqueue(task->exit_waiting_threads, current);
-	current->state = STATE_SLEEPING;
-	schedule();
+
+	//Wait for task to finish
+	if (task->state != STATE_FINISHED) {
+		list_safe_enqueue(task->exit_waiting_threads, current);
+		current->state = STATE_SLEEPING;
+		schedule();
+	}
+
 	if (stat_loc != NULL) {
 		*stat_loc = task->exitcode;
 	}

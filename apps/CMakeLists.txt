@@ -38,4 +38,8 @@ add_custom_target(ramfs.img ALL
                   COMMAND make -C ramfs
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+# ramfs.img dependencies
 add_dependencies(ramfs.img additional_apps)
+foreach(target ${TARGETS_})
+add_dependencies(ramfs.img ${target})
+endforeach()
