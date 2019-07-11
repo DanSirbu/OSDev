@@ -197,12 +197,14 @@ void sbrk_alignto(size_t alignment)
 }
 void *sbrk(ssize_t size)
 {
-	//Initialize heap if this is the first call to it
+	//Initialize heap allocation if this is the first call to it
 	if (heap_top == (size_t)NULL) {
 		uint32_t alloc_size = INITIAL_HEAP_SIZE;
 		void *start = (void *)syscall_sbrk(alloc_size);
 		kinit_malloc((size_t)start, (size_t)(start + alloc_size));
-	} else if (heap_top + size > heap_end) {
+	}
+	//Increase size if not big enough
+	if (heap_top + size > heap_end) {
 		syscall_sbrk(size);
 		void *newEnd = syscall_sbrk(0);
 		kinit_malloc(NULL, newEnd);
