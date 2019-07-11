@@ -29,6 +29,7 @@
 #include "debug.h"
 #include "terminal.h"
 #include "pipe.h"
+#include "proc.h"
 
 //ramdisk
 extern void initrd_init(size_t start, size_t size);
@@ -205,6 +206,11 @@ void kmain(multiboot_info_t *multiboot_info)
 	inode_t *null_pipe = make_null_pipe();
 	assert(mount("/dev/null", null_pipe) == 0);
 
+	print(LOG_INFO, "Initializing /proc\n");
+	vfs_mkdir("/", "proc");
+	inode_t *proc_pipe = make_proc_pipe();
+	assert(mount("/proc", proc_pipe) == 0);
+
 	debug_print("Starting Tests\n");
 	run_tests();
 	debug_print("\nTests complete!\n");
@@ -229,7 +235,7 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	debug_print("Starting Init\n");
 
-	char *filename = "/init";
+	char *filename = strdup("/init");
 	char **args = copy_arr((char *[]){ filename, NULL });
 	char **envs = copy_arr((char *[]){ "HOME", "/", NULL });
 

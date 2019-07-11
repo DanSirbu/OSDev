@@ -23,7 +23,7 @@ int sys_execve(const char *filename, char *user_args[], char *user_envs[])
 		envs = copy_arr((char *[]){ NULL });
 	}
 
-	return execve((const char *)filename, args, envs);
+	return execve(strdup(filename), args, envs);
 }
 extern task_t *current;
 size_t sys_sbrk(uint32_t size)

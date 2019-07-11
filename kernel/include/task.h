@@ -63,6 +63,8 @@ typedef struct {
 typedef struct {
 	pid_t id;
 
+	char *name;
+
 	process_t *process;
 
 	int_regs_t *int_regs;
@@ -116,14 +118,15 @@ uint32_t sys_exit(int exitcode);
 uint32_t sys_fork(int_regs_t *regs);
 void schedule();
 void make_task_ready(task_t *task);
-task_t *create_task(process_t *process);
+task_t *create_task(process_t *process, const char *name);
 void schedule_task(task_t *next_task);
 void set_int_regs(int_regs_t *regs);
 
 task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);
-int execve(const char *filename, char *argv[], char *envp[]);
+int execve(char *filename, char *argv[], char *envp[]);
 uint32_t sys_clone(void *fn, void *child_stack, void *arg);
+void set_task_name(task_t *task, const char *name);
 
 void wakeup_queue(threaded_list_t *queue);
 void sleep_on(threaded_list_t *queue);
@@ -131,6 +134,7 @@ void sleep_on(threaded_list_t *queue);
 int getNextFD(process_t *proc);
 
 task_t *getTask(pid_t pid);
+int getNumTasksInTasklist();
 
 pid_t sys_getPID();
 int sys_kill(pid_t pid, int sig);

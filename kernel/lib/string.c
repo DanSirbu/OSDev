@@ -137,3 +137,105 @@ char *strdup(const char *s)
 
 	return new_str;
 }
+char *strchr(const char *s, int c)
+{
+	size_t len = strlen(s) + 1; //include '\0' at end of the string
+	for (size_t x = 0; x < len; x++) {
+		if (s[x] == c) {
+			return (char *)&s[x];
+		}
+	}
+	return NULL;
+}
+char *strrchr(const char *s, int c)
+{
+	size_t len = strlen(s) + 1; //include '\0' at end of the string
+	for (size_t x = len; x >= 0; x--) {
+		if (s[x] == c) {
+			return (char *)&s[x];
+		}
+	}
+	return NULL;
+}
+bool contains(const char *input, char c)
+{
+	size_t len = strlen(input);
+	for (size_t i = 0; i < len; i++) {
+		if (input[i] == c) {
+			return true;
+		}
+	}
+	return false;
+}
+size_t strspn(const char *s, const char *accept)
+{
+	//TODO, there is a faster algo
+	size_t len = strlen(s);
+
+	size_t numOccurences = 0;
+	for (size_t x = 0; x < len; x++) {
+		if (!contains(accept, s[x])) {
+			break;
+		}
+		numOccurences++;
+	}
+	return numOccurences;
+}
+size_t strcspn(const char *s, const char *reject)
+{
+	//TODO, there is a faster algo
+	size_t len = strlen(s);
+
+	size_t numNotContains = 0;
+	for (size_t x = 0; x < len; x++) {
+		if (contains(reject, s[x])) {
+			break;
+		}
+		numNotContains++;
+	}
+	return numNotContains;
+}
+
+char *strtok(char *s, const char *delim)
+{
+	//NOTE: TAKEN FROM MUSL
+	static char *strtok_ptr;
+	if (!s && !(s = strtok_ptr))
+		return NULL;
+
+	s += strspn(s, delim);
+	if (*s == '\0')
+		return strtok_ptr = 0;
+	strtok_ptr = s + strcspn(s, delim);
+	if (*strtok_ptr)
+		*strtok_ptr++ = 0;
+	else
+		strtok_ptr = 0;
+
+	return s;
+}
+/*
+Returns the basename of the path
+*/
+char *getBasename(const char *s)
+{
+	char *prevSlashNextIndex = (char *)s;
+	for (size_t x = 0; x < strlen(s); x++) {
+		if (x > 0 && s[x - 1] == '\\') {
+			continue;
+		}
+		if (s[x] == '/') {
+			prevSlashNextIndex = (char *)&s[x] + 1;
+		}
+	}
+
+	return prevSlashNextIndex;
+}
+/*
+ * Note: This modifies the string so make sure to pass a copy
+ */
+char *getFilenameNoExt(char *s)
+{
+	char *basename = getBasename(s);
+	return strtok(basename, ".");
+}

@@ -15,3 +15,6 @@ int strncmp(char *str1, char *str2, size_t max_len);
 char *strdup(const char *s);
 
 size_t array_length(char *arr[]);
+
+char *getBasename(const char *s);
+char *getFilenameNoExt(char *s);

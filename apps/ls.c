@@ -10,7 +10,11 @@
 
 int main(int argc, char *args[])
 {
-	int fd = open("/", 0);
+	char *directoryToOpen = args[1];
+	if (argc < 2) {
+		directoryToOpen = "/";
+	}
+	int fd = open(directoryToOpen, 0);
 	dir_header_t dir_header;
 
 	read(fd, &dir_header, sizeof(dir_header));

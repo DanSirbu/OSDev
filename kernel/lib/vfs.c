@@ -181,7 +181,8 @@ int vfs_close(file_t *file)
 }
 int vfs_read(file_t *file, void *buf, size_t offset, size_t size)
 {
-	if (file->f_inode->i_op->read) {
+	if (file && file->f_inode && file->f_inode->i_op &&
+	    file->f_inode->i_op->read) {
 		return file->f_inode->i_op->read(file->f_inode, buf, offset,
 						 size);
 	} else {

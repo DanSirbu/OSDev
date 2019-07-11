@@ -55,7 +55,7 @@ void idle_task()
 extern page_directory_t *current_directory;
 task_t *spawn_init()
 {
-	task_t *init_task = create_task(NULL);
+	task_t *init_task = create_task(NULL, "init");
 
 	init_task->state = STATE_INIT;
 
@@ -63,9 +63,11 @@ task_t *spawn_init()
 	init_task->stack = (size_t)kmalloc(STACK_SIZE);
 	init_task->process->page_directory = clone_directory(current_directory);
 
+	list_enqueue(task_list, init_task);
+
 	return init_task;
 }
-task_t *create_task(process_t *process)
+task_t *create_task(process_t *process, const char *name)
 {
 	if (process == NULL) { //First task
 		process = kcalloc(sizeof(process_t));
@@ -76,13 +78,16 @@ task_t *create_task(process_t *process)
 	new_task->process = process;
 	new_task->id = getNextPID();
 	new_task->exit_waiting_threads = list_safe_create();
+	new_task->name = strdup(name);
 	list_enqueue(process->threads, new_task);
 
 	return new_task;
 }
 task_t *spawn_idle()
 {
-	return copy_task((size_t)idle_task, (size_t)NULL);
+	task_t *task = copy_task((size_t)idle_task, (size_t)NULL);
+	set_task_name(task, "idle");
+	return task;
 }
 void tasking_install()
 {
@@ -101,7 +106,7 @@ void tasking_install()
 //Does not start it yet
 task_t *copy_task(size_t fn, size_t args)
 {
-	task_t *new_task = create_task(NULL);
+	task_t *new_task = create_task(NULL, "kthread");
 	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
@@ -150,7 +155,7 @@ size_t push_array_to_stack(size_t stacktop, char *arr[])
 	return stack;
 }
 
-int execve(const char *filename, char *argv[], char *envp[])
+int execve(char *filename, char *argv[], char *envp[])
 {
 	file_t *file = vfs_open(filename);
 	if (file == NULL) {
@@ -229,8 +234,12 @@ int execve(const char *filename, char *argv[], char *envp[])
 	PUSH(stack, char **, (char **)argv_pointer_value);
 	PUSH(stack, int, array_length(argv));
 
+	//Set new process name
+	set_task_name(current, getFilenameNoExt(filename));
+
 	//Cleanup
 	vfs_close(file);
+	kfree(filename);
 	kfree_arr(argv);
 	kfree_arr(envp);
 
@@ -271,7 +280,7 @@ uint32_t sys_clone(void *fn, void *child_stack, void *arg)
 	       "Current process does not exist, can't clone");
 	assert(current->process->userspace_variables.clone_func_caller != NULL);
 
-	task_t *new_task = create_task(current->process);
+	task_t *new_task = create_task(current->process, current->name);
 	list_enqueue(task_list, new_task);
 
 	//Page directory remains the same
@@ -305,7 +314,7 @@ uint32_t sys_fork(int_regs_t *regs)
 {
 	assert(current != NULL && "Current process does not exist, can't fork");
 
-	task_t *new_task = create_task(NULL);
+	task_t *new_task = create_task(NULL, current->name);
 	//copy fds
 	memcpy(new_task->process->files, current->process->files,
 	       sizeof(new_task->process->files));
@@ -361,6 +370,7 @@ void free_task(task_t *task)
 	assert(task->exit_waiting_threads->len == 0);
 	list_safe_free(task->exit_waiting_threads);
 	kfree((void *)task->stack);
+	kfree(task->name);
 	kfree(task);
 
 	//Last thread in the process, we can clean the process
@@ -520,6 +530,20 @@ task_t *getTask(pid_t pid)
 	}
 
 	return NULL;
+}
+int getNumTasksInTasklist()
+{
+	int numTasks = 0;
+	foreach_list(task_list, curTask)
+	{
+		numTasks++;
+	}
+	return numTasks;
+}
+void set_task_name(task_t *task, const char *name)
+{
+	free(task->name);
+	task->name = strdup(name);
 }
 pid_t sys_waitpid(pid_t pid, int *stat_loc, int options)
 {
