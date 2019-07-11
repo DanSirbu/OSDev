@@ -41,6 +41,5 @@ void *print_message_function(void *ptr)
 {
 	char *message;
 	message = (char *)ptr;
-	//printf("%s \n", message);
-	printf("Message!\n");
+	printf("%s \n", message);
 }

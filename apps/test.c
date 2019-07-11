@@ -3,7 +3,7 @@
 
 void testApp()
 {
-	printf("TestApp\n");
+	printf("Clone Test\n");
 }
 int main(int argc, char *argv[])
 {
@@ -13,6 +13,6 @@ int main(int argc, char *argv[])
 	}
 	void *clone_addr = malloc(1000);
 	assert(clone_addr != NULL);
-	clone(testApp, clone_addr + 1000);
+	clone(testApp, clone_addr + 1000, NULL);
 	return 0;
 }

@@ -298,8 +298,8 @@ void syscall(int_regs_t *regs)
 			     size);
 		DEF_SYSCALL3(__NR_execve, execve, const char *, filename,
 			     char **, args, char **, envs);
-		DEF_SYSCALL2(__NR_clone, clone, void *, fn, void *,
-			     child_stack);
+		DEF_SYSCALL3(__NR_clone, clone, void *, fn, void *, child_stack,
+			     void *, arg);
 		DEF_SYSCALL1(__NR_sbrk, sbrk, uint32_t, size);
 		DEF_SYSCALL3(__NR_update_screen, update_display, size_t, w,
 			     size_t, h, void *, buffered_data);

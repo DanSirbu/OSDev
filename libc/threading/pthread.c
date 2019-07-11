@@ -8,8 +8,7 @@ int pthread_create(pthread_t *thread, pthread_attr_t *attr,
 	void *stack = malloc(PTHREAD_STACK_SIZE);
 	size_t stack_top = stack + PTHREAD_STACK_SIZE;
 	thread->stack = (size_t)stack;
-	//TODO use arg
-	thread->id = clone(start_routine, stack_top);
+	thread->id = clone(start_routine, stack_top, arg);
 	return 0;
 }
 

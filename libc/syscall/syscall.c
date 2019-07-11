@@ -11,7 +11,7 @@ DEF_SYSCALL0(__NR_getpid, call_getpid);
 
 DEF_SYSCALL3(__NR_execve, execve, const char *, filename, char **, args,
 	     char **, envs);
-DEF_SYSCALL2(__NR_clone, clone, void *, fn, void *, child_stack);
+DEF_SYSCALL3(__NR_clone, clone, void *, fn, void *, child_stack, void *, arg);
 DEF_SYSCALL1(__NR_sbrk, syscall_sbrk, uint32_t, size);
 DEF_SYSCALL2(__NR_access, access, const char *, path, int, amode);
 
@@ -62,8 +62,8 @@ void exit(uint32_t exitcode)
 	_exit(exitcode);
 }
 
-void run_clone(void (*fn)())
+void run_clone(void (*fn)(), void *arg)
 {
-	(*fn)();
+	(*fn)(arg);
 	exit(0); //TODO add other exit codes
 }

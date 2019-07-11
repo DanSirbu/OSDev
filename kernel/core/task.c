@@ -263,7 +263,7 @@ task_t *pick_next_task()
 	return task;
 }
 extern void *_start;
-uint32_t sys_clone(void *fn, void *child_stack)
+uint32_t sys_clone(void *fn, void *child_stack, void *arg)
 {
 	assert(current != NULL &&
 	       "Current process does not exist, can't clone");
@@ -277,6 +277,7 @@ uint32_t sys_clone(void *fn, void *child_stack)
 
 	//Parameters for the clone userspace handler
 	size_t user_stack_top = (size_t)child_stack;
+	PUSH(user_stack_top, void *, arg);
 	PUSH(user_stack_top, uint32_t, fn);
 	PUSH(user_stack_top, void *, 0x99999); //Bogus function return address
 

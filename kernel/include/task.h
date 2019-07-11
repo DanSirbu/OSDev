@@ -123,7 +123,7 @@ void set_int_regs(int_regs_t *regs);
 task_t *copy_task(size_t fn, size_t args);
 void clone(void (*func_addr)(void), void *new_stack);
 int execve(const char *filename, char *argv[], char *envp[]);
-uint32_t sys_clone(void *fn, void *child_stack);
+uint32_t sys_clone(void *fn, void *child_stack, void *arg);
 
 void wakeup_queue(threaded_list_t *queue);
 void sleep_on(threaded_list_t *queue);
