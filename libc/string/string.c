@@ -302,3 +302,9 @@ char **tokenize(char *str, char *delim)
 	free(strCopy);
 	return arr;
 }
+char *strconcat(char *dst, char *str1, char *str2)
+{
+	strcpy(dst, str1);
+	strcpy(dst + strlen(str1), str2);
+	return dst;
+}

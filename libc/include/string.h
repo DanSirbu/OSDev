@@ -22,3 +22,4 @@ int puts(const char *s);
 int fputc(int c, FILE *stream);
 int sprintf(char *s, const char *format, ...);
 int vsprintf(char *str, const char *format, va_list ap);
+char *strconcat(char *dst, char *str1, char *str2);

@@ -140,6 +140,8 @@ int umount(char *path)
 		cur = vfs_find_child(cur, child_name);
 		if (cur == NULL) {
 			return -1;
+		} else if (cur->mount != NULL) {
+			cur = cur->mount;
 		}
 		i++;
 	}
@@ -250,6 +252,8 @@ inode_t *vfs_namei(char *path)
 		cur = vfs_find_child(cur, child_name);
 		if (cur == NULL) {
 			return NULL;
+		} else if (cur->mount != NULL) {
+			cur = cur->mount;
 		}
 
 		i++;

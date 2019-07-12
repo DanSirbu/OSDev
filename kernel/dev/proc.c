@@ -4,11 +4,12 @@
 #include "task.h"
 #include "proc.h"
 
+struct inode *proc_find_child(struct inode *parent, char *name);
 static dir_dirent_t *proc_get_child(struct inode *parent, uint32_t index);
 static int proc_read(struct inode *inode, void *buf, uint32_t offset,
 		     uint32_t size);
 
-inode_operations_t inode_proc_ops = { .find_child = NULL,
+inode_operations_t inode_proc_ops = { .find_child = proc_find_child,
 				      .get_child = proc_get_child,
 				      .open = open_noop,
 				      .close = close_noop,
@@ -23,6 +24,7 @@ inode_t *make_proc_pipe()
 	inode_t *inode = kcalloc(sizeof(inode_t));
 	inode->i_op = &inode_proc_ops;
 	inode->device = NULL;
+	inode->type = FS_DIRECTORY;
 
 	proc_root = inode;
 	proc_root_dirheader = kmalloc(sizeof(proc_root_dirheader));
@@ -32,6 +34,25 @@ inode_t *make_proc_pipe()
 
 extern list_t *task_list;
 
+struct inode *proc_find_child(struct inode *parent, char *name)
+{
+	if (parent != proc_root) {
+		return NULL;
+	}
+
+	foreach_list(task_list, nodeVal)
+	{
+		task_t *curTask = (task_t *)nodeVal->value;
+		if (strncmp(curTask->name, name, 255) == 0) {
+			inode_t *newInode = malloc(sizeof(inode_t));
+			newInode->ino = curTask->id;
+			newInode->i_op = &inode_proc_ops;
+			newInode->type = FS_FILE;
+
+			return newInode;
+		}
+	}
+}
 static dir_dirent_t *proc_get_child(struct inode *parent, uint32_t index)
 {
 	if (proc_root == parent) {
