@@ -48,6 +48,7 @@ struct inode *proc_find_child(struct inode *parent, char *name)
 			newInode->ino = curTask->id;
 			newInode->i_op = &inode_proc_ops;
 			newInode->type = FS_FILE;
+			newInode->flags |= FS_FLAG_NOCACHE;
 
 			return newInode;
 		}

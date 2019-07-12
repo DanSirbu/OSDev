@@ -89,7 +89,7 @@ inode_t *vfs_find_child(inode_t *parent, char *name)
 	struct inode *child = parent->i_op->find_child(parent, name);
 
 	//Add it to the cache
-	if (child != NULL) {
+	if (child != NULL && !(child->flags & FS_FLAG_NOCACHE)) {
 		cachedNode_t *newInodeToCache = kmalloc(sizeof(cachedNode_t));
 		newInodeToCache->parent = parent;
 		strncpy(newInodeToCache->name, name,

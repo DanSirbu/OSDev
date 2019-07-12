@@ -365,6 +365,7 @@ void free_task(task_t *task)
 
 	process_t *process = task->process;
 	list_remove_item(process->threads, task);
+	list_remove_item(task_list, task);
 
 	//Free task
 	assert(task->exit_waiting_threads->len == 0);

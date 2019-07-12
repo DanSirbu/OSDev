@@ -12,6 +12,8 @@
 #define FS_SYMLINK 0x06
 #define FS_MOUNTPOINT 0x08
 
+#define FS_FLAG_NOCACHE 0x1
+
 struct fs_node;
 
 typedef uint32_t ino_t;
