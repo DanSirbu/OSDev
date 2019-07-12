@@ -7,6 +7,7 @@
 #include "assert.h"
 #include "keyboard_map.h"
 #include "dirent.h"
+#include "fs_info.h"
 
 int main(int argc, char *args[])
 {
@@ -15,6 +16,18 @@ int main(int argc, char *args[])
 		directoryToOpen = "/";
 	}
 	int fd = open(directoryToOpen, 0);
+	if (fd < 0) {
+		printf("ls: cannot access '%s': No such file or directory\n",
+		       directoryToOpen);
+		return -1;
+	}
+	struct stat stat;
+	fstat(fd, &stat);
+	if (!(stat.st_type & FS_DIRECTORY)) {
+		printf("Error: not a directory\n");
+		return -1;
+	}
+
 	dir_header_t dir_header;
 
 	read(fd, &dir_header, sizeof(dir_header));

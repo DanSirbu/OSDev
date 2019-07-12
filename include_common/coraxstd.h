@@ -440,9 +440,10 @@ struct userspace_vars {
 };
 
 struct stat {
-	/*uint16_t st_dev;
+	/*uint16_t st_dev;*/
 	uint16_t st_ino;
-	uint32_t st_mode;
+	uint32_t st_type;
+	/*uint32_t st_mode;
 	uint16_t st_nlink;
 	uint16_t st_uid;
 	uint16_t st_gid;

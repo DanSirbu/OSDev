@@ -98,11 +98,13 @@ int sys_fstat(int fildes, struct stat *buf)
 {
 	file_t *file = getProcessFile(fildes);
 	if (file == NULL) {
-		set_userspace_errno(ENOMEM); //TODO, find better errno
+		set_userspace_errno(EBADF);
 		return -1;
 	}
 
 	memset(buf, 0, sizeof(struct stat));
+	buf->st_ino = file->f_inode->ino;
+	buf->st_type = file->f_inode->type;
 	buf->st_size = file->f_inode->size;
 
 	return 0;

@@ -97,6 +97,11 @@ void tasking_install()
 	ready_queue = list_create();
 	current = spawn_init();
 	kernel_idle_task = spawn_idle();
+	//Swap the task ids so idle is 0 and init is 1
+	assert(current->id == 0);
+	assert(kernel_idle_task->id == 1);
+	kernel_idle_task->id = 0;
+	current->id = 1;
 
 	//We are currently the init task
 	switch_page_directory(current->process->page_directory);
