@@ -4,7 +4,7 @@
 char **tokenize(const char *path);
 int mount(char *path, inode_t *ino);
 int umount(char *path);
-inode_t *vfs_namei(char *path);
+inode_t *vfs_namei(const char *path);
 file_t *vfs_open(const char *path);
 file_t *vfs_open_inode(inode_t *inode, char *path);
 int vfs_read(file_t *file, void *buf, size_t offset, size_t size);

@@ -5,6 +5,8 @@
 #include "assert.h"
 #include "list.h"
 #include "config.h"
+#include "path.h"
+#include "task.h" //TODO, remove this
 
 inode_t *fs_root;
 
@@ -181,13 +183,28 @@ int vfs_mkdir(char *path, char *name)
 	}
 }
 
-inode_t *vfs_namei(char *path)
+extern task_t *current;
+inode_t *vfs_namei(const char *path)
 {
 	if (path[0] == '/' && path[1] == '\0') {
 		return fs_root;
 	}
+	const char *full_path = path;
+	//TODO, clean up this mess, stop using path string, use path_t
+	if (path[0] != '/') {
+		char *cwdPath = get_absolute_path(current->process->cwd);
+		full_path = kmalloc(strlen(cwdPath) + strlen(path) +
+				    2); //+1 for / and + 1 for terminating null
 
-	char **tokens = tokenize(path);
+		strcpy((char *)full_path, cwdPath);
+		if (strlen(cwdPath) > 1) { // not "/""
+			strcat((char *)full_path, "/");
+		}
+		strcat((char *)full_path, path);
+		kfree(cwdPath);
+	}
+
+	char **tokens = tokenize(full_path);
 	if (tokens[0] == NULL) {
 		kfree_arr(tokens);
 		return NULL;

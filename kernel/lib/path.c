@@ -54,8 +54,8 @@ char *get_absolute_path(path_t *path)
 	absolute_path[0] = 0;
 	foreach_list(path->items, item)
 	{
-		char *pathToken = item->value;
 		strcat(absolute_path, "/");
+		char *pathToken = item->value;
 		strcat(absolute_path, pathToken);
 	}
 
