@@ -25,6 +25,16 @@ void test_tokenize()
 	assert(strcmp("test2", tokens1[2]) == 0);
 	assert(tokens1[3] == NULL);
 	kfree_arr(tokens1);
+
+	char **tokens2 = tokenize("test");
+	assert(strcmp("test", tokens2[0]) == 0);
+	assert(tokens2[1] == NULL);
+	kfree_arr(tokens2);
+
+	char **tokens3 = tokenize("/");
+	assert(strcmp("", tokens3[0]) == 0);
+	assert(tokens3[1] == NULL);
+	kfree_arr(tokens3);
 }
 
 inode_t *dummy_find_child(__attribute__((unused)) inode_t *cur,

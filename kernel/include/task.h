@@ -5,6 +5,7 @@
 #include "fs.h"
 #include "list.h"
 #include "coraxstd.h"
+#include "path.h"
 
 typedef struct context {
 	size_t eip;
@@ -51,6 +52,8 @@ typedef struct {
 	size_t heap;
 
 	list_t *threads;
+
+	path_t *cwd;
 
 	file_t *files[MAX_FD];
 	list_t *signals;
@@ -118,7 +121,7 @@ uint32_t sys_exit(int exitcode);
 uint32_t sys_fork(int_regs_t *regs);
 void schedule();
 void make_task_ready(task_t *task);
-task_t *create_task(process_t *process, const char *name);
+task_t *create_task(process_t *process, const char *name, const char *cwd);
 void schedule_task(task_t *next_task);
 void set_int_regs(int_regs_t *regs);
 

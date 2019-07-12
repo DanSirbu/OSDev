@@ -13,50 +13,24 @@ inode_t *fs_root;
  * 
  * Output string array
  */
-char **tokenize(char *path)
+char **tokenize(const char *path)
 {
-	path = &path[1]; //Ignore /
-	int len = strlen(path);
+	char *newPath = (char *)path;
+	if (path[0] == '/') {
+		newPath = (char *)&path[1];
+	}
 
-	//Count the number of /, excluding \/
-	int numTokens = 0;
-	char prevChar = ' ';
-	for (int x = 0; x < len; x++) {
-		if (path[x] == '/' && prevChar != '\\') {
-			numTokens++;
+	//Remove last '/' token if it is there
+	char **retPath = split(newPath, "/");
+	int retPathLength = array_length(retPath);
+	if (retPathLength > 1) {
+		if (strlen(retPath[retPathLength - 1]) ==
+		    0) { //last token will be ""
+			kfree(retPath[retPathLength - 1]);
+			retPath[retPathLength - 1] = NULL;
 		}
-		prevChar = path[x];
 	}
-	if (len != 0 && path[len - 1] != '/') {
-		numTokens++; //To account for the last one
-	}
-
-	char **tokens = kcalloc(sizeof(char *) * (numTokens + 1));
-
-	int pos = 0;
-	int count = 0;
-
-	for (int i = 0; i < numTokens; i++) {
-		count = 0;
-
-		while (!(path[pos] == '/' && path[pos - 1] != '\\')) {
-			if (path[pos] == '\0') {
-				break;
-			}
-			pos++;
-			count++;
-		}
-
-		tokens[i] = kmalloc(count + 1);
-		memcpy(tokens[i], &path[pos - count], count);
-		tokens[i][count] = '\0';
-
-		pos++; //Skip the /
-	}
-
-	tokens[numTokens] = NULL;
-
-	return tokens;
+	return retPath;
 }
 
 list_t *inode_cache;

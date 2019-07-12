@@ -239,3 +239,80 @@ char *getFilenameNoExt(char *s)
 	char *basename = getBasename(s);
 	return strtok(basename, ".");
 }
+
+char *strsep(char **stringp, const char *delim)
+{
+	if (*stringp == NULL) {
+		return NULL;
+	}
+	char *ret = *stringp;
+
+	char *cur = *stringp;
+	uint8_t numDelim = strlen(delim);
+	while (true) {
+		if (*cur == '\0') {
+			break;
+		}
+		for (uint8_t i = 0; i < numDelim; i++) {
+			if (*cur == delim[i]) {
+				goto strsep_break;
+			}
+		}
+		cur++;
+	}
+strsep_break:
+	if (*cur == '\0') {
+		*stringp = NULL;
+		return ret;
+	}
+	*cur = '\0';
+	*stringp = cur + 1;
+
+	return ret;
+}
+
+char **split(char *str, char *delim)
+{
+	char *strCopy = strdup(str);
+
+	char *strCopy2 = strCopy;
+	char **strSepCur = &strCopy2;
+
+	char *token;
+	int numTokens = 0;
+	while ((token = strsep(strSepCur, delim)) != NULL) {
+		numTokens++;
+	}
+
+	strcpy(strCopy, str);
+
+	strCopy2 = strCopy;
+	strSepCur = &strCopy2;
+	char **arr = malloc(sizeof(char *) *
+			    (numTokens + 1)); //+ 1 for null terminator token
+	int i = 0;
+	while ((token = strsep(strSepCur, delim)) != NULL) {
+		arr[i] = strdup(token);
+		i++;
+	}
+	arr[i] = NULL;
+
+	free(strCopy);
+	return arr;
+}
+char *strcat(char *dest, const char *src)
+{
+	char *destAddr = (char *)dest;
+	while (*destAddr != '\0') {
+		destAddr++;
+	}
+	char *srcAddr = (char *)src;
+	while (*srcAddr != '\0') {
+		*destAddr = *srcAddr;
+		destAddr++;
+		srcAddr++;
+	}
+	*destAddr = '\0';
+
+	return dest;
+}

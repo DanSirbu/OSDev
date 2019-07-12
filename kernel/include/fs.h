@@ -145,13 +145,7 @@ typedef struct {
 	superblock_t *mnt_sb;
 } vfs_mount_t;
 
-typedef struct {
-	vfs_mount_t *mnt;
-	//vfs_node_t *dentry;
-} path_t;
-
 typedef struct file {
-	//path_t *path;
 	char path[255];
 	inode_t *f_inode;
 	size_t offset;

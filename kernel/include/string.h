@@ -18,3 +18,7 @@ size_t array_length(char *arr[]);
 
 char *getBasename(const char *s);
 char *getFilenameNoExt(char *s);
+
+char *strsep(char **stringp, const char *delim);
+char **split(char *str, char *delim);
+char *strcat(char *dest, const char *src);

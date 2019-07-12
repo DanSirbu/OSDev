@@ -27,6 +27,7 @@ node_t *list_index(list_t *list, int item_index);
 
 void list_enqueue(list_t *list, void *item);
 void *list_dequeue(list_t *list);
+void *list_dequeue_tail(list_t *list);
 void list_push(list_t *list, void *item);
 void *list_pop(list_t *list);
 

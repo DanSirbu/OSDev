@@ -188,3 +188,13 @@ void *list_pop(list_t *list)
 {
 	return list_dequeue(list);
 }
+void *list_dequeue_tail(list_t *list)
+{
+	if (list->tail == NULL || list->len == 0) {
+		return NULL;
+	}
+	void *item = (void *)list->tail->value;
+	list_remove(list, list->tail);
+
+	return item;
+}

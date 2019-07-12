@@ -55,7 +55,7 @@ void idle_task()
 extern page_directory_t *current_directory;
 task_t *spawn_init()
 {
-	task_t *init_task = create_task(NULL, "init");
+	task_t *init_task = create_task(NULL, "init", "/");
 
 	init_task->state = STATE_INIT;
 
@@ -67,12 +67,14 @@ task_t *spawn_init()
 
 	return init_task;
 }
-task_t *create_task(process_t *process, const char *name)
+task_t *create_task(process_t *process, const char *name, const char *cwd)
 {
 	if (process == NULL) { //First task
 		process = kcalloc(sizeof(process_t));
 		process->threads = list_create();
 		process->signals = list_create();
+		assert(cwd != NULL);
+		process->cwd = make_path(cwd);
 	}
 	task_t *new_task = kcalloc(sizeof(task_t));
 	new_task->process = process;
@@ -106,7 +108,7 @@ void tasking_install()
 //Does not start it yet
 task_t *copy_task(size_t fn, size_t args)
 {
-	task_t *new_task = create_task(NULL, "kthread");
+	task_t *new_task = create_task(NULL, "kthread", "/");
 	list_enqueue(task_list, new_task);
 
 	new_task->stack = (size_t)kmalloc(STACK_SIZE);
@@ -280,7 +282,7 @@ uint32_t sys_clone(void *fn, void *child_stack, void *arg)
 	       "Current process does not exist, can't clone");
 	assert(current->process->userspace_variables.clone_func_caller != NULL);
 
-	task_t *new_task = create_task(current->process, current->name);
+	task_t *new_task = create_task(current->process, current->name, NULL);
 	list_enqueue(task_list, new_task);
 
 	//Page directory remains the same
@@ -314,7 +316,10 @@ uint32_t sys_fork(int_regs_t *regs)
 {
 	assert(current != NULL && "Current process does not exist, can't fork");
 
-	task_t *new_task = create_task(NULL, current->name);
+	char *cwd_absolute_path = get_absolute_path(current->process->cwd);
+	task_t *new_task = create_task(NULL, current->name, cwd_absolute_path);
+	kfree(cwd_absolute_path);
+
 	//copy fds
 	memcpy(new_task->process->files, current->process->files,
 	       sizeof(new_task->process->files));
@@ -357,6 +362,7 @@ void free_process(process_t *process)
 	assert(process->threads->len == 0);
 
 	list_free(process->threads);
+	free_path(process->cwd);
 	kfree(process);
 }
 void free_task(task_t *task)
