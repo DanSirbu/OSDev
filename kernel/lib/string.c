@@ -242,7 +242,7 @@ char *getFilenameNoExt(char *s)
 
 char *strsep(char **stringp, const char *delim)
 {
-	if (*stringp == NULL) {
+	if (*stringp == NULL || **stringp == (int)NULL) {
 		return NULL;
 	}
 	char *ret = *stringp;

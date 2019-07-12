@@ -91,6 +91,7 @@ void testramfs()
 			strconcat(concatstr, concatstr, dir.dirents[x].name);
 
 			file_t *curFile = vfs_open(concatstr);
+			assert(curFile != NULL);
 
 			debug_print("%s INO: %d\n", concatstr,
 				    curFile->f_inode->ino);
