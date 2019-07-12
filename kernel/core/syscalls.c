@@ -248,6 +248,18 @@ int sys_getdents(uint32_t fd, dir_dirent_t *dirp, uint32_t count)
 
 	return 0;
 }
+int sys_chdir(const char *path)
+{
+	if (path == NULL || strcmp(path, " ") == 0) {
+		return -1;
+	}
+
+	path_t *parsedPath = make_path(path);
+	free_path(current->process->cwd);
+	current->process->cwd = parsedPath;
+
+	return 0;
+}
 int __attribute__((noreturn)) sys_reboot()
 {
 	//Taken from wiki.osdev.org/Reboot
@@ -320,6 +332,8 @@ void syscall(int_regs_t *regs)
 
 		DEF_SYSCALL3(__NR_getdents, getdents, uint32_t, fd,
 			     dir_dirent_t *, dirp, uint32_t, count);
+
+		DEF_SYSCALL1(__NR_chdir, chdir, const char *, path);
 
 		DEF_SYSCALL0(__NR_reboot, reboot);
 	default:

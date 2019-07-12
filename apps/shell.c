@@ -145,6 +145,10 @@ int main(int argc, char *args[])
 		} else if (strncasecmp(line, "exitcode", sizeof("exitcode")) ==
 			   0) {
 			printf("%d\n", lastProcExitcode);
+		} else if (strncmp(line, "cd ", 3) == 0) {
+			char **tokens = tokenize(line, " ");
+			chdir(tokens[1]);
+			free_arr(tokens);
 		} else if (strncasecmp(line, "help", sizeof("help")) == 0) {
 			puts("\n");
 			puts("help - display this message\n");

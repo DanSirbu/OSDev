@@ -16,6 +16,9 @@ path_t *make_path(const char *raw_path)
 
 void free_path(path_t *path)
 {
+	if (path == NULL) {
+		return;
+	}
 	char *pathItem = NULL;
 	do {
 		pathItem = list_dequeue(path->items);

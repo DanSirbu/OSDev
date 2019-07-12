@@ -36,6 +36,8 @@ DEF_SYSCALL1(__NR_pipe, pipe, int, fildes[2]);
 DEF_SYSCALL3(__NR_waitpid, waitpid, pid_t, pid, int *, stat_loc, int, options);
 DEF_SYSCALL3(__NR_getdents, getdents, uint32_t, fd, dir_dirent_t *, dirp,
 	     uint32_t, count);
+DEF_SYSCALL1(__NR_chdir, chdir, const char *, path);
+
 DEF_SYSCALL0(__NR_reboot, reboot);
 
 void (*exit_funcs[10])(void);
