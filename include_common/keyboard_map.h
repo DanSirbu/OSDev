@@ -1,6 +1,12 @@
 #pragma once
 
+#include "assert.h"
+
 #define KEYBOARD_DEVICE "/dev/keyboard"
+#define SCANCODE_KEY_RELEASED 0x80
+
+typedef unsigned char uint8_t;
+extern uint8_t scancode_to_key[120];
 
 typedef enum {
 	KEY_ESCAPE = 0x1,
@@ -122,10 +128,23 @@ typedef enum {
 	KEY_KP_RIGHT = KEY_KP_6,
 } keyboard_key_t;
 
-extern unsigned char scancode_to_key[120];
-
+static inline int isKeyPressed(uint8_t scancode)
+{
+	return (scancode & SCANCODE_KEY_RELEASED) == 0;
+}
+static inline uint8_t getKey(uint8_t scancode)
+{
+	assert(scancode_to_key[0] ==
+	       0x1); //Make sure scancode table is initialized
+	return scancode_to_key[scancode];
+}
+static inline uint8_t getScancode(uint8_t raw_scancode)
+{
+	return raw_scancode & ~SCANCODE_KEY_RELEASED;
+}
 static inline void initialize_scancode_table()
 {
+	scancode_to_key[0] = 0x1;
 	scancode_to_key[KEY_ONE] = '1';
 	scancode_to_key[KEY_TWO] = '2';
 	scancode_to_key[KEY_THREE] = '3';
@@ -162,7 +181,10 @@ static inline void initialize_scancode_table()
 	scancode_to_key[KEY_B] = 'b';
 	scancode_to_key[KEY_N] = 'n';
 	scancode_to_key[KEY_M] = 'm';
-}
 
-#define KEY_PRESSED 129
-#define KEY_RELEASED 130
+	scancode_to_key[KEY_RETURN] = '\n';
+	scancode_to_key[KEY_SLASH] = '/';
+	scancode_to_key[KEY_BACKSLASH] = '\\';
+	scancode_to_key[KEY_DELETE] = '\b';
+	scancode_to_key[KEY_SPACE] = ' ';
+}

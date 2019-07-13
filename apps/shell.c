@@ -9,49 +9,21 @@
 
 extern char **environ;
 
+uint8_t scancode_to_key[120];
+
 char *read_line()
 {
 	int buf_size = 1024;
 	char *buf = malloc(buf_size);
 	int bufIndex = 0;
-	int validCharacter;
 	while (true) {
-		validCharacter = false;
-		uint8_t character = getc(stdin);
-		if (character == KEY_PRESSED) {
-			getc(stdin);
+		uint8_t raw_scancode = getc(stdin);
+		int keyPressed = isKeyPressed(raw_scancode);
+		uint8_t scancode = getScancode(raw_scancode);
+		uint8_t character = getKey(scancode);
+
+		if (character == '\0') {
 			continue;
-		}
-
-		if (character == KEY_RELEASED) {
-			character = getc(stdin);
-		}
-
-		switch (character) {
-		case KEY_RETURN:
-			character = '\n';
-			validCharacter = true;
-			break;
-		case KEY_SLASH:
-			character = '/';
-			validCharacter = true;
-			break;
-		case KEY_BACKSLASH:
-			character = '\\';
-			validCharacter = true;
-			break;
-		case KEY_DELETE:
-			character = '\b';
-			validCharacter = true;
-			break;
-		case KEY_SPACE:
-			character = ' ';
-			validCharacter = true;
-			break;
-		}
-		if (character >= 'a' && character <= 'z' ||
-		    character >= '1' && character <= '9') {
-			validCharacter = true;
 		}
 
 		//Grow buffer if full
@@ -61,21 +33,25 @@ char *read_line()
 		}
 
 		if (character == '\n') {
-			buf[bufIndex] = '\0';
-			printf("%s", "\n");
-			return buf;
-		} else if (character == '\b') {
+			if (!keyPressed) {
+				buf[bufIndex] = '\0';
+				printf("%s", "\n");
+				return buf;
+			} else {
+				continue;
+			}
+		} else if (character == '\b' && keyPressed) {
 			if (bufIndex > 0) {
 				bufIndex--;
 			} else {
 				continue;
 			}
-		} else if (validCharacter) {
+		} else if (keyPressed) {
 			buf[bufIndex] = character;
 			bufIndex++;
 		}
 
-		if (validCharacter) {
+		if (keyPressed) {
 			char charBuf[2];
 			charBuf[0] = character;
 			charBuf[1] = '\0';
@@ -133,6 +109,7 @@ int main(int argc, char *args[])
 	int buf[1024];
 	int lastProcExitcode = 0;
 
+	initialize_scancode_table();
 	printWelcomeMessage();
 
 	while (true) {

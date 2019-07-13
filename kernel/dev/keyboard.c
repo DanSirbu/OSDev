@@ -15,8 +15,6 @@ void keyboard_handler_main(int_regs_t *regs);
 
 inode_t *keyboard_pipe;
 
-unsigned char scancode_to_key[120];
-
 void kb_init(void)
 {
 	keyboard_pipe = make_pipe(100);
@@ -24,11 +22,7 @@ void kb_init(void)
 			     (isr_handler_t)keyboard_handler_main);
 	uint8_t pic_mask = inb(PIC1_DATA);
 	outb(PIC1_DATA, (pic_mask & ~(1 << 1)));
-
-	initialize_scancode_table();
 }
-
-#define KB_RELEASED 0x80
 
 int prevSequence = 0;
 void keyboard_handler_main(__attribute__((unused)) int_regs_t *regs)
@@ -40,32 +34,17 @@ void keyboard_handler_main(__attribute__((unused)) int_regs_t *regs)
 	assert((status & 0x01));
 
 	scancode = inb(KEYBOARD_DATA_PORT);
-	debug_print("Rscan: 0x%x\n", scancode);
 
 	if (scancode == 0xE0) {
 		prevSequence = 1;
 		return;
 	}
 
-	uint8_t key_press_status =
-		((scancode & KB_RELEASED) > 0) ? KEY_RELEASED : KEY_PRESSED;
-	scancode &= ~KB_RELEASED;
-
-	debug_print("Scancode: 0x%x\n", scancode);
-	debug_print("Key pressed: %d\n", key_press_status == KEY_PRESSED);
-
-	assert(scancode < 120);
-	uint8_t key = scancode_to_key[scancode];
-	if (key == '\0')
-		key = scancode;
-
-	if (key != '\0') {
+	if (scancode != '\0') {
 		file_t file;
 		file.f_inode = keyboard_pipe;
-		strncpy(file.path, "/dev/keyboard", sizeof(file.path));
+		strncpy(file.path, KEYBOARD_DEVICE, sizeof(file.path));
 
-		vfs_write(&file, &key_press_status, 0,
-			  1); //Write pressed status first
-		vfs_write(&file, &key, 0, 1); //Write key
+		vfs_write(&file, &scancode, 0, 1); //Write scancode
 	}
 }
