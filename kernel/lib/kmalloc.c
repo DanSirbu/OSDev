@@ -2,8 +2,41 @@
 #include "serial.h"
 #include "sys/types.h"
 #include "debug.h"
+#include "spinlock.h"
 
+/* Internal Prototypes */
 void sbrk_alignto(size_t alignment);
+void *kmalloc_unsafe(size_t size);
+void *kvmalloc_unsafe(size_t size);
+void kfree_unsafe(void *ptr);
+
+volatile int real_heaplock = 0;
+int volatile *heaplock = &real_heaplock;
+
+void *kmalloc(size_t size)
+{
+	void *ret;
+	spinlock_acquire(heaplock);
+	ret = kmalloc_unsafe(size);
+	spinlock_release(heaplock);
+
+	return ret;
+}
+void *kvmalloc(size_t size)
+{
+	void *ret;
+	spinlock_acquire(heaplock);
+	ret = kvmalloc_unsafe(size);
+	spinlock_release(heaplock);
+
+	return ret;
+}
+void kfree(void *ptr)
+{
+	spinlock_acquire(heaplock);
+	kfree_unsafe(ptr);
+	spinlock_release(heaplock);
+}
 
 // Block header is 8 bytes total
 typedef struct block {
@@ -85,7 +118,7 @@ void *kmalloc_align(size_t size, uint8_t alignment)
 /*
  * Allocate page-aligned block
  */
-void *kvmalloc(size_t size)
+void *kvmalloc_unsafe(size_t size)
 {
 	if (size == 0) {
 		return NULL;
@@ -111,7 +144,7 @@ void *kvmalloc(size_t size)
 	cur_block->size = size;
 	return B2P(cur_block);
 }
-void *kmalloc(size_t size)
+void *kmalloc_unsafe(size_t size)
 {
 	if (size == 0) {
 		return NULL;
@@ -184,7 +217,7 @@ void *krealloc(void *ptr, size_t newSize)
 	kfree(ptr);
 	return new_ptr;
 }
-void kfree(void *ptr)
+void kfree_unsafe(void *ptr)
 {
 	if (ptr == NULL) {
 		return;
@@ -233,7 +266,7 @@ void kfree_arr(char **ptr)
 }
 
 /*
- * NOTE: VERY WASTEFULL, this memory is never reclaimed
+ * NOTE: VERY WASTEFUL, this memory is never reclaimed
  * TODO, change allocator type
 */
 void sbrk_alignto(size_t alignment)
