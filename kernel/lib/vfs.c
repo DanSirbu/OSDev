@@ -81,7 +81,7 @@ int mount_root(inode_t *ino)
 
 	return 0;
 }
-int mount(char *path, inode_t *ino)
+int mount(const char *path, inode_t *ino)
 {
 	assert(ino != NULL);
 	if (path[0] == '/' && path[1] == '\0') {
@@ -159,6 +159,25 @@ dir_dirent_t *vfs_get_child(file_t *file, uint32_t index)
 	} else {
 		return NULL;
 	}
+}
+int vfs_mkdev(const char *path, inode_t *inode)
+{
+	char *tmpPath = strdup(path);
+	char *pathLastIndex = rindex(tmpPath, '/');
+	if (*(pathLastIndex + 1) == '\0') {
+		*pathLastIndex = '\0';
+	}
+	pathLastIndex = rindex(tmpPath, '/');
+	*pathLastIndex = '\0'; //Separate the path in two
+	pathLastIndex++;
+	int ret = vfs_mkdir(tmpPath, pathLastIndex);
+	if (ret < 0) {
+		return ret;
+	}
+	assert(mount(path, inode) == 0);
+	kfree(tmpPath);
+
+	return 0;
 }
 int vfs_mkdir(char *path, char *name)
 {

@@ -189,28 +189,23 @@ void kmain(multiboot_info_t *multiboot_info)
 
 	print(LOG_INFO, "Initializing keyboard\n");
 	kb_init();
-	vfs_mkdir("/dev", "keyboard");
-	assert(mount("/dev/keyboard", keyboard_pipe) == 0);
+	assert(vfs_mkdev("/dev/keyboard", keyboard_pipe) == 0);
 
 	print(LOG_INFO, "Initializing screen\n");
 	initialize_terminal();
-	vfs_mkdir("/dev", "screen");
-	assert(mount("/dev/screen", display_pipe) == 0);
+	assert(vfs_mkdev("/dev/screen", display_pipe) == 0);
 
 	print(LOG_INFO, "Initializing serial file\n");
-	vfs_mkdir("/dev", "serial");
 	init_serial_pipe();
-	assert(mount("/dev/serial", serial_pipe) == 0);
+	assert(vfs_mkdev("/dev/serial", serial_pipe) == 0);
 
 	print(LOG_INFO, "Initializing /dev/null\n");
-	vfs_mkdir("/dev", "null");
 	inode_t *null_pipe = make_null_pipe();
-	assert(mount("/dev/null", null_pipe) == 0);
+	assert(vfs_mkdev("/dev/null", null_pipe) == 0);
 
 	print(LOG_INFO, "Initializing /proc\n");
-	vfs_mkdir("/", "proc");
 	inode_t *proc_pipe = make_proc_pipe();
-	assert(mount("/proc", proc_pipe) == 0);
+	assert(vfs_mkdev("/proc", proc_pipe) == 0);
 
 	debug_print("Starting Tests\n");
 	run_tests();

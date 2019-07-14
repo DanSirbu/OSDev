@@ -115,10 +115,9 @@ void serial_print(char *message, va_list args)
 			i++;
 
 			minSize = 0;
-			if ((message[i] - ASCII_NUMBER_CONST) > 0 &&
-			    (message[i] - ASCII_NUMBER_CONST) <
-				    10) { // Its a number
-				minSize = message[i] - ASCII_NUMBER_CONST;
+			int numb = message[i] - '0';
+			if (numb > 0 && numb < 10) { // Its a number
+				minSize = numb;
 				i++;
 			}
 

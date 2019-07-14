@@ -1,8 +1,5 @@
 #pragma once
-#include "sys/types.h"
-
-#define ASCII_NUMBER_CONST 0x30
-#define ASCII_LETTER_CONST 0x57
+#include "coraxstd.h"
 
 size_t strlen(const char *str);
 void reverse(char *str);
@@ -22,3 +19,5 @@ char *getFilenameNoExt(char *s);
 char *strsep(char **stringp, const char *delim);
 char **split(char *str, char *delim);
 char *strcat(char *dest, const char *src);
+
+char *rindex(const char *s, int c);

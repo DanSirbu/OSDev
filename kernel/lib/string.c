@@ -37,9 +37,9 @@ void itoa(uint32_t number, char *str, uint32_t base)
 	while (lowBytes != 0) {
 		uint32_t rem = lowBytes % base;
 		if (rem < 10) {
-			str[i] = rem + ASCII_NUMBER_CONST;
+			str[i] = rem + '0';
 		} else {
-			str[i] = rem + ASCII_LETTER_CONST;
+			str[i] = rem + 0x57; //0x57 + 0xA = 'a'
 		}
 		lowBytes /= base;
 		i++;
@@ -315,4 +315,16 @@ char *strcat(char *dest, const char *src)
 	*destAddr = '\0';
 
 	return dest;
+}
+char *rindex(const char *s, int c)
+{
+	size_t len = strlen(s);
+	char *lastOccurence = NULL;
+	for (size_t x = 0; x < len; x++) {
+		if (s[x] == c) {
+			lastOccurence = (char *)&s[x];
+		}
+	}
+
+	return lastOccurence;
 }

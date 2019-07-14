@@ -2,7 +2,7 @@
 #include "fs.h"
 
 char **tokenize(const char *path);
-int mount(char *path, inode_t *ino);
+int mount(const char *path, inode_t *ino);
 int umount(char *path);
 inode_t *vfs_namei(const char *path);
 file_t *vfs_open(const char *path);
@@ -14,3 +14,4 @@ dir_dirent_t *vfs_get_child(file_t *file, uint32_t index);
 
 int vfs_close(file_t *file);
 int vfs_mkdir(char *path, char *name);
+int vfs_mkdev(const char *path, inode_t *inode);
