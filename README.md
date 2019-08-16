@@ -29,7 +29,11 @@ CoraxOS is a hobbyist kernel built to better understand how operating systems wo
 
 # Acknowledgement
 Special thanks to http://github.com/arjun024/mkernel, whose code was used to start writing the kernel
+
 [skiftOS](https://github.com/skiftOS/skift) for the design inspiration and the toolchain compiler scripts
+
 [toaruos](https://github.com/klange/toaruos) for how to port sdl and DOOM to a new OS
+
 [MUSL](https://www.musl-libc.org/). The ctype and math code in libc were copied from here.
+
 [Standalone-printf](https://github.com/rqou/standalone-printf-scanf). I had a printf implementation, but decided to use this one to save time creating libc.
