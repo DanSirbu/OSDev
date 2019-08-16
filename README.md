@@ -2,7 +2,7 @@
 
 CoraxOS is a hobbyist kernel built to better understand how operating systems work.
 
-<video src="demo.mp4" controls preload></video>
+![](docs/demo.gif)
 
 # Features
 - Memory Management
